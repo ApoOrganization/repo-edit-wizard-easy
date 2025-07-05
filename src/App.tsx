@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
 import Artists from "./pages/Artists";
+import ArtistDetail from "./pages/ArtistDetail";
 import Venues from "./pages/Venues";
 import VenueDetail from "./pages/VenueDetail";
 import Promoters from "./pages/Promoters";
@@ -43,6 +44,7 @@ const App = () => (
                 <Route path="/events" element={<DashboardLayout><Events /></DashboardLayout>} />
                 <Route path="/events/:id" element={<DashboardLayout><EventDetail /></DashboardLayout>} />
                 <Route path="/artists" element={<DashboardLayout><Artists /></DashboardLayout>} />
+                <Route path="/artists/:id" element={<DashboardLayout><ArtistDetail /></DashboardLayout>} />
                 <Route path="/venues" element={<DashboardLayout><Venues /></DashboardLayout>} />
                 <Route path="/venues/:id" element={<DashboardLayout><VenueDetail /></DashboardLayout>} />
                 <Route path="/promoters" element={<DashboardLayout><Promoters /></DashboardLayout>} />
