@@ -2,13 +2,13 @@
 #root {
   width: 100%;
   margin: 0 auto;
-  padding: 0.5rem;
+  padding: 0.25rem;
   text-align: center;
 }
 
 .logo {
-  height: 4em;
-  padding: 1em;
+  height: 3em;
+  padding: 0.75em;
   will-change: filter;
   transition: filter 300ms;
 }
@@ -35,39 +35,39 @@
 }
 
 .card {
-  padding: 0.75em;
+  padding: 0.5em;
 }
 
 .read-the-docs {
   color: #888;
 }
 
-/* Optimized layout without global scaling */
+/* Ultra-compact layout without global scaling */
 body {
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 /* Improved content density through natural spacing */
 .container-compact {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 0.75rem;
 }
 
 @media (min-width: 1280px) {
   .container-compact {
-    padding: 0 2rem;
+    padding: 0 1.5rem;
   }
 }
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
   #root {
-    padding: 0.25rem;
+    padding: 0.125rem;
   }
   
   .container-compact {
-    padding: 0 0.5rem;
+    padding: 0 0.25rem;
   }
 }

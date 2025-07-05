@@ -49,14 +49,14 @@
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 214 100% 59%;
 
-    /* Compact typography scale */
-    --font-size-xs: 0.75rem;      /* 12px */
-    --font-size-sm: 0.875rem;     /* 14px - base */
-    --font-size-base: 0.875rem;   /* 14px */
-    --font-size-lg: 1rem;         /* 16px */
-    --font-size-xl: 1.125rem;     /* 18px */
-    --font-size-2xl: 1.25rem;     /* 20px */
-    --font-size-3xl: 1.5rem;      /* 24px */
+    /* Ultra-compact typography scale - 25% smaller */
+    --font-size-xs: 0.625rem;     /* 10px */
+    --font-size-sm: 0.75rem;      /* 12px - base */
+    --font-size-base: 0.75rem;    /* 12px */
+    --font-size-lg: 0.875rem;     /* 14px */
+    --font-size-xl: 1rem;         /* 16px */
+    --font-size-2xl: 1.125rem;    /* 18px */
+    --font-size-3xl: 1.25rem;     /* 20px */
   }
 
   .dark {
@@ -107,24 +107,24 @@
   body {
     @apply bg-background text-foreground font-poppins;
     font-size: var(--font-size-base);
-    line-height: 1.5;
+    line-height: 1.35; /* Tighter line height for density */
   }
 
-  /* Responsive typography using clamp() */
+  /* Compact responsive typography using clamp() */
   h1 {
-    font-size: clamp(1.25rem, 1.1vw + 1rem, 1.5rem);
+    font-size: clamp(1rem, 1.1vw + 0.8rem, 1.25rem);
   }
 
   h2 {
-    font-size: clamp(1.125rem, 1vw + 0.9rem, 1.25rem);
+    font-size: clamp(0.875rem, 1vw + 0.7rem, 1.125rem);
   }
 
   h3 {
-    font-size: 1rem;
+    font-size: 0.875rem;
   }
 
   h4, h5, h6 {
-    font-size: 0.875rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -159,37 +159,37 @@
   }
 
   .btn-primary {
-    @apply bg-dashboard-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm;
+    @apply bg-dashboard-blue hover:bg-blue-600 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-xs;
   }
 
   .btn-secondary {
-    @apply bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded-md font-medium transition-colors text-sm;
+    @apply bg-muted hover:bg-muted/80 text-muted-foreground px-3 py-1.5 rounded-md font-medium transition-colors text-xs;
   }
 
-  /* Compact table styling */
+  /* Ultra-compact table styling */
   .table-compact {
-    @apply w-full border-collapse text-sm;
+    @apply w-full border-collapse text-xs;
   }
 
   .table-compact th {
-    @apply bg-muted/50 px-3 py-2 text-left text-xs font-medium text-muted-foreground border-b h-10;
+    @apply bg-muted/50 px-2 py-1.5 text-left text-xs font-medium text-muted-foreground border-b h-8;
   }
 
   .table-compact td {
-    @apply px-3 py-2 text-sm border-b border-border h-12;
+    @apply px-2 py-1.5 text-xs border-b border-border h-9;
   }
 
   .table-compact tr:hover {
     @apply bg-muted/30;
   }
 
-  /* Spacing utilities following 4-point scale */
+  /* Ultra-tight spacing utilities */
   .space-compact > * + * {
-    margin-top: 0.75rem; /* 12px */
+    margin-top: 0.5rem; /* 8px */
   }
 
   .gap-compact {
-    gap: 0.75rem; /* 12px */
+    gap: 0.5rem; /* 8px */
   }
 
   /* Animation utilities */
@@ -209,13 +209,13 @@
     @apply transition-transform duration-200 hover:scale-[1.02];
   }
 
-  /* Responsive grid for auto-fit containers */
+  /* Compact responsive grid for auto-fit containers */
   .grid-auto-fit-sm {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   }
 
   .grid-auto-fit-md {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
 
   /* Improved scrollbar styling */
