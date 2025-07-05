@@ -7,12 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, Building2, Music, User } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
-import FilterSidebar from "@/components/shared/FilterSidebar";
+import UniversalFilterPanel, { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
 
 const Artists = () => {
   const [activeTab, setActiveTab] = useState("internal");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<Record<string, string | string[]>>({
+  const [filters, setFilters] = useState<UniversalFilterState>({
+    search: '',
     genres: [],
     agencies: [],
     territories: [],
@@ -31,9 +31,11 @@ const Artists = () => {
   const territories = [...new Set(artists?.map(artist => artist.territory) || [])];
   
   const filteredArtists = artists?.filter(artist => {
-    const matchesSearch = artist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         artist.agency.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         artist.territory.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchValue = (filters.search as string) || '';
+    const matchesSearch = searchValue === '' || 
+                         artist.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                         artist.agency.toLowerCase().includes(searchValue.toLowerCase()) ||
+                         artist.territory.toLowerCase().includes(searchValue.toLowerCase());
     
     const matchesGenre = (filters.genres as string[]).length === 0 || 
                         (filters.genres as string[]).includes(artist.genre);
@@ -47,11 +49,19 @@ const Artists = () => {
     return matchesSearch && matchesGenre && matchesAgency && matchesTerritory;
   });
 
-  const filterSections = [
+  const filterSections: FilterSection[] = [
     {
-      title: "Genres",
+      key: "search",
+      title: "Search",
+      type: "search",
+      placeholder: "Search artists, agencies, territories...",
+      collapsible: false,
+    },
+    {
       key: "genres",
-      type: "checkbox" as const,
+      title: "Genres",
+      type: "checkbox",
+      icon: "music",
       options: genres.map(genre => ({
         value: genre,
         label: genre,
@@ -61,9 +71,10 @@ const Artists = () => {
       defaultOpen: true,
     },
     {
-      title: "Agencies",
       key: "agencies",
-      type: "checkbox" as const,
+      title: "Agencies",
+      type: "checkbox",
+      icon: "building",
       options: agencies.map(agency => ({
         value: agency,
         label: agency,
@@ -73,9 +84,10 @@ const Artists = () => {
       defaultOpen: true,
     },
     {
-      title: "Territories",
       key: "territories",
-      type: "checkbox" as const,
+      title: "Territories",
+      type: "checkbox",
+      icon: "location",
       options: territories.map(territory => ({
         value: territory,
         label: territory,
@@ -86,7 +98,8 @@ const Artists = () => {
     },
   ];
 
-  const activeFiltersCount = (filters.genres as string[]).length + 
+  const activeFiltersCount = (filters.search ? 1 : 0) +
+                            (filters.genres as string[]).length + 
                             (filters.agencies as string[]).length + 
                             (filters.territories as string[]).length;
 
@@ -100,13 +113,8 @@ const Artists = () => {
     return num.toString();
   };
 
-  const handleFilterChange = (key: string, value: string | string[]) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
   const clearFilters = () => {
-    setFilters({ genres: [], agencies: [], territories: [] });
-    setSearchTerm('');
+    setFilters({ search: '', genres: [], agencies: [], territories: [] });
   };
 
   if (isLoading) {
@@ -163,14 +171,10 @@ const Artists = () => {
       <div className="flex">
         {activeTab === 'internal' && (
           <div className="px-8 py-6">
-            <FilterSidebar
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
+            <UniversalFilterPanel
               filters={filters}
-              onFilterChange={handleFilterChange}
+              onFiltersChange={setFilters}
               sections={filterSections}
-              activeFiltersCount={activeFiltersCount}
-              onClearFilters={clearFilters}
             />
           </div>
         )}
