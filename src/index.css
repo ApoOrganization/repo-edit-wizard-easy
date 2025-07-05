@@ -1,10 +1,12 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Import custom fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+/* Dashboard Design System */
 
 @layer base {
   :root {
@@ -17,7 +19,7 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 214 100% 59%;
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -38,21 +40,23 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 214 100% 59%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 214 100% 59%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Compact typography scale */
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;     /* 14px - base */
+    --font-size-base: 0.875rem;   /* 14px */
+    --font-size-lg: 1rem;         /* 16px */
+    --font-size-xl: 1.125rem;     /* 18px */
+    --font-size-2xl: 1.25rem;     /* 20px */
+    --font-size-3xl: 1.5rem;      /* 24px */
   }
 
   .dark {
@@ -65,7 +69,7 @@ All colors MUST be HSL.
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
+    --primary: 214 100% 59%;
     --primary-foreground: 222.2 47.4% 11.2%;
 
     --secondary: 217.2 32.6% 17.5%;
@@ -83,14 +87,15 @@ All colors MUST be HSL.
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 214 100% 59%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 214 100% 59%;
   }
 }
 
@@ -100,6 +105,204 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-poppins;
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+  }
+
+  /* Responsive typography using clamp() */
+  h1 {
+    font-size: clamp(1.25rem, 1.1vw + 1rem, 1.5rem);
+  }
+
+  h2 {
+    font-size: clamp(1.125rem, 1vw + 0.9rem, 1.25rem);
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  h4, h5, h6 {
+    font-size: 0.875rem;
+  }
+}
+
+@layer components {
+  /* Dashboard Specific Styles */
+  .hero {
+    @apply relative pl-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-dashboard-blue before:rounded-full;
+  }
+
+  .accent-bar {
+    @apply w-1 bg-dashboard-blue rounded-full;
+  }
+
+  .media-card {
+    @apply bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5;
+  }
+
+  .kpi-card-blue {
+    @apply bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-sm;
+  }
+
+  .kpi-card-green {
+    @apply bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-sm;
+  }
+
+  .kpi-card-purple {
+    @apply bg-gradient-to-br from-purple-500 to-purple-600 text-white shadow-sm;
+  }
+
+  .kpi-card-orange {
+    @apply bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-sm;
+  }
+
+  .btn-primary {
+    @apply bg-dashboard-blue hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm;
+  }
+
+  .btn-secondary {
+    @apply bg-muted hover:bg-muted/80 text-muted-foreground px-4 py-2 rounded-md font-medium transition-colors text-sm;
+  }
+
+  /* Compact table styling */
+  .table-compact {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .table-compact th {
+    @apply bg-muted/50 px-3 py-2 text-left text-xs font-medium text-muted-foreground border-b h-10;
+  }
+
+  .table-compact td {
+    @apply px-3 py-2 text-sm border-b border-border h-12;
+  }
+
+  .table-compact tr:hover {
+    @apply bg-muted/30;
+  }
+
+  /* Spacing utilities following 4-point scale */
+  .space-compact > * + * {
+    margin-top: 0.75rem; /* 12px */
+  }
+
+  .gap-compact {
+    gap: 0.75rem; /* 12px */
+  }
+
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-[1.02];
+  }
+
+  /* Responsive grid for auto-fit containers */
+  .grid-auto-fit-sm {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .grid-auto-fit-md {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  /* Improved scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+}
+
+/* Gradient backgrounds */
+.gradient-dark {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+/* Global scrollbar improvements */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground));
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--primary));
+}
+
+/* Responsive layout improvements */
+@media (max-width: 640px) {
+  /* Mobile carousel for metric tiles */
+  .mobile-scroll {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Performance optimizations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-scale-in,
+  .hover-lift,
+  .hover-scale {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .media-card {
+    @apply border-2;
+  }
+  
+  .kpi-card-blue,
+  .kpi-card-green,
+  .kpi-card-purple,
+  .kpi-card-orange {
+    @apply border border-gray-800;
   }
 }

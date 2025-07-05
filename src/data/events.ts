@@ -1,0 +1,102 @@
+
+import { Event } from './types';
+import { mockArtists } from './artists';
+
+export const mockEvents: Event[] = [
+  {
+    id: '1',
+    name: 'The Weeknd: After Hours Til Dawn Tour',
+    date: '2024-08-15',
+    venue: 'Madison Square Garden',
+    city: 'New York',
+    promoter: 'Live Nation',
+    genre: 'Pop/R&B',
+    status: 'On Sale',
+    providers: ['biletix', 'bubilet'],
+    image: '/placeholder.svg',
+    revenue: 2500000,
+    ticketsSold: 18500,
+    capacity: 20000,
+    artists: [mockArtists[0], mockArtists[5]] // The Weeknd, Kaytranada
+  },
+  {
+    id: '2',
+    name: 'Dua Lipa World Tour',
+    date: '2024-09-22',
+    venue: 'The O2 Arena',
+    city: 'London',
+    promoter: 'AEG Presents',
+    genre: 'Pop',
+    status: 'Sold Out',
+    providers: ['biletix', 'passo'],
+    image: '/placeholder.svg',
+    revenue: 1800000,
+    ticketsSold: 20000,
+    capacity: 20000,
+    artists: [mockArtists[1], mockArtists[6]] // Dua Lipa, Caroline Polachek
+  },
+  {
+    id: '3',
+    name: 'Coldplay Music of the Spheres',
+    date: '2024-07-30',
+    venue: 'Wembley Stadium',
+    city: 'London',
+    promoter: 'Live Nation',
+    genre: 'Alternative Rock',
+    status: 'On Sale',
+    providers: ['biletinial', 'bugece'],
+    image: '/placeholder.svg',
+    revenue: 4200000,
+    ticketsSold: 75000,
+    capacity: 90000,
+    artists: [mockArtists[7]] // H.E.R.
+  },
+  {
+    id: '4',
+    name: 'Taylor Swift Eras Tour',
+    date: '2024-10-12',
+    venue: 'MetLife Stadium',
+    city: 'New Jersey',
+    promoter: 'Messina Touring Group',
+    genre: 'Pop/Country',
+    status: 'Sold Out',
+    providers: ['biletix', 'bubilet', 'passo'],
+    image: '/placeholder.svg',
+    revenue: 6800000,
+    ticketsSold: 82500,
+    capacity: 82500,
+    artists: [mockArtists[3], mockArtists[8]] // Taylor Swift, Phoebe Bridgers
+  },
+  {
+    id: '5',
+    name: 'Bad Bunny World Tour',
+    date: '2024-11-05',
+    venue: 'Crypto.com Arena',
+    city: 'Los Angeles',
+    promoter: 'Live Nation',
+    genre: 'Reggaeton',
+    status: 'On Sale',
+    providers: ['biletix', 'biletinial'],
+    image: '/placeholder.svg',
+    revenue: 3200000,
+    ticketsSold: 19000,
+    capacity: 21000,
+    artists: [mockArtists[2], mockArtists[9]] // Bad Bunny, Rosalía
+  },
+  {
+    id: '6',
+    name: 'Billie Eilish: Happier Than Ever Tour',
+    date: '2024-12-08',
+    venue: 'Forum',
+    city: 'Los Angeles',
+    promoter: 'Live Nation',
+    genre: 'Alternative Pop',
+    status: 'On Sale',
+    providers: ['biletix', 'passo'],
+    image: '/placeholder.svg',
+    revenue: 1950000,
+    ticketsSold: 15200,
+    capacity: 17500,
+    artists: [mockArtists[4]] // Billie Eilish
+  }
+];
