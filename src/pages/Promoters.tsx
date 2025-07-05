@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Users, BarChart3, MapPin, DollarSign, Star } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import PageHeader from "@/components/shared/PageHeader";
-import FilterSidebar from "@/components/shared/FilterSidebar";
+import UniversalFilterPanel from "@/components/shared/UniversalFilterPanel";
+import type { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
 
 const Promoters = () => {
   const [activeTab, setActiveTab] = useState("list");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<Record<string, string | string[]>>({
+  const [filters, setFilters] = useState<UniversalFilterState>({
+    search: '',
     sortBy: 'eventCount',
     cities: [],
     specialties: [],
@@ -31,7 +32,9 @@ const Promoters = () => {
   const specialties = [...new Set(promoters?.map(promoter => promoter.specialty) || [])];
 
   const filteredPromoters = promoters?.filter(promoter => {
-    const matchesSearch = promoter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const searchTerm = (filters.search as string) || '';
+    const matchesSearch = searchTerm === '' || 
+                         promoter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          promoter.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          promoter.specialty.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -59,22 +62,33 @@ const Promoters = () => {
     }
   });
 
-  const filterSections = [
+  const filterSections: FilterSection[] = [
     {
-      title: "Sort By",
+      key: "search",
+      title: "Search",
+      type: "search",
+      placeholder: "Search promoters...",
+      icon: "search",
+      collapsible: false,
+    },
+    {
       key: "sortBy",
-      type: "radio" as const,
+      title: "Sort By",
+      type: "radio",
+      icon: "building",
       options: [
         { value: "eventCount", label: "Most Active (Event Count)" },
         { value: "revenue", label: "Highest Revenue" },
         { value: "rating", label: "Highest Rating" },
         { value: "name", label: "Alphabetical" },
       ],
+      collapsible: false,
     },
     {
-      title: "Cities",
       key: "cities",
-      type: "checkbox" as const,
+      title: "Cities",
+      type: "checkbox",
+      icon: "location",
       options: cities.map(city => ({
         value: city,
         label: city,
@@ -84,9 +98,10 @@ const Promoters = () => {
       defaultOpen: true,
     },
     {
-      title: "Specialties",
       key: "specialties",
-      type: "checkbox" as const,
+      title: "Specialties",
+      type: "checkbox",
+      icon: "music",
       options: specialties.map(specialty => ({
         value: specialty,
         label: specialty,
@@ -97,8 +112,6 @@ const Promoters = () => {
     },
   ];
 
-  const activeFiltersCount = (filters.cities as string[]).length + (filters.specialties as string[]).length;
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -108,13 +121,8 @@ const Promoters = () => {
     }).format(value);
   };
 
-  const handleFilterChange = (key: string, value: string | string[]) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const clearFilters = () => {
-    setFilters({ sortBy: 'eventCount', cities: [], specialties: [] });
-    setSearchTerm('');
+  const handleFiltersChange = (newFilters: UniversalFilterState) => {
+    setFilters(newFilters);
   };
 
   if (isLoading) {
@@ -162,14 +170,10 @@ const Promoters = () => {
       <div className="flex">
         {activeTab === 'list' && (
           <div className="px-8 py-6">
-            <FilterSidebar
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
+            <UniversalFilterPanel
               filters={filters}
-              onFilterChange={handleFilterChange}
+              onFiltersChange={handleFiltersChange}
               sections={filterSections}
-              activeFiltersCount={activeFiltersCount}
-              onClearFilters={clearFilters}
             />
           </div>
         )}

@@ -9,12 +9,13 @@ import { Building2, BarChart3, MapPin, Users, DollarSign, Star } from "lucide-re
 import { Link } from "react-router-dom";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import PageHeader from "@/components/shared/PageHeader";
-import FilterSidebar from "@/components/shared/FilterSidebar";
+import UniversalFilterPanel from "@/components/shared/UniversalFilterPanel";
+import type { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
 
 const Venues = () => {
   const [activeTab, setActiveTab] = useState("list");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<Record<string, string | string[]>>({
+  const [filters, setFilters] = useState<UniversalFilterState>({
+    search: '',
     capacityRange: [],
     cities: [],
     priceTiers: [],
@@ -36,7 +37,9 @@ const Venues = () => {
   const venueTypes = [...new Set(venues?.map(venue => venue.type) || [])];
 
   const filteredVenues = venues?.filter(venue => {
-    const matchesSearch = venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const searchTerm = (filters.search as string) || '';
+    const matchesSearch = searchTerm === '' || 
+                         venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          venue.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          venue.type.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -70,11 +73,20 @@ const Venues = () => {
     return matchesSearch && matchesCapacity && matchesCity && matchesPriceTier && matchesType;
   });
 
-  const filterSections = [
+  const filterSections: FilterSection[] = [
     {
-      title: "Capacity",
+      key: "search",
+      title: "Search",
+      type: "search",
+      placeholder: "Search venues...",
+      icon: "search",
+      collapsible: false,
+    },
+    {
       key: "capacityRange",
-      type: "checkbox" as const,
+      title: "Capacity",
+      type: "checkbox",
+      icon: "users",
       options: [
         { value: "small", label: "Under 1,000", count: venues?.filter(v => v.capacity < 1000).length || 0 },
         { value: "medium", label: "1,000 - 10,000", count: venues?.filter(v => v.capacity >= 1000 && v.capacity <= 10000).length || 0 },
@@ -83,9 +95,10 @@ const Venues = () => {
       collapsible: false,
     },
     {
-      title: "Cities",
       key: "cities",
-      type: "checkbox" as const,
+      title: "Cities",
+      type: "checkbox",
+      icon: "location",
       options: cities.map(city => ({
         value: city,
         label: city,
@@ -95,9 +108,10 @@ const Venues = () => {
       defaultOpen: true,
     },
     {
-      title: "Price Tiers",
       key: "priceTiers",
-      type: "checkbox" as const,
+      title: "Price Tiers",
+      type: "checkbox",
+      icon: "money",
       options: [
         { value: "budget", label: "Budget (Under $50 avg)", count: venues?.filter(v => (v.avgPrice || 75) < 50).length || 0 },
         { value: "mid", label: "Mid-tier ($50-$150 avg)", count: venues?.filter(v => {
@@ -110,9 +124,10 @@ const Venues = () => {
       defaultOpen: false,
     },
     {
-      title: "Venue Types",
       key: "venueTypes",
-      type: "checkbox" as const,
+      title: "Venue Types",
+      type: "checkbox",
+      icon: "building",
       options: venueTypes.map(type => ({
         value: type,
         label: type,
@@ -122,11 +137,6 @@ const Venues = () => {
       defaultOpen: false,
     },
   ];
-
-  const activeFiltersCount = (filters.capacityRange as string[]).length + 
-                            (filters.cities as string[]).length + 
-                            (filters.priceTiers as string[]).length + 
-                            (filters.venueTypes as string[]).length;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -149,13 +159,8 @@ const Venues = () => {
     return 'destructive';
   };
 
-  const handleFilterChange = (key: string, value: string | string[]) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  const clearFilters = () => {
-    setFilters({ capacityRange: [], cities: [], priceTiers: [], venueTypes: [] });
-    setSearchTerm('');
+  const handleFiltersChange = (newFilters: UniversalFilterState) => {
+    setFilters(newFilters);
   };
 
   // Mock analytics data
@@ -211,14 +216,10 @@ const Venues = () => {
       <div className="flex">
         {activeTab === 'list' && (
           <div className="px-8 py-6">
-            <FilterSidebar
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
+            <UniversalFilterPanel
               filters={filters}
-              onFilterChange={handleFilterChange}
+              onFiltersChange={handleFiltersChange}
               sections={filterSections}
-              activeFiltersCount={activeFiltersCount}
-              onClearFilters={clearFilters}
             />
           </div>
         )}
