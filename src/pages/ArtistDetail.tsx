@@ -2,7 +2,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockArtists, mockEvents } from "@/data/mockData";
-import { ArrowLeft, Instagram, Spotify, Mail, ExternalLink } from "lucide-react";
+import { ArrowLeft, Instagram, Music, Mail, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -156,7 +156,7 @@ const ArtistDetail = () => {
                       </Button>
                       {artist.spotifyUrl && (
                         <Button size="sm" variant="outline" className="h-7 w-7 p-0">
-                          <Spotify className="h-3 w-3" />
+                          <Music className="h-3 w-3" />
                         </Button>
                       )}
                       {artist.email && (
