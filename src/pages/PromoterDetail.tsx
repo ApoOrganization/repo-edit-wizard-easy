@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockPromoters, mockEvents } from "@/data/mockData";
@@ -6,7 +5,7 @@ import { ArrowLeft, Users, Building2, TrendingUp, Calendar, DollarSign, Star, Ba
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
-import DetailPageCalendar from "@/components/shared/DetailPageCalendar";
+import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
 import ExpandableCard from "@/components/shared/ExpandableCard";
 
 const PromoterDetail = () => {
@@ -262,7 +261,7 @@ const PromoterDetail = () => {
         </div>
 
         {/* Calendar Section */}
-        <DetailPageCalendar 
+        <EnhancedCalendar 
           events={promoterEvents || []}
           title="Event Schedule"
           entityType="promoter"

@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockVenues, mockEvents } from "@/data/mockData";
@@ -7,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
 import ExpandableCard from "@/components/shared/ExpandableCard";
-import DetailPageCalendar from "@/components/shared/DetailPageCalendar";
+import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
 
 const VenueDetail = () => {
   const { id } = useParams();
@@ -244,7 +243,7 @@ const VenueDetail = () => {
         </div>
 
         {/* Calendar Section */}
-        <DetailPageCalendar 
+        <EnhancedCalendar 
           events={venueEvents || []} 
           title="Event Calendar"
           entityType="venue"

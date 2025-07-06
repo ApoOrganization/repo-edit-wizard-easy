@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
 import ExpandableCard from "@/components/shared/ExpandableCard";
-import DetailPageCalendar from "@/components/shared/DetailPageCalendar";
+import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
 
 const ArtistDetail = () => {
   const { id } = useParams();
@@ -228,7 +228,7 @@ const ArtistDetail = () => {
 
         {/* Full Width Calendar */}
         <div className="mt-8">
-          <DetailPageCalendar 
+          <EnhancedCalendar 
             events={artistEvents || []}
             title="Tour Calendar"
             entityType="artist"
