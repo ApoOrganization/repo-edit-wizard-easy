@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockArtists, mockEvents } from "@/data/mockData";
@@ -8,11 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
 import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
-
 const ArtistDetail = () => {
-  const { id } = useParams();
-  
-  const { data: artist, isLoading, error } = useQuery({
+  const {
+    id
+  } = useParams();
+  const {
+    data: artist,
+    isLoading,
+    error
+  } = useQuery({
     queryKey: ['artist', id],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -21,46 +24,35 @@ const ArtistDetail = () => {
       const foundArtist = mockArtists.find(a => a.id === artistId);
       if (!foundArtist) throw new Error('Artist not found');
       return foundArtist;
-    },
+    }
   });
-
-  const { data: artistEvents } = useQuery({
+  const {
+    data: artistEvents
+  } = useQuery({
     queryKey: ['artist-events', id],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 200));
       const artistId = parseInt(id || '0');
       if (isNaN(artistId)) return [];
-      return mockEvents.filter(event => 
-        event.artists.some(a => a.id === artistId)
-      );
+      return mockEvents.filter(event => event.artists.some(a => a.id === artistId));
     },
-    enabled: !!id && !isNaN(parseInt(id || '0')),
+    enabled: !!id && !isNaN(parseInt(id || '0'))
   });
-
   if (isLoading) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    return <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="hero">
           <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Loading Artist...</h1>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (error || !artist) {
-    return (
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    return <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="hero">
           <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Artist Not Found</h1>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  const upcomingEvents = artistEvents?.filter(event => 
-    new Date(event.date) > new Date()
-  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
-
+  const upcomingEvents = artistEvents?.filter(event => new Date(event.date) > new Date()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M';
@@ -70,16 +62,11 @@ const ArtistDetail = () => {
     }
     return num.toString();
   };
-
-  return (
-    <div className="max-w-7xl mx-auto px-6 py-4">
+  return <div className="max-w-7xl mx-auto px-6 py-4">
       <div className="space-y-6">
         {/* Navigation */}
         <div className="flex items-center gap-4">
-          <Link 
-            to="/artists" 
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <Link to="/artists" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
             Artists
           </Link>
@@ -140,12 +127,10 @@ const ArtistDetail = () => {
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground mb-2">Top Cities</h4>
                     <div className="space-y-1">
-                      {artist.topCities.slice(0, 5).map((city, index) => (
-                        <div key={city} className="flex justify-between items-center py-1">
+                      {artist.topCities.slice(0, 5).map((city, index) => <div key={city} className="flex justify-between items-center py-1">
                           <span className="text-xs">{city}</span>
                           <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
                   </div>
                 </div>
@@ -159,33 +144,27 @@ const ArtistDetail = () => {
                       <Button size="sm" variant="outline" className="h-7 w-7 p-0">
                         <Instagram className="h-3 w-3" />
                       </Button>
-                      {artist.spotifyUrl && (
-                        <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+                      {artist.spotifyUrl && <Button size="sm" variant="outline" className="h-7 w-7 p-0">
                           <Music className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {artist.email && (
-                        <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+                        </Button>}
+                      {artist.email && <Button size="sm" variant="outline" className="h-7 w-7 p-0">
                           <Mail className="h-3 w-3" />
-                        </Button>
-                      )}
-                      {artist.profileUrl && (
-                        <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+                        </Button>}
+                      {artist.profileUrl && <Button size="sm" variant="outline" className="h-7 w-7 p-0">
                           <ExternalLink className="h-3 w-3" />
-                        </Button>
-                      )}
+                        </Button>}
                     </div>
                   </div>
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-2 bg-muted/30 rounded-md">
-                      <p className="text-lg font-semibold">{artistEvents?.length || 0}</p>
-                      <p className="text-xs text-muted-foreground">Total Events</p>
+                      
+                      
                     </div>
                     <div className="text-center p-2 bg-muted/30 rounded-md">
-                      <p className="text-lg font-semibold">{upcomingEvents.length}</p>
-                      <p className="text-xs text-muted-foreground">Upcoming</p>
+                      
+                      
                     </div>
                   </div>
                 </div>
@@ -196,11 +175,7 @@ const ArtistDetail = () => {
           {/* Right Column */}
           <div className="space-y-6">
             {/* Upcoming Events Card */}
-            <UpcomingEventsCard 
-              events={upcomingEvents}
-              title="Upcoming Shows"
-              maxEvents={5}
-            />
+            <UpcomingEventsCard events={upcomingEvents} title="Upcoming Shows" maxEvents={5} />
             
             {/* Biography Card - Simple version */}
             <Card>
@@ -229,15 +204,9 @@ const ArtistDetail = () => {
 
         {/* Full Width Calendar */}
         <div className="mt-8">
-          <EnhancedCalendar 
-            events={artistEvents || []}
-            title="Tour Calendar"
-            entityType="artist"
-          />
+          <EnhancedCalendar events={artistEvents || []} title="Tour Calendar" entityType="artist" />
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ArtistDetail;
