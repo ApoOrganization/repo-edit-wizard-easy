@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
@@ -5,7 +6,7 @@ import { mockArtists } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, Music, User } from "lucide-react";
+import { Users, Building2, User } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import UniversalFilterPanel, { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
 
@@ -98,11 +99,6 @@ const Artists = () => {
     },
   ];
 
-  const activeFiltersCount = (filters.search ? 1 : 0) +
-                            (filters.genres as string[]).length + 
-                            (filters.agencies as string[]).length + 
-                            (filters.territories as string[]).length;
-
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M';
@@ -111,10 +107,6 @@ const Artists = () => {
       return (num / 1000).toFixed(1) + 'K';
     }
     return num.toString();
-  };
-
-  const clearFilters = () => {
-    setFilters({ search: '', genres: [], agencies: [], territories: [] });
   };
 
   if (isLoading) {
@@ -155,15 +147,6 @@ const Artists = () => {
           >
             <Building2 className="h-4 w-4 mr-2" />
             Agencies
-          </Button>
-          <Button 
-            variant={activeTab === 'spotify' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('spotify')}
-            className="rounded-full px-4"
-          >
-            <Music className="h-4 w-4 mr-2" />
-            Spotify View
           </Button>
         </div>
       </div>
@@ -256,44 +239,6 @@ const Artists = () => {
                   </Card>
                 );
               })}
-            </div>
-          )}
-
-          {activeTab === 'spotify' && (
-            <div className="space-y-6">
-              <Card className="media-card">
-                <CardHeader>
-                  <CardTitle>Spotify Analytics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-green-600 font-manrope">
-                        {formatNumber(artists?.reduce((sum, artist) => sum + artist.monthlyListeners, 0) || 0)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Total Monthly Listeners</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-blue-600 font-manrope">
-                        {formatNumber(artists?.reduce((sum, artist) => sum + artist.followers, 0) || 0)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Total Followers</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-purple-600 font-manrope">
-                        {artists?.length || 0}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Artists Tracked</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-orange-600 font-manrope">
-                        {agencies.length}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Agencies</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           )}
         </div>
