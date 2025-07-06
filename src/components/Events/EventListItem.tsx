@@ -3,13 +3,15 @@ import { Event } from "@/data/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users, DollarSign, Ticket } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface EventListItemProps {
   event: Event;
 }
 
 const EventListItem = ({ event }: EventListItemProps) => {
+  const navigate = useNavigate();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'On Sale': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
@@ -30,6 +32,13 @@ const EventListItem = ({ event }: EventListItemProps) => {
   };
 
   const selloutPercentage = (event.ticketsSold / event.capacity) * 100;
+
+  const handleVenueNavigation = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const venueId = event.venue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    navigate(`/venues/${venueId}`);
+  };
 
   return (
     <Link to={`/events/${event.id}`}>
@@ -63,7 +72,12 @@ const EventListItem = ({ event }: EventListItemProps) => {
                 
                 <div className="flex items-center col-span-2">
                   <Users className="h-3 w-3 mr-1" />
-                  <span className="truncate">{event.venue}</span>
+                  <span 
+                    className="truncate hover:text-primary transition-colors cursor-pointer"
+                    onClick={handleVenueNavigation}
+                  >
+                    {event.venue}
+                  </span>
                 </div>
               </div>
             </div>

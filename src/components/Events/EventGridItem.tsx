@@ -3,13 +3,15 @@ import { Event } from "@/data/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface EventGridItemProps {
   event: Event;
 }
 
 const EventGridItem = ({ event }: EventGridItemProps) => {
+  const navigate = useNavigate();
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'On Sale': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
@@ -27,6 +29,13 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  const handleVenueNavigation = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const venueId = event.venue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    navigate(`/venues/${venueId}`);
   };
 
   return (
@@ -54,7 +63,12 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
             
             <div className="flex items-center text-xs text-muted-foreground">
               <MapPin className="h-3 w-3 mr-2" />
-              <span className="truncate">{event.venue}, {event.city}</span>
+              <span 
+                className="truncate hover:text-primary transition-colors cursor-pointer"
+                onClick={handleVenueNavigation}
+              >
+                {event.venue}, {event.city}
+              </span>
             </div>
             
             <div className="flex items-center text-xs text-muted-foreground">
