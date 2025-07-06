@@ -4,15 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, User } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface ArtistInfoCardProps {
   event: Event;
 }
 
 const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
+  const navigate = useNavigate();
   // For now, we'll use the first artist from the event
   const primaryArtist = event.artists[0];
+
+  const handleArtistNavigation = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Artist navigation clicked:', primaryArtist);
+    console.log('Navigating to:', `/artists/${primaryArtist.id}`);
+    navigate(`/artists/${primaryArtist.id}`);
+  };
 
   if (!primaryArtist) {
     return (
@@ -28,9 +37,9 @@ const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
     <Card className="media-card h-full">
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
-          <Link to={`/artists/${primaryArtist.id}`} className="hover:text-primary transition-colors">
+          <span className="hover:text-primary transition-colors cursor-pointer" onClick={handleArtistNavigation}>
             {primaryArtist.name}
-          </Link>
+          </span>
           <Badge variant="outline" className="text-xs">{primaryArtist.genre}</Badge>
         </CardTitle>
       </CardHeader>
@@ -75,7 +84,13 @@ const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
             </Button>
           </div>
           
-          <Button variant="ghost" size="sm" className="p-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="p-2 cursor-pointer hover:bg-accent transition-colors" 
+            onClick={handleArtistNavigation}
+            title={`View ${primaryArtist.name} details`}
+          >
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
