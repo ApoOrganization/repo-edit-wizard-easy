@@ -24,7 +24,7 @@ const ExpandableCard = ({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   return (
-    <Card className={className}>
+    <Card className={`${className} overflow-hidden`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -45,16 +45,17 @@ const ExpandableCard = ({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 relative">
         <div
-          className={`transition-all duration-300 overflow-hidden ${
-            isExpanded ? "max-h-none" : `max-h-[${maxCollapsedHeight}]`
+          className={`transition-all duration-300 ${
+            isExpanded ? "" : "overflow-hidden"
           }`}
+          style={{ maxHeight: isExpanded ? "none" : maxCollapsedHeight }}
         >
           {children}
         </div>
         {!isExpanded && (
-          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card via-card/80 to-transparent pointer-events-none" />
         )}
       </CardContent>
     </Card>
