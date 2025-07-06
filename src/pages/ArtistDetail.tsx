@@ -12,13 +12,15 @@ import DetailPageCalendar from "@/components/shared/DetailPageCalendar";
 const ArtistDetail = () => {
   const { id } = useParams();
   
-  const { data: artist, isLoading } = useQuery({
+  const { data: artist, isLoading, error } = useQuery({
     queryKey: ['artist', id],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300));
       const artistId = parseInt(id || '0');
-      if (isNaN(artistId)) return null;
-      return mockArtists.find(a => a.id === artistId);
+      if (isNaN(artistId)) throw new Error('Invalid artist ID');
+      const foundArtist = mockArtists.find(a => a.id === artistId);
+      if (!foundArtist) throw new Error('Artist not found');
+      return foundArtist;
     },
   });
 
@@ -32,7 +34,7 @@ const ArtistDetail = () => {
         event.artists.some(a => a.id === artistId)
       );
     },
-    enabled: !!id,
+    enabled: !!id && !isNaN(parseInt(id || '0')),
   });
 
   if (isLoading) {
@@ -45,7 +47,7 @@ const ArtistDetail = () => {
     );
   }
 
-  if (!artist) {
+  if (error || !artist) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="hero">
@@ -189,8 +191,18 @@ const ArtistDetail = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
 
-            {/* Expandable Bio Card */}
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* Upcoming Events Card */}
+            <UpcomingEventsCard 
+              events={upcomingEvents}
+              title="Upcoming Shows"
+              maxEvents={5}
+            />
+            
+            {/* Biography Card - Moved here */}
             <ExpandableCard
               title="Biography"
               defaultExpanded={false}
@@ -211,15 +223,6 @@ const ArtistDetail = () => {
                 </p>
               </div>
             </ExpandableCard>
-          </div>
-
-          {/* Right Column */}
-          <div>
-            <UpcomingEventsCard 
-              events={upcomingEvents}
-              title="Upcoming Shows"
-              maxEvents={5}
-            />
           </div>
         </div>
 

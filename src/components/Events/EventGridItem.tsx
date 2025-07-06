@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 
-
 interface EventGridItemProps {
   event: Event;
 }
@@ -88,6 +87,24 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
                 +{event.providers.length - 2}
               </Badge>
             )}
+          </div>
+
+          {/* Artists section with clickable names */}
+          <div className="pt-2 border-t border-border">
+            <p className="text-xs text-muted-foreground">
+              {event.artists.map((artist, index) => (
+                <span key={artist.id}>
+                  {index > 0 && ', '}
+                  <Link 
+                    to={`/artists/${artist.id}`} 
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:text-primary transition-colors"
+                  >
+                    {artist.name}
+                  </Link>
+                </span>
+              ))}
+            </p>
           </div>
         </CardContent>
       </Card>

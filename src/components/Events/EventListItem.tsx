@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users, DollarSign, Ticket } from "lucide-react";
 import { Link } from "react-router-dom";
 
-
 interface EventListItemProps {
   event: Event;
 }
@@ -96,7 +95,18 @@ const EventListItem = ({ event }: EventListItemProps) => {
           <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground truncate">
-                {event.artists.map(artist => artist.name).join(', ')}
+                {event.artists.map((artist, index) => (
+                  <span key={artist.id}>
+                    {index > 0 && ', '}
+                    <Link 
+                      to={`/artists/${artist.id}`} 
+                      onClick={(e) => e.stopPropagation()}
+                      className="hover:text-primary transition-colors"
+                    >
+                      {artist.name}
+                    </Link>
+                  </span>
+                ))}
               </p>
             </div>
             

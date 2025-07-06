@@ -1,8 +1,10 @@
+
 import { Event } from "@/data/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, User } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface ArtistInfoCardProps {
   event: Event;
@@ -26,7 +28,9 @@ const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
     <Card className="media-card h-full">
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
-          {primaryArtist.name}
+          <Link to={`/artists/${primaryArtist.id}`} className="hover:text-primary transition-colors">
+            {primaryArtist.name}
+          </Link>
           <Badge variant="outline" className="text-xs">{primaryArtist.genre}</Badge>
         </CardTitle>
       </CardHeader>
