@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockArtists, mockEvents } from "@/data/mockData";
@@ -6,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
-import ExpandableCard from "@/components/shared/ExpandableCard";
 import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
 
 const ArtistDetail = () => {
@@ -202,27 +202,28 @@ const ArtistDetail = () => {
               maxEvents={5}
             />
             
-            {/* Biography Card - Moved here */}
-            <ExpandableCard
-              title="Biography"
-              defaultExpanded={false}
-              maxCollapsedHeight="60px"
-            >
-              <div className="text-xs text-muted-foreground leading-relaxed">
-                <p>
-                  {artist.name} is a {artist.genre.toLowerCase()} artist known for their innovative sound and captivating performances. 
-                  With {formatNumber(artist.monthlyListeners)} monthly listeners on Spotify, they have established themselves as a major force in the music industry.
-                </p>
-                <p className="mt-3">
-                  Represented by {artist.agency} and covering the {artist.territory} territory, {artist.name} continues to tour extensively, 
-                  bringing their unique sound to fans across their top markets including {artist.topCities.slice(0, 3).join(', ')}.
-                </p>
-                <p className="mt-3">
-                  Their music resonates with audiences worldwide, consistently drawing sold-out crowds and maintaining strong streaming numbers. 
-                  {artist.name} represents the evolution of {artist.genre.toLowerCase()} music in the modern era.
-                </p>
-              </div>
-            </ExpandableCard>
+            {/* Biography Card - Simple version */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold">Biography</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="text-xs text-muted-foreground leading-relaxed space-y-3">
+                  <p>
+                    {artist.name} is a {artist.genre.toLowerCase()} artist known for their innovative sound and captivating performances. 
+                    With {formatNumber(artist.monthlyListeners)} monthly listeners on Spotify, they have established themselves as a major force in the music industry.
+                  </p>
+                  <p>
+                    Represented by {artist.agency} and covering the {artist.territory} territory, {artist.name} continues to tour extensively, 
+                    bringing their unique sound to fans across their top markets including {artist.topCities.slice(0, 3).join(', ')}.
+                  </p>
+                  <p>
+                    Their music resonates with audiences worldwide, consistently drawing sold-out crowds and maintaining strong streaming numbers. 
+                    {artist.name} represents the evolution of {artist.genre.toLowerCase()} music in the modern era.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
 

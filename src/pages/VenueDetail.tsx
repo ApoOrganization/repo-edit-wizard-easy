@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockVenues, mockEvents } from "@/data/mockData";
@@ -5,7 +6,6 @@ import { ArrowLeft, MapPin, Users, Star, Building2, Calendar, DollarSign } from 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
-import ExpandableCard from "@/components/shared/ExpandableCard";
 import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
 
 const VenueDetail = () => {
@@ -212,33 +212,38 @@ const VenueDetail = () => {
               maxEvents={5}
             />
 
-            {/* Venue Information */}
-            <ExpandableCard
-              title="Venue Details"
-              icon={<Building2 className="h-4 w-4" />}
-            >
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type:</span>
-                  <Badge variant="outline">{venue.type}</Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Capacity:</span>
-                  <span className="font-semibold">{venue.capacity.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Rating:</span>
-                  <div className="flex items-center space-x-1">
-                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                    <span className="font-semibold">{venue.rating}</span>
+            {/* Venue Information - Simple Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Venue Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Type:</span>
+                    <Badge variant="outline">{venue.type}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Capacity:</span>
+                    <span className="font-semibold">{venue.capacity.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Rating:</span>
+                    <div className="flex items-center space-x-1">
+                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                      <span className="font-semibold">{venue.rating}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Avg Revenue/Event:</span>
+                    <span className="font-semibold">{formatCurrency(avgRevenuePerEvent)}</span>
                   </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Avg Revenue/Event:</span>
-                  <span className="font-semibold">{formatCurrency(avgRevenuePerEvent)}</span>
-                </div>
-              </div>
-            </ExpandableCard>
+              </CardContent>
+            </Card>
           </div>
         </div>
 

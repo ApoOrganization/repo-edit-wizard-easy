@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockPromoters, mockEvents } from "@/data/mockData";
@@ -6,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
 import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
-import ExpandableCard from "@/components/shared/ExpandableCard";
 
 const PromoterDetail = () => {
   const { id } = useParams();
@@ -232,31 +232,35 @@ const PromoterDetail = () => {
               maxEvents={5}
             />
 
-            {/* Company Details */}
-            <ExpandableCard 
-              title="Company Details"
-              icon={<Building2 className="h-4 w-4" />}
-              defaultExpanded={false}
-            >
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="font-medium text-muted-foreground">Specialty</p>
-                  <p>{promoter.specialty}</p>
+            {/* Company Details - Simple Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Building2 className="h-4 w-4" />
+                  Company Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-medium text-muted-foreground">Specialty</p>
+                    <p>{promoter.specialty}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Territory</p>
+                    <p>{promoter.city}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Total Events</p>
+                    <p>{promoter.eventsCount.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Success Rate</p>
+                    <p>{successRate}% events sold out</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-muted-foreground">Territory</p>
-                  <p>{promoter.city}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-muted-foreground">Total Events</p>
-                  <p>{promoter.eventsCount.toLocaleString()}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-muted-foreground">Success Rate</p>
-                  <p>{successRate}% events sold out</p>
-                </div>
-              </div>
-            </ExpandableCard>
+              </CardContent>
+            </Card>
           </div>
         </div>
 
