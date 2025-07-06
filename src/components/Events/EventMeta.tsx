@@ -1,4 +1,3 @@
-
 import { Event } from "@/data/types";
 import { MapPin } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -19,7 +18,7 @@ const EventMeta = ({ event }: EventMetaProps) => {
     navigate(`/venues/${venueId}`);
   };
 
-  const handlePromoterNavigation = (e: React.MockEvent) => {
+  const handlePromoterNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const promoterId = getPromoterIdFromName(event.promoter);

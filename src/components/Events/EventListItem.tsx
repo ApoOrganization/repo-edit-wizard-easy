@@ -1,4 +1,3 @@
-
 import { Event } from "@/data/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +41,7 @@ const EventListItem = ({ event }: EventListItemProps) => {
     navigate(`/venues/${venueId}`);
   };
 
-  const handlePromoterNavigation = (e: React.MockEvent) => {
+  const handlePromoterNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const promoterId = getPromoterIdFromName(event.promoter);
