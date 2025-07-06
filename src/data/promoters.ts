@@ -33,3 +33,9 @@ export const mockPromoters: Promoter[] = [
     image: '/placeholder.svg'
   }
 ];
+
+// Helper function to get promoter ID from name
+export const getPromoterIdFromName = (promoterName: string): string => {
+  const promoter = mockPromoters.find(p => p.name === promoterName);
+  return promoter?.id || promoterName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+};

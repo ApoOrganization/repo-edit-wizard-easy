@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { mockPromoters } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -189,45 +190,47 @@ const Promoters = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {sortedPromoters?.map((promoter) => (
-                  <Card key={promoter.id} className="media-card hover-lift">
-                    <CardHeader className="pb-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <Badge variant="outline" className="text-xs">{promoter.specialty}</Badge>
-                        <div className="flex items-center space-x-1">
-                          <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                          <span className="text-sm font-medium">{promoter.rating}</span>
+                  <Link key={promoter.id} to={`/promoters/${promoter.id}`}>
+                    <Card className="media-card hover-lift cursor-pointer">
+                      <CardHeader className="pb-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <Badge variant="outline" className="text-xs">{promoter.specialty}</Badge>
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                            <span className="text-sm font-medium">{promoter.rating}</span>
+                          </div>
                         </div>
-                      </div>
-                      <CardTitle className="text-lg font-bold leading-tight">{promoter.name}</CardTitle>
-                      <div className="flex items-center text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span className="text-sm">{promoter.city}</span>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Events</p>
-                          <p className="font-bold text-lg font-manrope">{promoter.eventsCount}</p>
+                        <CardTitle className="text-lg font-bold leading-tight">{promoter.name}</CardTitle>
+                        <div className="flex items-center text-muted-foreground">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          <span className="text-sm">{promoter.city}</span>
                         </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Revenue</p>
-                          <p className="font-bold text-sm font-manrope text-green-600">
-                            {formatCurrency(promoter.revenue)}
-                          </p>
+                      </CardHeader>
+                      
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-xs text-muted-foreground">Events</p>
+                            <p className="font-bold text-lg font-manrope">{promoter.eventsCount}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">Revenue</p>
+                            <p className="font-bold text-sm font-manrope text-green-600">
+                              {formatCurrency(promoter.revenue)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="w-full bg-muted rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ width: `${Math.min((promoter.eventsCount / 1500) * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-muted-foreground text-center">Activity Level</p>
-                    </CardContent>
-                  </Card>
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div 
+                            className="bg-primary h-2 rounded-full" 
+                            style={{ width: `${Math.min((promoter.eventsCount / 1500) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center">Activity Level</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>

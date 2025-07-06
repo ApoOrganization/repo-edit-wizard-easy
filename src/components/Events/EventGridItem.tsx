@@ -1,9 +1,10 @@
-
 import { Event } from "@/data/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { getVenueIdFromName } from "@/data/venues";
+import { getPromoterIdFromName } from "@/data/promoters";
 
 interface EventGridItemProps {
   event: Event;
@@ -34,8 +35,15 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
   const handleVenueNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const venueId = event.venue.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const venueId = getVenueIdFromName(event.venue);
     navigate(`/venues/${venueId}`);
+  };
+
+  const handlePromoterNavigation = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const promoterId = getPromoterIdFromName(event.promoter);
+    navigate(`/promoters/${promoterId}`);
   };
 
   return (
@@ -73,7 +81,12 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
             
             <div className="flex items-center text-xs text-muted-foreground">
               <Users className="h-3 w-3 mr-2" />
-              <span className="truncate">{event.promoter}</span>
+              <span 
+                className="truncate hover:text-primary transition-colors cursor-pointer"
+                onClick={handlePromoterNavigation}
+              >
+                {event.promoter}
+              </span>
             </div>
           </div>
 
