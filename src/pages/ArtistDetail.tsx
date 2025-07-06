@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockArtists, mockEvents } from "@/data/mockData";
@@ -17,7 +16,9 @@ const ArtistDetail = () => {
     queryKey: ['artist', id],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 300));
-      return mockArtists.find(a => a.id === Number(id));
+      const artistId = parseInt(id || '0');
+      if (isNaN(artistId)) return null;
+      return mockArtists.find(a => a.id === artistId);
     },
   });
 
@@ -25,8 +26,10 @@ const ArtistDetail = () => {
     queryKey: ['artist-events', id],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 200));
+      const artistId = parseInt(id || '0');
+      if (isNaN(artistId)) return [];
       return mockEvents.filter(event => 
-        event.artists.some(a => a.id === Number(id))
+        event.artists.some(a => a.id === artistId)
       );
     },
     enabled: !!id,

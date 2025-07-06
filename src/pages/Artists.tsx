@@ -1,6 +1,6 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { mockArtists } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -190,31 +190,33 @@ const Artists = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {filteredArtists?.map((artist) => (
-                  <Card key={artist.id} className="media-card hover-lift cursor-pointer">
-                    <CardHeader className="pb-3">
-                      <Badge variant="outline" className="text-xs w-fit">{artist.genre}</Badge>
-                      <CardTitle className="text-sm font-bold">{artist.name}</CardTitle>
-                      <p className="text-xs text-muted-foreground">{artist.territory}</p>
-                    </CardHeader>
-                    
-                    <CardContent className="pt-0 space-y-3">
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Agency</span>
-                          <span className="font-medium">{artist.agent}</span>
-                        </div>
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">Monthly Listeners</span>
-                          <span className="font-medium">{formatNumber(artist.monthlyListeners)}</span>
-                        </div>
-                      </div>
+                  <Link key={artist.id} to={`/artists/${artist.id}`}>
+                    <Card className="media-card hover-lift cursor-pointer transition-all duration-200 hover:shadow-lg">
+                      <CardHeader className="pb-3">
+                        <Badge variant="outline" className="text-xs w-fit">{artist.genre}</Badge>
+                        <CardTitle className="text-sm font-bold">{artist.name}</CardTitle>
+                        <p className="text-xs text-muted-foreground">{artist.territory}</p>
+                      </CardHeader>
                       
-                      <Button variant="outline" size="sm" className="w-full">
-                        <User className="h-3 w-3 mr-2" />
-                        View Profile
-                      </Button>
-                    </CardContent>
-                  </Card>
+                      <CardContent className="pt-0 space-y-3">
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Agency</span>
+                            <span className="font-medium">{artist.agent}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Monthly Listeners</span>
+                            <span className="font-medium">{formatNumber(artist.monthlyListeners)}</span>
+                          </div>
+                        </div>
+                        
+                        <Button variant="outline" size="sm" className="w-full">
+                          <User className="h-3 w-3 mr-2" />
+                          View Profile
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -235,12 +237,14 @@ const Artists = () => {
                     <CardContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {agencyArtists.slice(0, 6).map(artist => (
-                          <div key={artist.id} className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30">
-                            <div className="flex-1">
-                              <p className="font-semibold text-sm">{artist.name}</p>
-                              <p className="text-xs text-muted-foreground">{formatNumber(artist.monthlyListeners)} listeners</p>
+                          <Link key={artist.id} to={`/artists/${artist.id}`}>
+                            <div className="flex items-center space-x-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 cursor-pointer transition-colors">
+                              <div className="flex-1">
+                                <p className="font-semibold text-sm hover:text-primary">{artist.name}</p>
+                                <p className="text-xs text-muted-foreground">{formatNumber(artist.monthlyListeners)} listeners</p>
+                              </div>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                       {agencyArtists.length > 6 && (
