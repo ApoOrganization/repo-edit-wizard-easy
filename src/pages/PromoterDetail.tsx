@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { mockPromoters, mockEvents } from "@/data/mockData";
@@ -137,40 +136,40 @@ const PromoterDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
           {/* Left Column - Promoter Overview */}
           <div className="lg:col-span-7">
-            <Card className="media-card h-[480px]">
+            <Card className="media-card h-[480px] overflow-hidden">
               <CardHeader className="pb-4">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
                   Business Overview
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="h-[calc(100%-80px)] overflow-y-auto custom-scrollbar space-y-6 pb-6">
                 {/* Key Metrics Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                    <Calendar className="h-8 w-8 text-blue-500" />
-                    <div>
+                    <Calendar className="h-8 w-8 text-blue-500 flex-shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Monthly Avg Events</p>
-                      <p className="text-xl font-bold font-manrope">{monthlyAverage}</p>
+                      <p className="text-xl font-bold font-manrope truncate">{monthlyAverage}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                    <DollarSign className="h-8 w-8 text-green-500" />
-                    <div>
+                    <DollarSign className="h-8 w-8 text-green-500 flex-shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Avg Ticket Price</p>
-                      <p className="text-xl font-bold font-manrope">{formatCurrency(avgTicketPrice)}</p>
+                      <p className="text-xl font-bold font-manrope truncate">{formatCurrency(avgTicketPrice)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                    <TrendingUp className="h-8 w-8 text-purple-500" />
-                    <div>
+                    <TrendingUp className="h-8 w-8 text-purple-500 flex-shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Total Revenue</p>
-                      <p className="text-xl font-bold font-manrope">{formatCurrency(promoter.revenue)}</p>
+                      <p className="text-xl font-bold font-manrope truncate">{formatCurrency(promoter.revenue)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
-                    <BarChart3 className="h-8 w-8 text-orange-500" />
-                    <div>
+                    <BarChart3 className="h-8 w-8 text-orange-500 flex-shrink-0" />
+                    <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Success Rate</p>
                       <p className="text-xl font-bold font-manrope">{successRate}%</p>
                     </div>
@@ -183,11 +182,11 @@ const PromoterDetail = () => {
                     <Building2 className="h-4 w-4" />
                     Most Used Venues
                   </h3>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                     {topVenues.slice(0, 4).map(([venue, count]) => (
                       <div key={venue} className="flex justify-between items-center p-2 bg-muted/20 rounded">
-                        <span className="text-sm font-medium">{venue}</span>
-                        <Badge variant="outline" className="text-xs">{count} events</Badge>
+                        <span className="text-sm font-medium truncate flex-1 mr-2">{venue}</span>
+                        <Badge variant="outline" className="text-xs flex-shrink-0">{count} events</Badge>
                       </div>
                     ))}
                   </div>
@@ -199,7 +198,7 @@ const PromoterDetail = () => {
                     <Users className="h-4 w-4" />
                     Top Artist Collaborations
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto custom-scrollbar">
                     {topArtists.slice(0, 6).map(([artist, count]) => (
                       <Badge key={artist} variant="outline" className="text-xs">
                         {artist} ({count})
