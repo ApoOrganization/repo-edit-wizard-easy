@@ -20,7 +20,18 @@ const getBasicVenueData = async (venueId: string) => {
 
 // Transform basic venue data to analytics format
 const transformToVenueAnalyticsFormat = (basicData: any): VenueAnalyticsResponse => {
-  return {
+  console.log('🔄 [VENUE ANALYTICS] Transforming basic data to analytics format:', {
+    hasBasicData: !!basicData,
+    basicDataKeys: basicData ? Object.keys(basicData) : [],
+    id: basicData?.id,
+    name: basicData?.name,
+    city: basicData?.city,
+    capacity: basicData?.capacity,
+    totalEvents: basicData?.total_events,
+    avgPrice: basicData?.avg_ticket_price
+  });
+  
+  const transformed = {
     venue: {
       id: basicData?.id || '',
       name: basicData?.name || 'Unknown Venue',
@@ -54,9 +65,17 @@ const transformToVenueAnalyticsFormat = (basicData: any): VenueAnalyticsResponse
     },
     timeSeries: []
   };
+  
+  console.log('✅ [VENUE ANALYTICS] Transformation completed:', {
+    venue: transformed.venue.name,
+    hasEventStats: !!transformed.venue.event_stats,
+    totalEvents: transformed.venue.event_stats.total_events
+  });
+  
+  return transformed;
 };
 
-// Main venue analytics hook with robust error handling
+// Main venue analytics hook with enhanced debugging
 export const useVenueAnalytics = (
   venueId: string | undefined,
   timeRange: 'month' | 'quarter' | 'year' | 'all' = 'year',
@@ -69,28 +88,62 @@ export const useVenueAnalytics = (
         throw new Error('Venue ID is required');
       }
       
-      console.log('🏟️ Fetching analytics for venue:', { venueId, timeRange, compareWith });
+      const startTime = Date.now();
+      console.log('🏟️ [VENUE ANALYTICS] Starting request:', {
+        venueId,
+        timeRange,
+        compareWith,
+        timestamp: new Date().toISOString()
+      });
       
       try {
+        // Prepare request body
+        const requestBody = {
+          venueId,
+          timeRange,
+          compareWith
+        };
+        
+        console.log('📤 [VENUE ANALYTICS] Request body:', JSON.stringify(requestBody, null, 2));
+        
         // Try analytics function first
+        const requestStartTime = Date.now();
         const { data, error } = await supabase.functions.invoke('venue-analytics', {
-          body: {
-            venueId,
-            timeRange,
-            compareWith
-          }
+          body: requestBody
         });
+        
+        const requestDuration = Date.now() - requestStartTime;
+        console.log('⏱️ [VENUE ANALYTICS] Request completed in:', requestDuration + 'ms');
 
         if (error) {
-          console.error('❌ Venue analytics function error:', {
+          console.error('❌ [VENUE ANALYTICS] Edge Function error:', {
             venueId,
-            error: error.message,
-            status: error.context?.res?.status
+            error: {
+              message: error.message,
+              name: error.name,
+              context: error.context,
+              stack: error.stack
+            },
+            status: error.context?.res?.status,
+            headers: error.context?.res?.headers,
+            requestDuration
           });
           
           // Check if it's a 500 error or other server error
           if (error.context?.res?.status >= 500) {
-            console.warn('🔄 Server error detected, falling back to basic venue data');
+            console.warn('🔄 [VENUE ANALYTICS] Server error detected (status >= 500), falling back to basic venue data');
+            const fallbackData = await getBasicVenueData(venueId);
+            const transformedData = transformToVenueAnalyticsFormat(fallbackData);
+            console.log('✅ [VENUE ANALYTICS] Fallback transformation successful:', {
+              venue: transformedData.venue.name,
+              hasAnalytics: !!transformedData.analytics
+            });
+            return transformedData;
+          }
+          
+          // Check for CORS or other network errors
+          if (error.name === 'FunctionsFetchError') {
+            console.error('🌐 [VENUE ANALYTICS] Network/CORS error detected, falling back');
             const fallbackData = await getBasicVenueData(venueId);
             return transformToVenueAnalyticsFormat(fallbackData);
           }
@@ -98,35 +151,121 @@ export const useVenueAnalytics = (
           throw new Error(`Venue analytics function failed: ${error.message}`);
         }
 
-        if (!data || !data.venue) {
-          console.warn('⚠️ No venue data returned, falling back to basic data');
+        console.log('📥 [VENUE ANALYTICS] Raw response received:', {
+          dataType: typeof data,
+          hasData: !!data,
+          dataKeys: data ? Object.keys(data) : [],
+          dataStructure: data ? {
+            hasVenue: !!data.venue,
+            hasAnalytics: !!data.analytics,
+            hasTimeSeries: !!data.timeSeries,
+            venueKeys: data.venue ? Object.keys(data.venue) : [],
+            analyticsKeys: data.analytics ? Object.keys(data.analytics) : [],
+            timeSeriesLength: data.timeSeries ? data.timeSeries.length : 0
+          } : null
+        });
+
+        // Validate response structure
+        if (!data) {
+          console.warn('⚠️ [VENUE ANALYTICS] Null/undefined response, falling back to basic data');
           const fallbackData = await getBasicVenueData(venueId);
           return transformToVenueAnalyticsFormat(fallbackData);
         }
 
-        console.log('✅ Venue analytics data loaded successfully for:', data.venue.name);
+        if (!data.venue) {
+          console.warn('⚠️ [VENUE ANALYTICS] No venue property in response, falling back to basic data');
+          console.log('📋 [VENUE ANALYTICS] Full response for debugging:', JSON.stringify(data, null, 2));
+          const fallbackData = await getBasicVenueData(venueId);
+          return transformToVenueAnalyticsFormat(fallbackData);
+        }
+
+        // Validate venue data structure
+        const venue = data.venue;
+        console.log('🏛️ [VENUE ANALYTICS] Venue data validation:', {
+          hasId: !!venue.id,
+          hasName: !!venue.name,
+          hasCity: !!venue.city,
+          hasCapacity: venue.capacity !== undefined,
+          hasEventStats: !!venue.event_stats,
+          hasUtilizationMetrics: !!venue.utilization_metrics,
+          hasPricingAnalytics: !!venue.pricing_analytics,
+          hasTopArtists: !!venue.top_artists,
+          hasDayDistribution: !!venue.day_of_week_distribution
+        });
+
+        // Validate analytics data
+        const analytics = data.analytics;
+        console.log('📊 [VENUE ANALYTICS] Analytics data validation:', {
+          hasAnalytics: !!analytics,
+          hasTimeRange: analytics?.timeRange,
+          hasUniqueArtists: analytics?.uniqueArtists !== undefined,
+          hasArtistReturnRate: analytics?.artistReturnRate !== undefined,
+          hasPeakDays: !!analytics?.peakDays,
+          peakDaysLength: analytics?.peakDays?.length || 0
+        });
+
+        // Validate time series data
+        const timeSeries = data.timeSeries;
+        console.log('📈 [VENUE ANALYTICS] Time series validation:', {
+          hasTimeSeries: !!timeSeries,
+          isArray: Array.isArray(timeSeries),
+          length: timeSeries?.length || 0,
+          firstItem: timeSeries?.[0] ? Object.keys(timeSeries[0]) : []
+        });
+
+        const totalDuration = Date.now() - startTime;
+        console.log('✅ [VENUE ANALYTICS] Analytics data loaded successfully:', {
+          venue: venue.name,
+          city: venue.city,
+          totalEvents: venue.event_stats?.total_events,
+          uniqueArtists: analytics?.uniqueArtists,
+          timeSeriesPoints: timeSeries?.length,
+          totalDuration: totalDuration + 'ms'
+        });
+        
         return data;
         
       } catch (analyticsError: any) {
-        console.error('💥 Venue analytics function completely failed:', {
+        const totalDuration = Date.now() - startTime;
+        console.error('💥 [VENUE ANALYTICS] Function completely failed:', {
           venueId,
-          error: analyticsError.message
+          error: {
+            message: analyticsError.message,
+            name: analyticsError.name,
+            stack: analyticsError.stack
+          },
+          totalDuration: totalDuration + 'ms'
         });
         
         // Fall back to basic venue data
         try {
-          console.log('🔄 Attempting fallback to basic venue data...');
+          console.log('🔄 [VENUE ANALYTICS] Attempting fallback to basic venue data...');
+          const fallbackStartTime = Date.now();
           const fallbackData = await getBasicVenueData(venueId);
-          console.log('✅ Fallback venue data loaded successfully');
-          return transformToVenueAnalyticsFormat(fallbackData);
+          const fallbackDuration = Date.now() - fallbackStartTime;
+          
+          console.log('📋 [VENUE ANALYTICS] Fallback data received:', {
+            hasData: !!fallbackData,
+            fallbackKeys: fallbackData ? Object.keys(fallbackData) : [],
+            fallbackDuration: fallbackDuration + 'ms'
+          });
+          
+          const transformedData = transformToVenueAnalyticsFormat(fallbackData);
+          console.log('✅ [VENUE ANALYTICS] Fallback venue data loaded successfully:', {
+            venue: transformedData.venue.name,
+            isFallback: true
+          });
+          return transformedData;
         } catch (fallbackError: any) {
-          console.error('💥 Both analytics and fallback failed:', {
+          console.error('💥 [VENUE ANALYTICS] Both analytics and fallback failed:', {
             venueId,
             analyticsError: analyticsError.message,
-            fallbackError: fallbackError.message
+            fallbackError: fallbackError.message,
+            totalDuration: (Date.now() - startTime) + 'ms'
           });
           
           // Return minimal data structure to prevent complete failure
+          console.log('🚨 [VENUE ANALYTICS] Returning minimal error data structure');
           return {
             venue: {
               id: venueId,
@@ -153,6 +292,13 @@ export const useVenueAnalytics = (
     enabled: !!venueId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error: any) => {
+      console.log('🔄 [VENUE ANALYTICS] Retry decision:', {
+        failureCount,
+        errorStatus: error?.context?.res?.status,
+        errorName: error?.name,
+        willRetry: !(error?.context?.res?.status >= 400 && error?.context?.res?.status < 500) && failureCount < 3
+      });
+      
       // Don't retry on 404 or 400 errors (client errors)
       if (error?.context?.res?.status >= 400 && error?.context?.res?.status < 500) {
         return false;
@@ -160,15 +306,30 @@ export const useVenueAnalytics = (
       // Retry up to 3 times for server errors
       return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    retryDelay: (attemptIndex) => {
+      const delay = Math.min(1000 * 2 ** attemptIndex, 30000);
+      console.log('⏳ [VENUE ANALYTICS] Retry delay:', { attemptIndex, delay: delay + 'ms' });
+      return delay;
+    }
   });
 };
 
 // Hook to check if venue analytics data is from fallback
 export const useIsVenueAnalyticsFallback = (analyticsData: VenueAnalyticsResponse | undefined) => {
-  return analyticsData?.venue?.name === 'Unknown Venue' || 
-         analyticsData?.analytics?.uniqueArtists === 0 && 
-         analyticsData?.timeSeries?.length === 0;
+  const isFallback = analyticsData?.venue?.name === 'Unknown Venue' || 
+                    (analyticsData?.analytics?.uniqueArtists === 0 && 
+                     analyticsData?.timeSeries?.length === 0);
+  
+  if (analyticsData) {
+    console.log('🔍 [VENUE ANALYTICS] Fallback detection:', {
+      venueName: analyticsData.venue?.name,
+      uniqueArtists: analyticsData.analytics?.uniqueArtists,
+      timeSeriesLength: analyticsData.timeSeries?.length,
+      isFallback
+    });
+  }
+  
+  return isFallback;
 };
 
 // Hook to check if venue analytics data is error state
