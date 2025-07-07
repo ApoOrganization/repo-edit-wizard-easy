@@ -12,13 +12,13 @@ export const transformPromoterFromDB = (dbPromoter: PromoterListItem): Transform
     const eventScore = Math.min(promoter.total_events / 500, 1) * 2;
     score += eventScore;
     
-    // Revenue factor (0-2 points)
-    const revenueScore = promoter.total_revenue ? Math.min(promoter.total_revenue / 10000000, 1) * 2 : 0;
-    score += revenueScore;
-    
-    // Venue diversity factor (0-1 point)
-    const venueScore = Math.min(promoter.venues_used / 50, 1);
+    // Venue diversity factor (0-2 points)
+    const venueScore = Math.min(promoter.venues_used / 50, 1) * 2;
     score += venueScore;
+    
+    // Artist diversity factor (0-1 point)
+    const artistScore = Math.min(promoter.unique_artists_count / 100, 1);
+    score += artistScore;
     
     return Math.round(score * 10) / 10; // Round to 1 decimal place
   };
@@ -26,14 +26,14 @@ export const transformPromoterFromDB = (dbPromoter: PromoterListItem): Transform
   return {
     id: dbPromoter.id,
     name: dbPromoter.name,
-    city: dbPromoter.city || 'Unknown',
-    specialty: dbPromoter.specialty || 'General',
+    city: dbPromoter.cities?.[0] || 'Unknown',
+    specialty: dbPromoter.scale_tier || dbPromoter.activity_status || 'General',
     eventsCount: dbPromoter.total_events,
     upcomingEvents: dbPromoter.upcoming_events,
     venuesUsed: dbPromoter.venues_used,
-    genresPromoted: dbPromoter.genres_promoted,
-    revenue: dbPromoter.total_revenue || 0,
-    avgEventRevenue: dbPromoter.avg_event_revenue || 0,
+    genresPromoted: dbPromoter.genres_count,
+    revenue: 0, // Not available in real schema
+    avgEventRevenue: 0, // Not available in real schema
     rating: calculateRating(dbPromoter)
   };
 };
@@ -44,25 +44,31 @@ export const usePromoterSearch = (params: PromoterSearchParams) => {
     queryFn: async () => {
       console.log('Searching promoters with params:', params);
 
-      // Use direct Supabase query with specific fields to improve performance
+      // Use direct Supabase query with correct fields from real schema
       let query = supabase
         .from('promoter_list_summary')
-        .select('id, name, normalized_name, city, specialty, total_events, upcoming_events, venues_used, genres_promoted, total_revenue, avg_event_revenue', { count: 'exact' });
+        .select('id, name, instagram_link, created_at, total_events, upcoming_events, past_events, recent_events, venues_used, genres_count, cities_count, cities, genres_promoted, unique_artists_count, top_artists, activity_status, scale_tier, last_event_date, next_event_date', { count: 'exact' });
 
-      // Search filter across name, city, and specialty
+      // Search filter across name and activity status
       if (params.searchTerm) {
         const searchTerm = params.searchTerm.trim();
-        query = query.or(`name.ilike.%${searchTerm}%,city.ilike.%${searchTerm}%,specialty.ilike.%${searchTerm}%`);
+        query = query.or(`name.ilike.%${searchTerm}%,activity_status.ilike.%${searchTerm}%,scale_tier.ilike.%${searchTerm}%`);
       }
 
-      // City filter
+      // City filter (searches within cities array)
       if (params.cities && params.cities.length > 0) {
-        query = query.in('city', params.cities);
+        // For array columns, we need to use overlap operator
+        query = query.overlaps('cities', params.cities);
       }
 
-      // Specialty filter
-      if (params.specialties && params.specialties.length > 0) {
-        query = query.in('specialty', params.specialties);
+      // Activity Status filter
+      if (params.activityStatuses && params.activityStatuses.length > 0) {
+        query = query.in('activity_status', params.activityStatuses);
+      }
+
+      // Scale Tier filter
+      if (params.scaleTiers && params.scaleTiers.length > 0) {
+        query = query.in('scale_tier', params.scaleTiers);
       }
 
       // Event count range filter
@@ -75,13 +81,13 @@ export const usePromoterSearch = (params: PromoterSearchParams) => {
         }
       }
 
-      // Revenue range filter (handle nulls)
-      if (params.revenueRange) {
-        if (params.revenueRange.min !== undefined) {
-          query = query.gte('total_revenue', params.revenueRange.min);
+      // Venues used range filter
+      if (params.venuesUsedRange) {
+        if (params.venuesUsedRange.min !== undefined) {
+          query = query.gte('venues_used', params.venuesUsedRange.min);
         }
-        if (params.revenueRange.max !== undefined) {
-          query = query.lte('total_revenue', params.revenueRange.max);
+        if (params.venuesUsedRange.max !== undefined) {
+          query = query.lte('venues_used', params.venuesUsedRange.max);
         }
       }
 
@@ -135,8 +141,8 @@ export const usePromoterFilterOptions = () => {
       // Get promoters for filter data with limit to prevent timeout
       const { data: promoters, error } = await supabase
         .from('promoter_list_summary')
-        .select('city, specialty, total_events, total_revenue')
-        .not('city', 'is', null)
+        .select('cities, activity_status, scale_tier, total_events, venues_used')
+        .not('activity_status', 'is', null)
         .limit(1000);
 
       if (error) {
@@ -144,18 +150,31 @@ export const usePromoterFilterOptions = () => {
         throw error;
       }
 
-      // Extract unique cities
-      const cities = [...new Set(
+      // Extract unique cities from cities arrays
+      const citySet = new Set<string>();
+      promoters?.forEach(promoter => {
+        if (Array.isArray(promoter.cities)) {
+          promoter.cities.forEach(city => {
+            if (city && city.trim()) {
+              citySet.add(city);
+            }
+          });
+        }
+      });
+      const cities = Array.from(citySet).sort();
+
+      // Extract unique activity statuses
+      const activityStatuses = [...new Set(
         promoters
-          ?.map(p => p.city)
+          ?.map(p => p.activity_status)
           .filter(Boolean)
           .sort()
       )] as string[];
 
-      // Extract unique specialties
-      const specialties = [...new Set(
+      // Extract unique scale tiers
+      const scaleTiers = [...new Set(
         promoters
-          ?.map(p => p.specialty)
+          ?.map(p => p.scale_tier)
           .filter(Boolean)
           .sort()
       )] as string[];
@@ -167,25 +186,27 @@ export const usePromoterFilterOptions = () => {
       const minEventCount = eventCounts.length > 0 ? Math.min(...eventCounts) : 0;
       const maxEventCount = eventCounts.length > 0 ? Math.max(...eventCounts) : 1000;
 
-      // Calculate revenue range (excluding nulls)
-      const revenues = promoters
-        ?.map(p => p.total_revenue)
-        .filter((r): r is number => r !== null && r !== undefined) || [];
-      const minRevenue = revenues.length > 0 ? Math.min(...revenues) : 0;
-      const maxRevenue = revenues.length > 0 ? Math.max(...revenues) : 50000000;
+      // Calculate venues used range
+      const venuesUsed = promoters
+        ?.map(p => p.venues_used)
+        .filter((v): v is number => v !== null && v !== undefined) || [];
+      const minVenuesUsed = venuesUsed.length > 0 ? Math.min(...venuesUsed) : 0;
+      const maxVenuesUsed = venuesUsed.length > 0 ? Math.max(...venuesUsed) : 100;
 
       console.log('Filter options extracted:', { 
         cities: cities.length, 
-        specialties: specialties.length,
+        activityStatuses: activityStatuses.length,
+        scaleTiers: scaleTiers.length,
         eventCountRange: { min: minEventCount, max: maxEventCount },
-        revenueRange: { min: minRevenue, max: maxRevenue }
+        venuesUsedRange: { min: minVenuesUsed, max: maxVenuesUsed }
       });
 
       return {
         cities,
-        specialties,
+        activityStatuses,
+        scaleTiers,
         eventCountRange: { min: minEventCount, max: maxEventCount },
-        revenueRange: { min: minRevenue, max: maxRevenue }
+        venuesUsedRange: { min: minVenuesUsed, max: maxVenuesUsed }
       };
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -227,10 +248,11 @@ export const getPromoterSpecialtyBadgeVariant = (specialty: string | null) => {
   
   const specialtyLower = specialty.toLowerCase();
   
-  if (specialtyLower.includes('festival')) return 'default';
-  if (specialtyLower.includes('tour')) return 'secondary';
-  if (specialtyLower.includes('concert')) return 'outline';
-  if (specialtyLower.includes('club')) return 'destructive';
+  // Map scale_tier and activity_status to badge variants
+  if (specialtyLower.includes('large') || specialtyLower.includes('major')) return 'default';
+  if (specialtyLower.includes('medium') || specialtyLower.includes('active')) return 'secondary';
+  if (specialtyLower.includes('small') || specialtyLower.includes('emerging')) return 'outline';
+  if (specialtyLower.includes('inactive') || specialtyLower.includes('dormant')) return 'destructive';
   
   return 'outline';
 };

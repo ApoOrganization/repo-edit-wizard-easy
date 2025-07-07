@@ -1,16 +1,24 @@
-// Promoter List Item Interface (from promoter_list_summary view)
+// Promoter List Item Interface (from promoter_list_summary view - REAL SCHEMA)
 export interface PromoterListItem {
   id: string;
   name: string;
-  normalized_name: string;
-  city: string | null;
-  specialty: string | null;
+  instagram_link: string | null;
+  created_at: string;
   total_events: number;
-  upcoming_events: number;
   venues_used: number;
-  genres_promoted: number;
-  total_revenue: number | null;
-  avg_event_revenue: number | null;
+  genres_count: number;
+  cities_count: number;
+  cities: string[];
+  genres_promoted: string[];
+  upcoming_events: number;
+  past_events: number;
+  recent_events: number;
+  last_event_date: string | null;
+  next_event_date: string | null;
+  unique_artists_count: number;
+  top_artists: any; // JSONB
+  activity_status: string | null;
+  scale_tier: string | null;
 }
 
 // Transform to UI-friendly format (matching existing mock data structure)
@@ -28,20 +36,21 @@ export interface TransformedPromoter {
   rating: number; // Calculated from performance metrics
 }
 
-// Search Parameters Interface
+// Search Parameters Interface (Updated for Real Schema)
 export interface PromoterSearchParams {
   searchTerm?: string;
   cities?: string[];
-  specialties?: string[];
+  activityStatuses?: string[];
+  scaleTiers?: string[];
   eventCountRange?: {
     min?: number;
     max?: number;
   };
-  revenueRange?: {
+  venuesUsedRange?: {
     min?: number;
     max?: number;
   };
-  sortBy?: 'name' | 'total_events' | 'upcoming_events' | 'total_revenue' | 'avg_event_revenue' | 'venues_used';
+  sortBy?: 'name' | 'total_events' | 'upcoming_events' | 'venues_used' | 'unique_artists_count' | 'genres_count';
   sortOrder?: 'asc' | 'desc';
   page?: number;
   limit?: number;
@@ -58,15 +67,16 @@ export interface PromoterSearchResponse {
   };
 }
 
-// Filter Options Interface
+// Filter Options Interface (Updated for Real Schema)
 export interface PromoterFilterOptions {
   cities: string[];
-  specialties: string[];
+  activityStatuses: string[];
+  scaleTiers: string[];
   eventCountRange: {
     min: number;
     max: number;
   };
-  revenueRange: {
+  venuesUsedRange: {
     min: number;
     max: number;
   };

@@ -18,7 +18,8 @@ const Promoters = () => {
     search: '',
     sortBy: 'total_events',
     cities: [],
-    specialties: [],
+    activityStatuses: [],
+    scaleTiers: [],
   });
 
   // Convert filters to search params
@@ -35,7 +36,8 @@ const Promoters = () => {
     setSearchParams({
       searchTerm: (filters.search as string) || '',
       cities: (filters.cities as string[]).length > 0 ? (filters.cities as string[]) : undefined,
-      specialties: (filters.specialties as string[]).length > 0 ? (filters.specialties as string[]) : undefined,
+      activityStatuses: (filters.activityStatuses as string[]).length > 0 ? (filters.activityStatuses as string[]) : undefined,
+      scaleTiers: (filters.scaleTiers as string[]).length > 0 ? (filters.scaleTiers as string[]) : undefined,
       sortBy: filters.sortBy as string || 'total_events',
       sortOrder: 'desc',
       page: 1,
@@ -87,14 +89,27 @@ const Promoters = () => {
       defaultOpen: true,
     },
     {
-      key: "specialties",
-      title: "Specialties",
+      key: "activityStatuses",
+      title: "Activity Status",
       type: "checkbox",
-      icon: "music",
-      options: (filterOptions?.specialties || []).map(specialty => ({
-        value: specialty,
-        label: specialty,
-        count: promoters?.filter(p => p.specialty === specialty).length || 0,
+      icon: "activity",
+      options: (filterOptions?.activityStatuses || []).map(status => ({
+        value: status,
+        label: status,
+        count: promoters?.filter(p => p.specialty?.includes(status)).length || 0,
+      })),
+      collapsible: true,
+      defaultOpen: false,
+    },
+    {
+      key: "scaleTiers",
+      title: "Scale Tier",
+      type: "checkbox",
+      icon: "trending-up",
+      options: (filterOptions?.scaleTiers || []).map(tier => ({
+        value: tier,
+        label: tier,
+        count: promoters?.filter(p => p.specialty?.includes(tier)).length || 0,
       })),
       collapsible: true,
       defaultOpen: false,
@@ -218,9 +233,9 @@ const Promoters = () => {
                             <p className="font-bold text-lg font-manrope">{promoter.eventsCount}</p>
                           </div>
                           <div>
-                            <p className="text-xs text-muted-foreground">Revenue</p>
+                            <p className="text-xs text-muted-foreground">Venues Used</p>
                             <p className="font-bold text-sm font-manrope text-green-600">
-                              {formatRevenue(promoter.revenue)}
+                              {promoter.venuesUsed}
                             </p>
                           </div>
                         </div>
@@ -276,12 +291,12 @@ const Promoters = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-purple-100 text-sm font-medium">Total Revenue</p>
+                        <p className="text-purple-100 text-sm font-medium">Total Venues Used</p>
                         <p className="text-3xl font-bold text-white font-manrope">
-                          {formatRevenue(promoters?.reduce((sum, promoter) => sum + promoter.revenue, 0) || 0)}
+                          {promoters?.reduce((sum, promoter) => sum + promoter.venuesUsed, 0) || 0}
                         </p>
                       </div>
-                      <DollarSign className="h-8 w-8 text-purple-200" />
+                      <Building2 className="h-8 w-8 text-purple-200" />
                     </div>
                   </CardContent>
                 </Card>
@@ -309,12 +324,12 @@ const Promoters = () => {
                 <CardContent>
                   <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={promoters}>
+                      <BarChart data={promoters?.slice(0, 10)}>
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                         <XAxis dataKey="name" />
-                        <YAxis tickFormatter={(value) => `$${value / 1000000}M`} />
-                        <Tooltip formatter={(value: any) => [formatRevenue(value), 'Revenue']} />
-                        <Bar dataKey="revenue" fill="#3B82F6" />
+                        <YAxis />
+                        <Tooltip formatter={(value: any) => [value, 'Events']} />
+                        <Bar dataKey="eventsCount" fill="#3B82F6" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
