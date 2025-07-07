@@ -108,12 +108,27 @@ export const useVenueAnalytics = (
         
         // Try analytics function first
         const requestStartTime = Date.now();
+        console.log('🌐 [VENUE ANALYTICS] Making Edge Function request:', {
+          url: 'venue-analytics',
+          method: 'POST',
+          headers: 'Supabase managed',
+          bodyStringified: JSON.stringify(requestBody),
+          timestamp: new Date().toISOString()
+        });
+        
         const { data, error } = await supabase.functions.invoke('venue-analytics', {
           body: requestBody
         });
         
         const requestDuration = Date.now() - requestStartTime;
-        console.log('⏱️ [VENUE ANALYTICS] Request completed in:', requestDuration + 'ms');
+        console.log('⏱️ [VENUE ANALYTICS] Request completed:', {
+          duration: requestDuration + 'ms',
+          hasError: !!error,
+          hasData: !!data,
+          errorType: error?.name,
+          statusCode: error?.context?.res?.status,
+          timestamp: new Date().toISOString()
+        });
 
         if (error) {
           console.error('❌ [VENUE ANALYTICS] Edge Function error:', {
@@ -155,13 +170,18 @@ export const useVenueAnalytics = (
           dataType: typeof data,
           hasData: !!data,
           dataKeys: data ? Object.keys(data) : [],
+          dataStringified: data ? JSON.stringify(data, null, 2).substring(0, 500) + '...' : null,
           dataStructure: data ? {
             hasVenue: !!data.venue,
             hasAnalytics: !!data.analytics,
             hasTimeSeries: !!data.timeSeries,
             venueKeys: data.venue ? Object.keys(data.venue) : [],
             analyticsKeys: data.analytics ? Object.keys(data.analytics) : [],
-            timeSeriesLength: data.timeSeries ? data.timeSeries.length : 0
+            timeSeriesLength: data.timeSeries ? data.timeSeries.length : 0,
+            venueId: data.venue?.id,
+            venueName: data.venue?.name,
+            analyticsTimeRange: data.analytics?.timeRange,
+            analyticsUniqueArtists: data.analytics?.uniqueArtists
           } : null
         });
 
@@ -221,6 +241,26 @@ export const useVenueAnalytics = (
           uniqueArtists: analytics?.uniqueArtists,
           timeSeriesPoints: timeSeries?.length,
           totalDuration: totalDuration + 'ms'
+        });
+        
+        // CRITICAL: Log exactly what we're returning to detect fallback later
+        console.log('🔍 [VENUE ANALYTICS] FINAL RETURN DATA PREVIEW:', {
+          isFromEdgeFunction: true,
+          venue: {
+            id: data.venue?.id,
+            name: data.venue?.name,
+            hasEventStats: !!data.venue?.event_stats,
+            totalEvents: data.venue?.event_stats?.total_events
+          },
+          analytics: {
+            timeRange: data.analytics?.timeRange,
+            uniqueArtists: data.analytics?.uniqueArtists,
+            hasNonZeroArtists: (data.analytics?.uniqueArtists || 0) > 0
+          },
+          timeSeries: {
+            length: data.timeSeries?.length || 0,
+            hasData: (data.timeSeries?.length || 0) > 0
+          }
         });
         
         return data;
@@ -316,18 +356,36 @@ export const useVenueAnalytics = (
 
 // Hook to check if venue analytics data is from fallback
 export const useIsVenueAnalyticsFallback = (analyticsData: VenueAnalyticsResponse | undefined) => {
-  const isFallback = analyticsData?.venue?.name === 'Unknown Venue' || 
-                    (analyticsData?.analytics?.uniqueArtists === 0 && 
-                     analyticsData?.timeSeries?.length === 0);
-  
-  if (analyticsData) {
-    console.log('🔍 [VENUE ANALYTICS] Fallback detection:', {
-      venueName: analyticsData.venue?.name,
-      uniqueArtists: analyticsData.analytics?.uniqueArtists,
-      timeSeriesLength: analyticsData.timeSeries?.length,
-      isFallback
-    });
+  if (!analyticsData) {
+    console.log('🔍 [VENUE ANALYTICS] Fallback detection: No data available');
+    return true;
   }
+  
+  // Enhanced fallback detection criteria
+  const indicators = {
+    unknownVenueName: analyticsData.venue?.name === 'Unknown Venue',
+    zeroUniqueArtists: analyticsData.analytics?.uniqueArtists === 0,
+    emptyTimeSeries: (analyticsData.timeSeries?.length || 0) === 0,
+    missingTopArtists: !analyticsData.venue?.top_artists || analyticsData.venue.top_artists.length === 0,
+    missingDayDistribution: !analyticsData.venue?.day_of_week_distribution || analyticsData.venue.day_of_week_distribution.length === 0,
+    zeroCapacityUtilization: analyticsData.venue?.utilization_metrics?.capacity_utilization === 0,
+    emptyPeakMonths: !analyticsData.venue?.utilization_metrics?.peak_months || analyticsData.venue.utilization_metrics.peak_months.length === 0
+  };
+  
+  // Consider it fallback if multiple indicators are true
+  const fallbackIndicatorCount = Object.values(indicators).filter(Boolean).length;
+  const isFallback = indicators.unknownVenueName || 
+                    (indicators.zeroUniqueArtists && indicators.emptyTimeSeries) ||
+                    fallbackIndicatorCount >= 3;
+  
+  console.log('🔍 [VENUE ANALYTICS] Enhanced fallback detection:', {
+    venueName: analyticsData.venue?.name,
+    venueId: analyticsData.venue?.id,
+    indicators,
+    fallbackIndicatorCount,
+    isFallback,
+    dataSource: isFallback ? 'FALLBACK (venue_list_summary)' : 'EDGE FUNCTION (venue-analytics)'
+  });
   
   return isFallback;
 };

@@ -37,13 +37,27 @@ const VenueDetail = () => {
   const isErrorState = useIsVenueAnalyticsError(analyticsData);
   const hasFullAnalytics = !isFallbackData && !isErrorState && analytics;
   
-  console.log('🏟️ Venue Detail Status:', {
+  console.log('🏟️ [VENUE DETAIL] Component Status:', {
     venueId: id,
     venueName: venue?.name,
-    isFallbackData,
-    isErrorState,
-    hasFullAnalytics,
-    timeRange
+    timeRange,
+    dataStatus: {
+      isLoading,
+      hasError: !!error,
+      hasAnalyticsData: !!analyticsData,
+      hasVenue: !!venue,
+      isFallbackData,
+      isErrorState,
+      hasFullAnalytics
+    },
+    dataOverview: analyticsData ? {
+      venueEventStats: venue?.event_stats,
+      analyticsTimeRange: analytics?.timeRange,
+      analyticsUniqueArtists: analytics?.uniqueArtists,
+      timeSeriesLength: timeSeries?.length,
+      topArtistsCount: venue?.top_artists?.length || 0,
+      dayDistributionCount: venue?.day_of_week_distribution?.length || 0
+    } : null
   });
 
   // Helper functions
