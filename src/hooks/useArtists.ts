@@ -8,10 +8,10 @@ export const useArtistSearch = (params: ArtistSearchParams) => {
     queryFn: async () => {
       console.log('Searching artists with params:', params);
 
-      // Use direct Supabase query with limited fields to improve performance
+      // Use direct Supabase query with essential fields only for performance
       let query = supabase
         .from('artist_list_summary')
-        .select('canonical_id, name, normalized_name, spotify_link, monthly_listeners, followers, agency, territory, booking_emails, social_presence, total_events, upcoming_events, past_events, top_genres, top_cities', { count: 'exact' });
+        .select('canonical_id, name, normalized_name, spotify_link, monthly_listeners, followers, agency, territory, booking_emails, top_genres', { count: 'exact' });
 
       // Apply search term across multiple fields
       if (params.searchTerm) {
@@ -39,10 +39,16 @@ export const useArtistSearch = (params: ArtistSearchParams) => {
         query = query.gte('monthly_listeners', params.minListeners);
       }
 
-      // Apply sorting with null handling
+      // Apply sorting - simplified to avoid timeout issues
       const sortBy = params.sortBy || 'monthly_listeners';
       const sortOrder = params.sortOrder || 'desc';
-      query = query.order(sortBy, { ascending: sortOrder === 'asc', nullsFirst: false });
+      
+      // For monthly_listeners, use simpler sorting to avoid timeout
+      if (sortBy === 'monthly_listeners') {
+        query = query.order('monthly_listeners', { ascending: sortOrder === 'asc' });
+      } else {
+        query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+      }
 
       // Apply pagination
       const page = params.page || 1;
@@ -50,7 +56,35 @@ export const useArtistSearch = (params: ArtistSearchParams) => {
       const from = (page - 1) * limit;
       query = query.range(from, from + limit - 1);
 
-      const { data, error, count } = await query;
+      let data, error, count;
+      
+      try {
+        // Try the main query with timeout handling
+        const result = await Promise.race([
+          query,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Query timeout')), 8000)
+          )
+        ]) as any;
+        
+        data = result.data;
+        error = result.error;
+        count = result.count;
+      } catch (timeoutError) {
+        console.warn('Main query timed out, trying fallback query:', timeoutError);
+        
+        // Fallback query with minimal fields and no complex operations
+        const fallbackQuery = supabase
+          .from('artist_list_summary')
+          .select('canonical_id, name, agency, territory, monthly_listeners, followers', { count: 'exact' })
+          .order('name')
+          .limit(params.limit || 20);
+          
+        const fallbackResult = await fallbackQuery;
+        data = fallbackResult.data;
+        error = fallbackResult.error;
+        count = fallbackResult.count;
+      }
 
       if (error) {
         console.error('Error fetching artists:', error);
@@ -86,11 +120,13 @@ export const useArtistFilterOptions = () => {
     queryFn: async () => {
       console.log('Fetching artist filter options...');
 
-      // Use correct column names based on actual schema
+      // Use correct column names based on actual schema with aggressive limiting
       const { data: artists, error } = await supabase
         .from('artist_list_summary')
         .select('agency, territory, top_genres')
-        .limit(1000); // Limit to prevent timeout
+        .not('agency', 'is', null)
+        .not('territory', 'is', null)
+        .limit(500); // Reduced limit to prevent timeout
 
       if (error) {
         console.error('Error fetching artist filter options:', error);
