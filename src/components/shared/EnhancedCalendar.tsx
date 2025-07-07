@@ -12,6 +12,7 @@ import {
   isSameMonth,
   isToday,
   parse,
+  startOfMonth,
   startOfToday,
   startOfWeek,
 } from "date-fns";
@@ -45,7 +46,7 @@ export function EnhancedCalendar({ events, title, entityType, currentMonth, onEv
   
   // Use prop or default to today's month
   const displayMonth = currentMonth || today;
-  const firstDayCurrentMonth = displayMonth;
+  const firstDayCurrentMonth = startOfMonth(displayMonth);
 
   // Convert your Event type to calendar format
   const calendarData = events.map(event => ({
