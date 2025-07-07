@@ -67,7 +67,17 @@ export interface ArtistAnalyticsResponse {
   }>;
 }
 
-// Events Response Interface for RPC calls
+// Actual database function return interface
+interface DatabaseEventResponse {
+  id: string;
+  name: string;
+  date: string;
+  venue_name: string;
+  venue_city: string;
+  status: string;
+}
+
+// Events Response Interface for frontend (transformed)
 export interface ArtistEventsResponse {
   events: Array<{
     event_id: string;
@@ -260,6 +270,29 @@ export const useArtistAnalytics = (artistId: string | undefined) => {
   });
 };
 
+// Transform database response to frontend format
+const transformDatabaseEvents = (dbEvents: DatabaseEventResponse[]): ArtistEventsResponse['events'] => {
+  return dbEvents.map(event => ({
+    event_id: event.id,
+    event_name: event.name,
+    date: event.date,
+    venue_name: event.venue_name,
+    city: event.venue_city,
+    ticket_price: null, // Not available in database function
+    attendance: null, // Not available in database function
+    status: event.status
+  }));
+};
+
+// Filter events by past/upcoming
+const filterEventsByTime = (events: ArtistEventsResponse['events'], includePast: boolean) => {
+  const now = new Date();
+  return events.filter(event => {
+    const eventDate = new Date(event.date);
+    return includePast ? eventDate < now : eventDate >= now;
+  });
+};
+
 // Events data hook (lazy loading for Events tab) with error handling
 export const useArtistEvents = (artistId: string | undefined, includePast: boolean = false, enabled: boolean = false) => {
   return useQuery<ArtistEventsResponse>({
@@ -270,24 +303,40 @@ export const useArtistEvents = (artistId: string | undefined, includePast: boole
       console.log('🎫 Fetching events for artist:', { artistId, includePast });
       
       try {
+        // Call RPC with only the artist_uuid parameter (matching database function)
         const { data, error } = await supabase.rpc('get_artist_events', {
-          artist_uuid: artistId,
-          include_past: includePast,
-          limit_count: 10
+          artist_uuid: artistId
         });
 
         if (error) {
           console.error('❌ Events RPC error:', {
             artistId,
-            includePast,
-            error: error.message
+            error: error.message,
+            details: error
           });
           throw new Error(`Failed to fetch artist events: ${error.message}`);
         }
 
-        console.log('✅ Events loaded successfully:', data?.length || 0, 'events');
+        console.log('✅ Raw events from database:', data?.length || 0, 'total events');
+        
+        // Transform database response to frontend format
+        const transformedEvents = transformDatabaseEvents(data || []);
+        
+        // Filter by past/upcoming in frontend
+        const filteredEvents = filterEventsByTime(transformedEvents, includePast);
+        
+        // Limit to 10 events
+        const limitedEvents = filteredEvents.slice(0, 10);
+        
+        console.log('✅ Events processed:', {
+          total: transformedEvents.length,
+          filtered: filteredEvents.length,
+          final: limitedEvents.length,
+          includePast
+        });
+        
         return {
-          events: data || []
+          events: limitedEvents
         };
       } catch (eventsError: any) {
         console.error('💥 Events fetch completely failed:', {
