@@ -29,7 +29,7 @@ export interface ArtistSearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-// Artist Details Interface for Edge Function response
+// Legacy Artist Details Interface (deprecated - use ArtistAnalyticsResponse)
 export interface ArtistDetails {
   artist: {
     id: string;
@@ -49,6 +49,125 @@ export interface ArtistDetails {
   upcoming_events: any[];
   top_venues: any[];
   top_cities: any[];
+}
+
+// Comprehensive Artist Analytics Response Interface
+export interface ArtistAnalyticsResponse {
+  artist: {
+    id: string;
+    name: string;
+    normalized_name: string;
+    genres: string[];
+    agency: string | null;
+    territory: string | null;
+    spotify_link: string | null;
+    booking_emails: string[];
+    monthly_listeners: number | null;
+    event_stats: {
+      total_events: number;
+      avg_ticket_price: number;
+    };
+    performance_cities: Array<{
+      city_name: string;
+      event_count: number;
+      avg_attendance: number;
+    }>;
+    favorite_venues: Array<{
+      venue_name: string;
+      city: string;
+      performance_count: number;
+    }>;
+    genre_distribution: Array<{
+      genre: string;
+      percentage: number;
+    }>;
+    day_of_week_preferences: Array<{
+      day: string;
+      event_count: number;
+      percentage: number;
+    }>;
+    social_presence: {
+      instagram?: string;
+      twitter?: string;
+      facebook?: string;
+      website?: string;
+      youtube?: string;
+    } | null;
+  };
+  analytics: {
+    diversityScore: number;
+    touringIntensity: number;
+    marketPenetration: number;
+    growth: {
+      listener_growth_rate: number;
+      event_growth_rate: number;
+      venue_diversity_trend: number;
+    };
+  };
+  insights: Array<{
+    type: string;
+    message: string;
+  }>;
+  comparisons: Array<{
+    artist_id: string;
+    artist_name: string;
+    similarity_score: number;
+    monthly_listeners: number;
+    total_events: number;
+  }>;
+}
+
+// Artist Events Response Interface
+export interface ArtistEventsResponse {
+  events: Array<{
+    event_id: string;
+    event_name: string;
+    date: string;
+    venue_name: string;
+    city: string;
+    ticket_price: number | null;
+    attendance: number | null;
+    status: string;
+  }>;
+}
+
+// Individual Event Interface
+export interface ArtistEvent {
+  event_id: string;
+  event_name: string;
+  date: string;
+  venue_name: string;
+  city: string;
+  ticket_price: number | null;
+  attendance: number | null;
+  status: string;
+}
+
+// Analytics Metrics Interface
+export interface AnalyticsMetrics {
+  diversityScore: number;
+  touringIntensity: number;
+  marketPenetration: number;
+  growth: {
+    listener_growth_rate: number;
+    event_growth_rate: number;
+    venue_diversity_trend: number;
+  };
+}
+
+// Insight Interface
+export interface ArtistInsight {
+  type: string;
+  message: string;
+}
+
+// Similar Artist Interface
+export interface SimilarArtist {
+  artist_id: string;
+  artist_name: string;
+  similarity_score: number;
+  monthly_listeners: number;
+  total_events: number;
 }
 
 // Search Artists Interface for Edge Function response

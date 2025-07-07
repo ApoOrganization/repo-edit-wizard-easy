@@ -1,76 +1,83 @@
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
-import { ArrowLeft, Instagram, Music, Mail, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Instagram, Music, Mail, ExternalLink, Globe, Twitter, Facebook, Youtube, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
-import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
-import { ArtistDetails } from "@/types/artist.types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useArtistAnalytics, useArtistUpcomingEvents, useArtistPastEvents } from "@/hooks/useArtistAnalytics";
+import { formatNumber, formatPercentage, formatCurrency, formatScore, formatDecimalPercentage, formatSimilarityScore, formatDayOfWeek, getPrimaryGenre } from "@/utils/formatters";
+
 const ArtistDetail = () => {
+  const { id } = useParams();
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Main analytics data
   const {
-    id
-  } = useParams();
-  const {
-    data: artistDetails,
+    data: analyticsData,
     isLoading,
     error
-  } = useQuery<ArtistDetails>({
-    queryKey: ['artist-details', id],
-    queryFn: async () => {
-      if (!id) throw new Error('Artist ID is required');
-      
-      const { data, error } = await supabase.functions.invoke('get-artist-details', {
-        body: {
-          artistId: id
-        }
-      });
+  } = useArtistAnalytics(id);
+  
+  // Events data (lazy loaded based on tab)
+  const { data: upcomingEventsData } = useArtistUpcomingEvents(id, activeTab === 'events');
+  const { data: pastEventsData } = useArtistPastEvents(id, activeTab === 'events');
 
-      if (error) {
-        console.error('Error fetching artist details:', error);
-        throw new Error(`Failed to fetch artist details: ${error.message}`);
-      }
+  // Destructure analytics data
+  const artist = analyticsData?.artist;
+  const analytics = analyticsData?.analytics;
+  const insights = analyticsData?.insights || [];
+  const comparisons = analyticsData?.comparisons || [];
+  const upcomingEvents = upcomingEventsData?.events || [];
+  const pastEvents = pastEventsData?.events || [];
+  const allEvents = [...upcomingEvents, ...pastEvents];
 
-      if (!data || !data.artist) {
-        throw new Error('Artist not found');
-      }
+  // Helper functions
+  const renderGrowthIcon = (value: number) => {
+    if (value > 0) return <TrendingUp className="h-3 w-3 text-green-600" />;
+    if (value < 0) return <TrendingDown className="h-3 w-3 text-red-600" />;
+    return <Minus className="h-3 w-3 text-muted-foreground" />;
+  };
+  
+  const renderSocialIcon = (platform: string) => {
+    switch (platform) {
+      case 'instagram': return <Instagram className="h-3 w-3" />;
+      case 'twitter': return <Twitter className="h-3 w-3" />;
+      case 'facebook': return <Facebook className="h-3 w-3" />;
+      case 'youtube': return <Youtube className="h-3 w-3" />;
+      case 'website': return <Globe className="h-3 w-3" />;
+      default: return <ExternalLink className="h-3 w-3" />;
+    }
+  };
 
-      return data;
-    },
-    enabled: !!id
-  });
-  const artist = artistDetails?.artist;
-  const stats = artistDetails?.stats;
-  const upcomingEvents = artistDetails?.upcoming_events || [];
-  const recentEvents = artistDetails?.recent_events || [];
-  const topVenues = artistDetails?.top_venues || [];
-  const topCities = artistDetails?.top_cities || [];
-  const artistEvents = [...(upcomingEvents || []), ...(recentEvents || [])];
   if (isLoading) {
-    return <div className="max-w-7xl mx-auto px-6 py-8">
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="hero">
           <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Loading Artist...</h1>
         </div>
-      </div>;
+      </div>
+    );
   }
+
   if (error || !artist) {
-    return <div className="max-w-7xl mx-auto px-6 py-8">
+    return (
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="hero">
           <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Artist Not Found</h1>
+          <p className="text-muted-foreground">
+            {error instanceof Error ? error.message : 'Unable to load artist data'}
+          </p>
+          <Button className="mt-4" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
         </div>
-      </div>;
+      </div>
+    );
   }
-  const formatNumber = (num: number) => {
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M';
-    }
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K';
-    }
-    return num.toString();
-  };
-  return <div className="max-w-7xl mx-auto px-6 py-4">
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-4">
       <div className="space-y-6">
         {/* Navigation */}
         <div className="flex items-center gap-4">
@@ -85,159 +92,371 @@ const ArtistDetail = () => {
           <div className="flex items-center gap-4 mb-2">
             <h1 className="text-2xl font-bold text-foreground font-manrope">{artist?.name}</h1>
             <Badge variant="secondary" className="text-xs">
-              Artist
+              {getPrimaryGenre(artist?.genres)}
             </Badge>
+            {artist?.agency && (
+              <Badge variant="outline" className="text-xs">
+                {artist.agency}
+              </Badge>
+            )}
+            {artist?.territory && (
+              <Badge variant="outline" className="text-xs">
+                {artist.territory}
+              </Badge>
+            )}
           </div>
         </div>
 
         {/* Divider */}
         <div className="border-t border-border" />
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
-          {/* Left Column */}
-          <div className="space-y-8">
-            {/* Artist Overview Card */}
-            <Card className="h-[480px]">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold">Artist Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0 h-full flex flex-col">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
-                  {/* Spotify Metrics */}
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Spotify Metrics</h4>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center py-1">
-                          <span className="text-xs">Total Events</span>
-                          <span className="text-xs font-medium">{stats?.total_events || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center py-1">
-                          <span className="text-xs">Upcoming Events</span>
-                          <span className="text-xs font-medium">{stats?.upcoming_events || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center py-1">
-                          <span className="text-xs">Past Events</span>
-                          <span className="text-xs font-medium">{stats?.past_events || 0}</span>
-                        </div>
-                        <div className="flex justify-between items-center py-1">
-                          <span className="text-xs">Cities Performed</span>
-                          <span className="text-xs font-medium">{stats?.cities_performed || 0}</span>
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{formatNumber(artist?.monthly_listeners)}</div>
+                <p className="text-xs text-muted-foreground">Monthly Listeners</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{artist?.event_stats?.total_events || 0}</div>
+                <p className="text-xs text-muted-foreground">Total Events</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{artist?.performance_cities?.length || 0}</div>
+                <p className="text-xs text-muted-foreground">Cities</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{formatCurrency(artist?.event_stats?.avg_ticket_price)}</div>
+                <p className="text-xs text-muted-foreground">Avg Ticket Price</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Performance Analytics */}
+        {analytics && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatScore(analytics.diversityScore)}</div>
+                  <p className="text-xs text-muted-foreground">Diversity Score</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatScore(analytics.touringIntensity)}</div>
+                  <p className="text-xs text-muted-foreground">Touring Intensity</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatScore(analytics.marketPenetration)}</div>
+                  <p className="text-xs text-muted-foreground">Market Penetration</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Growth Trends */}
+        {analytics?.growth && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">Growth Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
+                  <span className="text-sm">Listener Growth</span>
+                  <div className="flex items-center gap-2">
+                    {renderGrowthIcon(analytics.growth.listener_growth_rate)}
+                    <span className="text-sm font-medium">{formatPercentage(analytics.growth.listener_growth_rate)}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
+                  <span className="text-sm">Event Growth</span>
+                  <div className="flex items-center gap-2">
+                    {renderGrowthIcon(analytics.growth.event_growth_rate)}
+                    <span className="text-sm font-medium">{formatPercentage(analytics.growth.event_growth_rate)}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-md">
+                  <span className="text-sm">Venue Diversity</span>
+                  <div className="flex items-center gap-2">
+                    {renderGrowthIcon(analytics.growth.venue_diversity_trend)}
+                    <span className="text-sm font-medium">{formatPercentage(analytics.growth.venue_diversity_trend)}</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Insights */}
+        {insights.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">Insights</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {insights.map((insight, index) => (
+                  <div key={index} className="p-3 bg-muted/30 rounded-md">
+                    <div className="flex items-start gap-2">
+                      <Badge variant="outline" className="text-xs">{insight.type}</Badge>
+                      <p className="text-sm text-muted-foreground flex-1">{insight.message}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabbed Content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="similar">Similar Artists</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Performance Cities */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Top Performance Cities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {artist?.performance_cities?.slice(0, 5).map((city, index) => (
+                      <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                        <span className="text-sm">{city.city_name}</span>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">{city.event_count} events</div>
+                          <div className="text-xs text-muted-foreground">{formatNumber(city.avg_attendance)} avg attendance</div>
                         </div>
                       </div>
-                    </div>
+                    )) || <p className="text-sm text-muted-foreground">No city data available</p>}
+                  </div>
+                </CardContent>
+              </Card>
 
-                    {/* Top Venues */}
+              {/* Favorite Venues */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Favorite Venues</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {artist?.favorite_venues?.slice(0, 5).map((venue, index) => (
+                      <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                        <div>
+                          <div className="text-sm font-medium">{venue.venue_name}</div>
+                          <div className="text-xs text-muted-foreground">{venue.city}</div>
+                        </div>
+                        <div className="text-sm font-medium">{venue.performance_count}</div>
+                      </div>
+                    )) || <p className="text-sm text-muted-foreground">No venue data available</p>}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Genre Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Genre Distribution</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {artist?.genre_distribution?.map((genre, index) => (
+                      <div key={index} className="flex justify-between items-center py-1">
+                        <span className="text-sm">{genre.genre}</span>
+                        <span className="text-sm font-medium">{formatDecimalPercentage(genre.percentage)}</span>
+                      </div>
+                    )) || <p className="text-sm text-muted-foreground">No genre data available</p>}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Contact & Links</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Booking Emails */}
+                    {artist?.booking_emails && artist.booking_emails.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-medium text-muted-foreground mb-2">Booking</h4>
+                        <div className="space-y-1">
+                          {artist.booking_emails.map((email, index) => (
+                            <Button key={index} variant="outline" size="sm" className="h-auto p-2" asChild>
+                              <a href={`mailto:${email}`} className="text-xs">{email}</a>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Social Links */}
                     <div>
-                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Top Venues</h4>
-                      <div className="space-y-1">
-                        {topVenues.slice(0, 5).map((venue: any, index: number) => (
-                          <div key={index} className="flex justify-between items-center py-1">
-                            <span className="text-xs">{venue.name || venue.venue_name || 'Unknown Venue'}</span>
-                            <span className="text-xs text-muted-foreground">{venue.event_count || 1}</span>
-                          </div>
+                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Social Media</h4>
+                      <div className="flex gap-2 flex-wrap">
+                        {artist?.social_presence && Object.entries(artist.social_presence).map(([platform, url]) => (
+                          <Button key={platform} size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
+                            <a href={url} target="_blank" rel="noopener noreferrer">
+                              {renderSocialIcon(platform)}
+                            </a>
+                          </Button>
                         ))}
-                        {topVenues.length === 0 && (
-                          <p className="text-xs text-muted-foreground">No venue data available</p>
+                        {artist?.spotify_link && (
+                          <Button size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
+                            <a href={artist.spotify_link} target="_blank" rel="noopener noreferrer">
+                              <Music className="h-3 w-3" />
+                            </a>
+                          </Button>
                         )}
                       </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-                  {/* Top Cities */}
-                  <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-2">Top Cities</h4>
-                    <div className="space-y-1">
-                      {topCities.slice(0, 5).map((city: any, index: number) => (
-                        <div key={index} className="flex justify-between items-center py-1">
-                          <span className="text-xs">{city.name || city.city_name || 'Unknown City'}</span>
-                          <span className="text-xs text-muted-foreground">{city.event_count || 1}</span>
+          <TabsContent value="events" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Upcoming Events */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Upcoming Events</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {upcomingEvents.length > 0 ? (
+                      upcomingEvents.map((event) => (
+                        <div key={event.event_id} className="p-3 border border-border rounded-md">
+                          <div className="font-medium text-sm">{event.event_name}</div>
+                          <div className="text-xs text-muted-foreground">{event.venue_name}, {event.city}</div>
+                          <div className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</div>
+                          {event.ticket_price && (
+                            <div className="text-xs font-medium">{formatCurrency(event.ticket_price)}</div>
+                          )}
                         </div>
-                      ))}
-                      {topCities.length === 0 && (
-                        <p className="text-xs text-muted-foreground">No city data available</p>
-                      )}
-                    </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No upcoming events</p>
+                    )}
                   </div>
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* Social Links & Stats - Bottom Section */}
-                <div className="mt-6 space-y-4">
-                  {/* Social Links */}
-                  <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-2">Links</h4>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="h-7 w-7 p-0">
-                        <Instagram className="h-3 w-3" />
-                      </Button>
-                      {artist?.spotify_link && (
-                        <Button size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
-                          <a href={artist.spotify_link} target="_blank" rel="noopener noreferrer">
-                            <Music className="h-3 w-3" />
-                          </a>
-                        </Button>
-                      )}
-                      <Button size="sm" variant="outline" className="h-7 w-7 p-0">
-                        <Mail className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-7 w-7 p-0">
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
-                    </div>
+              {/* Past Events */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Recent Past Events</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {pastEvents.length > 0 ? (
+                      pastEvents.map((event) => (
+                        <div key={event.event_id} className="p-3 border border-border rounded-md">
+                          <div className="font-medium text-sm">{event.event_name}</div>
+                          <div className="text-xs text-muted-foreground">{event.venue_name}, {event.city}</div>
+                          <div className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</div>
+                          {event.attendance && (
+                            <div className="text-xs font-medium">{formatNumber(event.attendance)} attendance</div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No past events</p>
+                    )}
                   </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-2 bg-muted/30 rounded-md">
-                      
-                      
-                    </div>
-                    <div className="text-center p-2 bg-muted/30 rounded-md">
-                      
-                      
-                    </div>
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Day of Week Preferences */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Day of Week Preferences</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {artist?.day_of_week_preferences?.map((day, index) => (
+                      <div key={index} className="flex justify-between items-center py-1">
+                        <span className="text-sm">{formatDayOfWeek(day.day)}</span>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">{day.event_count} events</div>
+                          <div className="text-xs text-muted-foreground">{formatDecimalPercentage(day.percentage)}</div>
+                        </div>
+                      </div>
+                    )) || <p className="text-sm text-muted-foreground">No analytics data available</p>}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Upcoming Events Card */}
-            <UpcomingEventsCard events={upcomingEvents} title="Upcoming Shows" maxEvents={5} />
-            
-            {/* Biography Card - Simple version */}
+          <TabsContent value="similar" className="space-y-6">
             <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold">Biography</CardTitle>
+              <CardHeader>
+                <CardTitle className="text-sm font-semibold">Similar Artists</CardTitle>
               </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-xs text-muted-foreground leading-relaxed space-y-3">
-                  <p>
-                    {artist?.name} is a talented artist known for their captivating performances and strong audience connection. 
-                    With {stats?.total_events || 0} total events and {stats?.upcoming_events || 0} upcoming shows, they maintain an active touring schedule.
-                  </p>
-                  <p>
-                    Having performed in {stats?.cities_performed || 0} different cities, {artist?.name} continues to expand their reach and 
-                    connect with audiences across diverse markets{topCities.length > 0 ? `, including ${topCities.slice(0, 3).map((city: any) => city.name || city.city_name).join(', ')}` : ''}.
-                  </p>
-                  <p>
-                    Their consistent touring schedule and strong performance history demonstrate their commitment to live music and fan engagement. 
-                    {artist?.name} represents the dedication and artistry that defines today's touring musicians.
-                  </p>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {comparisons.length > 0 ? (
+                    comparisons.map((comparison) => (
+                      <div key={comparison.artist_id} className="p-4 border border-border rounded-md hover:bg-muted/50 transition-colors">
+                        <Link to={`/artists/${comparison.artist_id}`} className="block">
+                          <div className="font-medium text-sm mb-1">{comparison.artist_name}</div>
+                          <div className="text-xs text-muted-foreground mb-2">
+                            {formatSimilarityScore(comparison.similarity_score)} similarity
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-xs">{formatNumber(comparison.monthly_listeners)} listeners</div>
+                            <div className="text-xs">{comparison.total_events} events</div>
+                          </div>
+                        </Link>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground col-span-full">No similar artists found</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          </div>
-        </div>
-
-        {/* Full Width Calendar */}
-        <div className="mt-8">
-          <EnhancedCalendar events={artistEvents || []} title="Tour Calendar" entityType="artist" />
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default ArtistDetail;
