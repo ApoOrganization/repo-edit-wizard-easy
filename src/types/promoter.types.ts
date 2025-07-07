@@ -82,7 +82,97 @@ export interface PromoterFilterOptions {
   };
 }
 
-// Promoter Analytics Response Interface (for detail page)
+// Actual Edge Function Response Interface (matches real API)
+export interface PromoterAnalyticsEdgeFunctionResponse {
+  promoter: {
+    id: string;
+    name: string;
+    created_at: string;
+    instagram_link: string | null;
+    total_events_count: number;
+    upcoming_events_count: number;
+    past_events_count: number;
+    venue_analytics: {
+      cities: number;
+      total_venues: number;
+      top_venues: Array<{
+        city: string;
+        venue_id: string;
+        venue_name: string;
+        event_count: number;
+      }>;
+      city_distribution: Array<{
+        city: string;
+        percentage: number;
+        event_count: number;
+      }>;
+    };
+    genre_analytics: {
+      total_genres: number;
+      primary_genre: string;
+      genre_distribution: Array<{
+        genre: string;
+        trend: string;
+        percentage: number;
+        event_count: number;
+      }>;
+    };
+    time_analytics: {
+      years_active: number;
+      avg_events_per_month: number;
+      events_by_month: Array<{
+        month: string;
+        event_count: number;
+      }>;
+      day_of_week_preference: Array<{
+        day: string;
+        count: number;
+        percentage: number;
+      }>;
+      first_event_date: string;
+      last_event_date: string;
+    };
+    artist_metrics: {
+      total_artists: number;
+      recurring_artists: number;
+      artist_loyalty_rate: number;
+    };
+    business_metrics: {
+      events_per_year: number;
+      growth_trend: string;
+      scale_classification: string;
+    };
+  };
+  events: Array<{
+    id: string;
+    date: string;
+    name: string;
+    genre: string;
+    venue: {
+      id: string;
+      city: string;
+      name: string;
+      capacity: number | null;
+    };
+    status: string;
+    has_tickets: boolean;
+    artists: Array<{
+      id: string;
+      name: string;
+      spotify_link: string | null;
+    }>;
+  }>;
+  insights: {
+    topPerformingGenre: string;
+    bestPerformingCity: string;
+    averageEventsPerMonth: number;
+    artistLoyaltyRate: number;
+    venuePreference: string;
+    growthTrend: string;
+  };
+}
+
+// Transformed Promoter Analytics Response Interface (for UI)
 export interface PromoterAnalyticsResponse {
   promoter: PromoterDetailsFull;
   analytics: {
