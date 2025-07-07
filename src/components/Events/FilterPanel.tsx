@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, ChevronDown, X, Calendar, MapPin, Users, Music, Filter } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, X, Calendar, MapPin, Users, Music, Filter } from "lucide-react";
 
 interface FilterState {
   search: string;
@@ -50,7 +50,6 @@ const FilterPanel = ({
     venue: false,
     artist: false,
     promoter: false,
-    dateOrder: false,
   });
 
   // Search states for each filter section
@@ -177,6 +176,27 @@ const FilterPanel = ({
             Clear all
           </Button>
         )}
+      </div>
+
+      {/* Date Order Control */}
+      <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg border">
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Sort by Date</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => updateFilters({ dateOrder: filters.dateOrder === 'desc' ? 'asc' : 'desc' })}
+          className="flex items-center space-x-1 h-7 px-2 text-xs hover:bg-background"
+        >
+          <span className="font-medium">{filters.dateOrder === 'desc' ? 'Newest' : 'Oldest'}</span>
+          {filters.dateOrder === 'desc' ? (
+            <ChevronDown className="h-3 w-3" />
+          ) : (
+            <ChevronUp className="h-3 w-3" />
+          )}
+        </Button>
       </div>
 
       {/* Basic Search */}
@@ -470,31 +490,6 @@ const FilterPanel = ({
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Date Order */}
-      <Collapsible open={openSections.dateOrder} onOpenChange={() => toggleSection('dateOrder')}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-3 w-3" />
-              <span className="font-medium text-sm">Date Order</span>
-            </div>
-            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.dateOrder ? 'rotate-180' : ''}`} />
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-3 mt-3">
-          <div>
-            <Select value={filters.dateOrder} onValueChange={(value: 'asc' | 'desc') => updateFilters({ dateOrder: value })}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Sort by date" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desc">Newest First</SelectItem>
-                <SelectItem value="asc">Oldest First</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
     </div>
   );
 };

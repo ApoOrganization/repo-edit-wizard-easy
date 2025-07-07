@@ -1,11 +1,13 @@
 import { Event } from "@/data/types";
+import { EventAnalytics } from "@/hooks/useEventAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface DetailedAnalysisViewProps {
   event: Event;
+  analytics?: EventAnalytics['analytics'];
 }
 
-const DetailedAnalysisView = ({ event }: DetailedAnalysisViewProps) => {
+const DetailedAnalysisView = ({ event, analytics }: DetailedAnalysisViewProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
       {/* Left Column */}

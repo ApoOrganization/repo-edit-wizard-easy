@@ -28,7 +28,7 @@ const VenueCard = ({ event }: VenueCardProps) => {
       <div 
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: `url(${event.image})`,
+          backgroundImage: `url('/placeholder.svg')`,
         }}
       >
         <div className="absolute inset-0 bg-black/50" />
@@ -46,7 +46,7 @@ const VenueCard = ({ event }: VenueCardProps) => {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span className="text-sm">{event.capacity.toLocaleString()} capacity</span>
+              <span className="text-sm">Capacity information loading...</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />

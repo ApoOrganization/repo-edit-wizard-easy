@@ -4,18 +4,20 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import EventGridView from "./EventGridView";
 import DetailedAnalysisView from "./DetailedAnalysisView";
+import { EventAnalytics } from "@/hooks/useEventAnalytics";
 
 interface EventDetailContainerProps {
   event: Event;
+  analytics?: EventAnalytics['analytics'];
 }
 
-const EventDetailContainer = ({ event }: EventDetailContainerProps) => {
+const EventDetailContainer = ({ event, analytics }: EventDetailContainerProps) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [activeView, setActiveView] = useState<'overview' | 'detailed'>('overview');
   
   const pages = [
-    { component: <EventGridView event={event} />, label: "Overview" },
-    { component: <DetailedAnalysisView event={event} />, label: "Detailed Analysis" }
+    { component: <EventGridView event={event} analytics={analytics} />, label: "Overview" },
+    { component: <DetailedAnalysisView event={event} analytics={analytics} />, label: "Detailed Analysis" }
   ];
 
   const nextPage = () => {

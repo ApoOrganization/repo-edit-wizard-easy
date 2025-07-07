@@ -47,7 +47,11 @@ const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
         <div className="grid grid-cols-1 gap-3">
           <div>
             <p className="text-sm text-muted-foreground">Followers</p>
-            <p className="text-lg font-semibold">{primaryArtist.followers.toLocaleString()}</p>
+            <p className="text-lg font-semibold">
+              {primaryArtist.followers > 0 
+                ? primaryArtist.followers.toLocaleString() 
+                : 'Data loading...'}
+            </p>
           </div>
           
           <div>
@@ -59,14 +63,18 @@ const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
         <div>
           <p className="text-sm text-muted-foreground mb-2">Top 5 Cities</p>
           <div className="space-y-1">
-            {primaryArtist.topCities.slice(0, 5).map((city, index) => (
-              <div key={index} className="flex justify-between items-center text-sm">
-                <span>{city}</span>
-                <span className="text-muted-foreground">
-                  {Math.floor(Math.random() * 50000 + 10000).toLocaleString()}
-                </span>
-              </div>
-            ))}
+            {primaryArtist.topCities && primaryArtist.topCities.length > 0 ? (
+              primaryArtist.topCities.slice(0, 5).map((city, index) => (
+                <div key={index} className="flex justify-between items-center text-sm">
+                  <span>{city}</span>
+                  <span className="text-muted-foreground">
+                    {Math.floor(Math.random() * 50000 + 10000).toLocaleString()}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">City data loading...</p>
+            )}
           </div>
         </div>
 
