@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ArtistCalendarResponse, ArtistCalendarEvent, CalendarEventData } from '@/types/artist.types';
-import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns';
+import { format, getYear, getMonth } from 'date-fns';
 
 // Transform the JSONB calendar response to flat array format for UI
 const transformCalendarData = (calendarData: ArtistCalendarResponse): CalendarEventData[] => {
@@ -12,15 +12,15 @@ const transformCalendarData = (calendarData: ArtistCalendarResponse): CalendarEv
   Object.entries(calendarData).forEach(([date, dayEvents]) => {
     dayEvents.forEach((event: ArtistCalendarEvent) => {
       events.push({
-        id: event.event_id,
+        id: event.id,
         date: date,
-        name: event.event_name,
-        venue: event.venue_name,
-        city: event.city,
-        time: event.start_time ? format(parseISO(event.start_time), 'HH:mm') : '',
-        status: event.ticket_status || 'Unknown',
-        role: event.artist_role || 'Artist',
-        datetime: event.start_time || date + 'T00:00:00Z'
+        name: event.name,
+        venue: `${event.venue_name}, ${event.venue_city}`,
+        city: event.venue_city,
+        time: event.time || '',
+        status: event.status || 'Unknown',
+        has_tickets: event.has_tickets,
+        datetime: `${date}T${event.time || '00:00'}:00Z`
       });
     });
   });
@@ -33,11 +33,11 @@ export const useArtistCalendar = (
   artistId: string | undefined,
   currentMonth: Date = new Date()
 ) => {
-  const startDate = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
-  const endDate = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
+  const year = getYear(currentMonth);
+  const month = getMonth(currentMonth) + 1; // getMonth() returns 0-11, but we need 1-12
 
   return useQuery<CalendarEventData[]>({
-    queryKey: ['artist-calendar', artistId, startDate, endDate],
+    queryKey: ['artist-calendar', artistId, year, month],
     queryFn: async () => {
       if (!artistId) {
         throw new Error('Artist ID is required');
@@ -45,15 +45,15 @@ export const useArtistCalendar = (
 
       console.log('🗓️ [ARTIST CALENDAR] Fetching calendar data:', {
         artistId,
-        startDate,
-        endDate,
-        month: format(currentMonth, 'MMMM yyyy')
+        year,
+        month,
+        monthDisplay: format(currentMonth, 'MMMM yyyy')
       });
 
       const { data, error } = await supabase.rpc('get_artist_calendar', {
-        p_artist_id: artistId,
-        p_start_date: startDate,
-        p_end_date: endDate
+        artist_uuid: artistId,
+        year_param: year,
+        month_param: month
       });
 
       if (error) {
@@ -72,7 +72,8 @@ export const useArtistCalendar = (
 
       console.log('✅ [ARTIST CALENDAR] Transformed events:', {
         totalEvents: transformedEvents.length,
-        dateRange: `${startDate} to ${endDate}`,
+        year,
+        month,
         eventsByDate: transformedEvents.reduce((acc, event) => {
           acc[event.date] = (acc[event.date] || 0) + 1;
           return acc;
@@ -99,20 +100,20 @@ export const useArtistCalendarByDate = (
   artistId: string | undefined,
   targetDate: Date
 ) => {
-  const startDate = format(targetDate, 'yyyy-MM-dd');
-  const endDate = format(targetDate, 'yyyy-MM-dd');
+  const year = getYear(targetDate);
+  const month = getMonth(targetDate) + 1;
 
   return useQuery<CalendarEventData[]>({
-    queryKey: ['artist-calendar-date', artistId, startDate],
+    queryKey: ['artist-calendar-date', artistId, year, month],
     queryFn: async () => {
       if (!artistId) {
         throw new Error('Artist ID is required');
       }
 
       const { data, error } = await supabase.rpc('get_artist_calendar', {
-        p_artist_id: artistId,
-        p_start_date: startDate,
-        p_end_date: endDate
+        artist_uuid: artistId,
+        year_param: year,
+        month_param: month
       });
 
       if (error) {

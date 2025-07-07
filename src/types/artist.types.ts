@@ -203,15 +203,13 @@ export interface ArtistCalendarResponse {
 }
 
 export interface ArtistCalendarEvent {
-  event_id: string;
-  event_name: string;
-  venue_id: string;
+  id: string;
+  name: string;
+  time: string;
   venue_name: string;
-  city: string;
-  start_time: string;
-  end_time: string | null;
-  ticket_status: string;
-  artist_role: string;
+  venue_city: string;
+  status: string;
+  has_tickets: boolean;
 }
 
 // Transformed format for calendar UI component
@@ -223,6 +221,6 @@ export interface CalendarEventData {
   city: string;
   time: string;
   status: string;
-  role: string;
+  has_tickets: boolean;
   datetime: string;
 }

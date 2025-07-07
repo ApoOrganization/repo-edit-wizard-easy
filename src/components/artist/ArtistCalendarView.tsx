@@ -32,11 +32,15 @@ export const ArtistCalendarView: React.FC<ArtistCalendarViewProps> = ({
       id: event.id,
       name: event.name,
       date: event.datetime,
-      venue: `${event.venue}, ${event.city}`,
-      status: event.status,
+      venue: event.venue,
+      status: event.has_tickets ? 'On Sale' : 'Unknown',
       // Add additional properties for display
-      artist_role: event.role,
-      time: event.time
+      has_tickets: event.has_tickets,
+      time: event.time,
+      city: event.city,
+      genre: '', // Not available in calendar function
+      providers: [], // Not available in calendar function
+      artists: [] // Not available in calendar function
     }));
   };
 

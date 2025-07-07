@@ -191,16 +191,16 @@ export function EnhancedCalendar({ events, title, entityType, onEventClick, onMo
                           event.status === 'Cancelled' && "bg-red-100 text-red-800 hover:bg-red-200",
                           entityType === 'artist' && "bg-blue-100 text-blue-800 hover:bg-blue-200"
                         )}
-                        title={`${event.name} - ${event.venue}${(event as any).artist_role ? ` (${(event as any).artist_role})` : ''}`}
+                        title={`${event.name} - ${event.venue}${(event as any).has_tickets ? ' (Tickets Available)' : ' (No Tickets)'}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onEventClick?.(event.id);
                         }}
                       >
                         {event.name}
-                        {entityType === 'artist' && (event as any).artist_role && (
+                        {entityType === 'artist' && (event as any).has_tickets && (
                           <span className="ml-1 text-xs opacity-75">
-                            ({(event as any).artist_role})
+                            🎟️
                           </span>
                         )}
                       </div>
