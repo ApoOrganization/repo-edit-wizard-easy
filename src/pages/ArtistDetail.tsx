@@ -1,43 +1,52 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { mockArtists, mockEvents } from "@/data/mockData";
+import { supabase } from "@/lib/supabase";
 import { ArrowLeft, Instagram, Music, Mail, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
 import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
+import { ArtistDetails } from "@/types/artist.types";
 const ArtistDetail = () => {
   const {
     id
   } = useParams();
   const {
-    data: artist,
+    data: artistDetails,
     isLoading,
     error
-  } = useQuery({
-    queryKey: ['artist', id],
+  } = useQuery<ArtistDetails>({
+    queryKey: ['artist-details', id],
     queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const artistId = parseInt(id || '0');
-      if (isNaN(artistId)) throw new Error('Invalid artist ID');
-      const foundArtist = mockArtists.find(a => a.id === artistId);
-      if (!foundArtist) throw new Error('Artist not found');
-      return foundArtist;
-    }
-  });
-  const {
-    data: artistEvents
-  } = useQuery({
-    queryKey: ['artist-events', id],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      const artistId = parseInt(id || '0');
-      if (isNaN(artistId)) return [];
-      return mockEvents.filter(event => event.artists.some(a => a.id === artistId));
+      if (!id) throw new Error('Artist ID is required');
+      
+      const { data, error } = await supabase.functions.invoke('get-artist-details', {
+        body: {
+          artistId: id
+        }
+      });
+
+      if (error) {
+        console.error('Error fetching artist details:', error);
+        throw new Error(`Failed to fetch artist details: ${error.message}`);
+      }
+
+      if (!data || !data.artist) {
+        throw new Error('Artist not found');
+      }
+
+      return data;
     },
-    enabled: !!id && !isNaN(parseInt(id || '0'))
+    enabled: !!id
   });
+  const artist = artistDetails?.artist;
+  const stats = artistDetails?.stats;
+  const upcomingEvents = artistDetails?.upcoming_events || [];
+  const recentEvents = artistDetails?.recent_events || [];
+  const topVenues = artistDetails?.top_venues || [];
+  const topCities = artistDetails?.top_cities || [];
+  const artistEvents = [...(upcomingEvents || []), ...(recentEvents || [])];
   if (isLoading) {
     return <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="hero">
@@ -52,7 +61,6 @@ const ArtistDetail = () => {
         </div>
       </div>;
   }
-  const upcomingEvents = artistEvents?.filter(event => new Date(event.date) > new Date()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M';
@@ -75,9 +83,9 @@ const ArtistDetail = () => {
         {/* Header Section */}
         <div className="py-2">
           <div className="flex items-center gap-4 mb-2">
-            <h1 className="text-2xl font-bold text-foreground font-manrope">{artist.name}</h1>
+            <h1 className="text-2xl font-bold text-foreground font-manrope">{artist?.name}</h1>
             <Badge variant="secondary" className="text-xs">
-              {artist.genre}
+              Artist
             </Badge>
           </div>
         </div>
@@ -102,23 +110,37 @@ const ArtistDetail = () => {
                       <h4 className="text-xs font-medium text-muted-foreground mb-2">Spotify Metrics</h4>
                       <div className="space-y-2">
                         <div className="flex justify-between items-center py-1">
-                          <span className="text-xs">Monthly Listeners</span>
-                          <span className="text-xs font-medium">{formatNumber(artist.monthlyListeners)}</span>
+                          <span className="text-xs">Total Events</span>
+                          <span className="text-xs font-medium">{stats?.total_events || 0}</span>
                         </div>
                         <div className="flex justify-between items-center py-1">
-                          <span className="text-xs">Followers</span>
-                          <span className="text-xs font-medium">{formatNumber(artist.followers)}</span>
+                          <span className="text-xs">Upcoming Events</span>
+                          <span className="text-xs font-medium">{stats?.upcoming_events || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-1">
+                          <span className="text-xs">Past Events</span>
+                          <span className="text-xs font-medium">{stats?.past_events || 0}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-1">
+                          <span className="text-xs">Cities Performed</span>
+                          <span className="text-xs font-medium">{stats?.cities_performed || 0}</span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Agency Information */}
+                    {/* Top Venues */}
                     <div>
-                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Agency</h4>
+                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Top Venues</h4>
                       <div className="space-y-1">
-                        <p className="text-xs font-medium">{artist.agency}</p>
-                        <p className="text-xs text-muted-foreground">{artist.agent}</p>
-                        <p className="text-xs text-muted-foreground">{artist.territory}</p>
+                        {topVenues.slice(0, 5).map((venue: any, index: number) => (
+                          <div key={index} className="flex justify-between items-center py-1">
+                            <span className="text-xs">{venue.name || venue.venue_name || 'Unknown Venue'}</span>
+                            <span className="text-xs text-muted-foreground">{venue.event_count || 1}</span>
+                          </div>
+                        ))}
+                        {topVenues.length === 0 && (
+                          <p className="text-xs text-muted-foreground">No venue data available</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -127,10 +149,15 @@ const ArtistDetail = () => {
                   <div>
                     <h4 className="text-xs font-medium text-muted-foreground mb-2">Top Cities</h4>
                     <div className="space-y-1">
-                      {artist.topCities.slice(0, 5).map((city, index) => <div key={city} className="flex justify-between items-center py-1">
-                          <span className="text-xs">{city}</span>
-                          <span className="text-xs text-muted-foreground">#{index + 1}</span>
-                        </div>)}
+                      {topCities.slice(0, 5).map((city: any, index: number) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-xs">{city.name || city.city_name || 'Unknown City'}</span>
+                          <span className="text-xs text-muted-foreground">{city.event_count || 1}</span>
+                        </div>
+                      ))}
+                      {topCities.length === 0 && (
+                        <p className="text-xs text-muted-foreground">No city data available</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -144,15 +171,19 @@ const ArtistDetail = () => {
                       <Button size="sm" variant="outline" className="h-7 w-7 p-0">
                         <Instagram className="h-3 w-3" />
                       </Button>
-                      {artist.spotifyUrl && <Button size="sm" variant="outline" className="h-7 w-7 p-0">
-                          <Music className="h-3 w-3" />
-                        </Button>}
-                      {artist.email && <Button size="sm" variant="outline" className="h-7 w-7 p-0">
-                          <Mail className="h-3 w-3" />
-                        </Button>}
-                      {artist.profileUrl && <Button size="sm" variant="outline" className="h-7 w-7 p-0">
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>}
+                      {artist?.spotify_link && (
+                        <Button size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
+                          <a href={artist.spotify_link} target="_blank" rel="noopener noreferrer">
+                            <Music className="h-3 w-3" />
+                          </a>
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+                        <Mail className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-7 w-7 p-0">
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
 
@@ -185,16 +216,16 @@ const ArtistDetail = () => {
               <CardContent className="pt-0">
                 <div className="text-xs text-muted-foreground leading-relaxed space-y-3">
                   <p>
-                    {artist.name} is a {artist.genre.toLowerCase()} artist known for their innovative sound and captivating performances. 
-                    With {formatNumber(artist.monthlyListeners)} monthly listeners on Spotify, they have established themselves as a major force in the music industry.
+                    {artist?.name} is a talented artist known for their captivating performances and strong audience connection. 
+                    With {stats?.total_events || 0} total events and {stats?.upcoming_events || 0} upcoming shows, they maintain an active touring schedule.
                   </p>
                   <p>
-                    Represented by {artist.agency} and covering the {artist.territory} territory, {artist.name} continues to tour extensively, 
-                    bringing their unique sound to fans across their top markets including {artist.topCities.slice(0, 3).join(', ')}.
+                    Having performed in {stats?.cities_performed || 0} different cities, {artist?.name} continues to expand their reach and 
+                    connect with audiences across diverse markets{topCities.length > 0 ? `, including ${topCities.slice(0, 3).map((city: any) => city.name || city.city_name).join(', ')}` : ''}.
                   </p>
                   <p>
-                    Their music resonates with audiences worldwide, consistently drawing sold-out crowds and maintaining strong streaming numbers. 
-                    {artist.name} represents the evolution of {artist.genre.toLowerCase()} music in the modern era.
+                    Their consistent touring schedule and strong performance history demonstrate their commitment to live music and fan engagement. 
+                    {artist?.name} represents the dedication and artistry that defines today's touring musicians.
                   </p>
                 </div>
               </CardContent>

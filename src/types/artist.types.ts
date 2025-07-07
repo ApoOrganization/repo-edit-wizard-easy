@@ -1,35 +1,11 @@
 export interface ArtistListItem {
-  canonical_id: string | null;  // UUID in database
-  name: string | null;
-  normalized_name: string | null;
-  spotify_link: string | null;
-  monthly_listeners: number | null;
-  followers: number | null;
-  agency: string | null;
-  territory: string | null;
-  booking_emails: string | null;
-  social_presence: {
-    instagram?: string;
-    twitter?: string;
-    facebook?: string;
-    website?: string;
-  } | null;
-  total_events: number | null;
-  upcoming_events: number | null;
-  past_events: number | null;
-  recent_events: number | null;
-  unique_venues: number | null;
-  cities_performed: number | null;
-  top_genres: string[] | null;  // This is the actual column name
-  last_performance: string | null;
-  next_performance: string | null;
-  top_cities: any | null;  // JSONB field
-  activity_status: string | null;
-  popularity_tier: string | null;
+  id: string;  // UUID from Edge Function
+  name: string;
+  total_count?: number;  // For pagination from Edge Function
 }
 
 export interface TransformedArtist {
-  id: number | string;
+  id: string;  // UUID only
   name: string;
   agency: string;
   agent: string;
@@ -37,7 +13,6 @@ export interface TransformedArtist {
   monthlyListeners: number;
   followers: number;
   topCities: string[];
-  genre: string;
   email: string;
   profileUrl: string;
   spotifyUrl: string;
@@ -45,7 +20,6 @@ export interface TransformedArtist {
 
 export interface ArtistSearchParams {
   searchTerm?: string;
-  genres?: string[];
   agencies?: string[];
   territories?: string[];
   minListeners?: number;
@@ -55,18 +29,51 @@ export interface ArtistSearchParams {
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface ArtistSearchResponse {
-  artists: ArtistListItem[];
+// Artist Details Interface for Edge Function response
+export interface ArtistDetails {
+  artist: {
+    id: string;
+    name: string;
+    normalized_name: string;
+    spotify_link: string | null;
+    created_at: string;
+    updated_at: string;
+  };
+  stats: {
+    total_events: number;
+    upcoming_events: number;
+    past_events: number;
+    cities_performed: number;
+  };
+  recent_events: any[];
+  upcoming_events: any[];
+  top_venues: any[];
+  top_cities: any[];
+}
+
+// Search Artists Interface for Edge Function response
+export interface SearchArtistsResponse {
+  artists: {
+    id: string;
+    name: string;
+    total_events: number;
+    upcoming_events: number;
+    cities: string[];
+  }[];
   pagination: {
     page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+    page_size: number;
+    total_count: number;
+    total_pages: number;
+  };
+  filters_applied: {
+    search_term: string | null;
+    min_events: number | null;
+    has_upcoming_events: boolean | null;
   };
 }
 
 export interface ArtistFilterOptions {
   agencies: string[];
   territories: string[];
-  genres: string[];
 }

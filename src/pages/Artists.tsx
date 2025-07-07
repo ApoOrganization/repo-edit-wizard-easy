@@ -6,52 +6,51 @@ import { Button } from "@/components/ui/button";
 import { Users, Building2, User, Music, Globe, Loader2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import UniversalFilterPanel, { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
-import { useArtistSearch, useArtistFilterOptions } from "@/hooks/useArtists";
+import { useArtistsList, useArtistFilterOptions } from "@/hooks/useArtists";
 import { ArtistSearchParams } from "@/types/artist.types";
 import { transformArtistFromDB } from "@/utils/artistTransformers";
 import { useDebouncedCallback } from 'use-debounce';
 
 const Artists = () => {
   const [activeTab, setActiveTab] = useState("internal");
-  const [searchParams, setSearchParams] = useState<ArtistSearchParams>({
+  const [searchParams, setSearchParams] = useState({
+    searchQuery: '',
     page: 1,
-    limit: 20,
-    sortBy: 'monthly_listeners',
-    sortOrder: 'desc'
+    pageSize: 20
   });
   
   const [filters, setFilters] = useState<UniversalFilterState>({
     search: '',
-    genres: [],
     agencies: [],
     territories: [],
   });
 
   // Fetch data from backend
-  const { data: searchResults, isLoading, error } = useArtistSearch(searchParams);
+  const { data: searchResults, isLoading, error } = useArtistsList(searchParams);
   const { data: filterOptions, isLoading: filterOptionsLoading } = useArtistFilterOptions();
   
   const rawArtists = searchResults?.artists || [];
-  const pagination = searchResults?.pagination;
+  const totalCount = searchResults?.totalCount || 0;
+  const pagination = {
+    page: searchParams.page,
+    limit: searchParams.pageSize,
+    total: totalCount,
+    totalPages: Math.ceil(totalCount / searchParams.pageSize)
+  };
 
   // Transform raw artists to match component expectations
   const artists = rawArtists.map(transformArtistFromDB);
 
   // Debounced search to avoid excessive API calls
   const debouncedUpdateSearch = useDebouncedCallback((search: string) => {
-    setSearchParams(prev => ({ ...prev, searchTerm: search, page: 1 }));
+    setSearchParams(prev => ({ ...prev, searchQuery: search, page: 1 }));
   }, 300);
 
-  // Update search params when filters change
+  // Update search params when filters change (simplified for simple list)
   useEffect(() => {
-    setSearchParams(prev => ({
-      ...prev,
-      genres: filters.genres as string[],
-      agencies: filters.agencies as string[],
-      territories: filters.territories as string[],
-      page: 1
-    }));
-  }, [filters.genres, filters.agencies, filters.territories]);
+    // For now, we only support search query in the simple list
+    // Advanced filtering will be handled by the search Edge Function
+  }, [filters.agencies, filters.territories]);
 
   useEffect(() => {
     debouncedUpdateSearch(filters.search as string);
@@ -75,19 +74,6 @@ const Artists = () => {
       collapsible: false,
     },
     {
-      key: "genres",
-      title: "Genres",
-      type: "checkbox",
-      icon: "music",
-      options: (filterOptions?.genres || []).map(genre => ({
-        value: genre,
-        label: genre,
-        count: rawArtists.filter(a => a.top_genres?.includes(genre)).length,
-      })),
-      collapsible: true,
-      defaultOpen: true,
-    },
-    {
       key: "agencies",
       title: "Agencies",
       type: "checkbox",
@@ -95,7 +81,7 @@ const Artists = () => {
       options: (filterOptions?.agencies || []).map(agency => ({
         value: agency,
         label: agency,
-        count: rawArtists.filter(a => a.agency === agency).length,
+        count: 0, // Count will be handled by backend
       })),
       collapsible: true,
       defaultOpen: false,
@@ -108,7 +94,7 @@ const Artists = () => {
       options: (filterOptions?.territories || []).map(territory => ({
         value: territory,
         label: territory,
-        count: rawArtists.filter(a => a.territory === territory).length,
+        count: 0, // Count will be handled by backend
       })),
       collapsible: true,
       defaultOpen: false,
@@ -195,7 +181,7 @@ const Artists = () => {
                 {isLoading ? (
                   'Loading artists...'
                 ) : (
-                  `Showing ${artists.length} of ${pagination?.total || 0} artists`
+                  `Showing ${artists.length} of ${totalCount} artists`
                 )}
               </p>
             </div>
@@ -205,19 +191,19 @@ const Artists = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
-                  disabled={pagination.page <= 1 || isLoading}
+                  onClick={() => handlePageChange(Math.max(1, searchParams.page - 1))}
+                  disabled={searchParams.page <= 1 || isLoading}
                 >
                   Previous
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Page {pagination.page} of {pagination.totalPages}
+                  Page {searchParams.page} of {pagination.totalPages}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
-                  disabled={pagination.page >= pagination.totalPages || isLoading}
+                  onClick={() => handlePageChange(Math.min(pagination.totalPages, searchParams.page + 1))}
+                  disabled={searchParams.page >= pagination.totalPages || isLoading}
                 >
                   Next
                 </Button>
@@ -258,7 +244,7 @@ const Artists = () => {
                           <p className="text-sm text-muted-foreground">{artist.agency}</p>
                         </div>
                         <Badge variant="secondary" className="text-xs">
-                          {artist.genre}
+                          Artist
                         </Badge>
                       </div>
                     </CardHeader>

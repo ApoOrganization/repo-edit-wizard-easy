@@ -1,111 +1,89 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { ArtistSearchParams, ArtistSearchResponse, ArtistFilterOptions } from '@/types/artist.types';
+import { ArtistSearchParams, ArtistFilterOptions, ArtistListItem, SearchArtistsResponse } from '@/types/artist.types';
 
+// Simple artists list using Edge Function
+export const useArtistsList = (params: { searchQuery?: string; page?: number; pageSize?: number }) => {
+  return useQuery<{ artists: ArtistListItem[]; totalCount: number }>({
+    queryKey: ['artists-list', params],
+    queryFn: async () => {
+      console.log('Fetching artists list with params:', params);
+
+      const { data, error } = await supabase.functions.invoke('get-artists-list', {
+        body: {
+          searchQuery: params.searchQuery || '',
+          page: params.page || 1,
+          pageSize: params.pageSize || 50
+        }
+      });
+
+      if (error) {
+        console.error('Error fetching artists list:', error);
+        throw new Error(`Failed to fetch artists: ${error.message}`);
+      }
+
+      if (!data || !Array.isArray(data)) {
+        throw new Error('Invalid response format from artists list API');
+      }
+
+      const totalCount = data[0]?.total_count || 0;
+      const artists = data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        total_count: item.total_count
+      }));
+
+      console.log('Artists list results:', { 
+        count: artists.length, 
+        total: totalCount,
+        first_artist: artists[0]?.name 
+      });
+
+      return {
+        artists,
+        totalCount
+      };
+    },
+    enabled: true,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    placeholderData: (previousData) => previousData,
+    retry: 2,
+  });
+};
+
+// Search artists using Edge Function
 export const useArtistSearch = (params: ArtistSearchParams) => {
-  return useQuery<ArtistSearchResponse>({
+  return useQuery<SearchArtistsResponse>({
     queryKey: ['artists-search', params],
     queryFn: async () => {
       console.log('Searching artists with params:', params);
 
-      // Use direct Supabase query with essential fields only for performance
-      let query = supabase
-        .from('artist_list_summary')
-        .select('canonical_id, name, normalized_name, spotify_link, monthly_listeners, followers, agency, territory, booking_emails, top_genres', { count: 'exact' });
-
-      // Apply search term across multiple fields
-      if (params.searchTerm) {
-        query = query.or(`name.ilike.%${params.searchTerm}%,agency.ilike.%${params.searchTerm}%,territory.ilike.%${params.searchTerm}%`);
-      }
-
-      // Apply genre filter for array field - use top_genres not genres
-      if (params.genres && params.genres.length > 0) {
-        // Use overlaps operator for array fields
-        query = query.overlaps('top_genres', params.genres);
-      }
-
-      // Apply agency filter
-      if (params.agencies && params.agencies.length > 0) {
-        query = query.in('agency', params.agencies);
-      }
-
-      // Apply territory filter
-      if (params.territories && params.territories.length > 0) {
-        query = query.in('territory', params.territories);
-      }
-
-      // Apply minimum listeners filter
-      if (params.minListeners) {
-        query = query.gte('monthly_listeners', params.minListeners);
-      }
-
-      // Apply sorting - simplified to avoid timeout issues
-      const sortBy = params.sortBy || 'monthly_listeners';
-      const sortOrder = params.sortOrder || 'desc';
-      
-      // For monthly_listeners, use simpler sorting to avoid timeout
-      if (sortBy === 'monthly_listeners') {
-        query = query.order('monthly_listeners', { ascending: sortOrder === 'asc' });
-      } else {
-        query = query.order(sortBy, { ascending: sortOrder === 'asc' });
-      }
-
-      // Apply pagination
-      const page = params.page || 1;
-      const limit = params.limit || 20;
-      const from = (page - 1) * limit;
-      query = query.range(from, from + limit - 1);
-
-      let data, error, count;
-      
-      try {
-        // Try the main query with timeout handling
-        const result = await Promise.race([
-          query,
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Query timeout')), 8000)
-          )
-        ]) as any;
-        
-        data = result.data;
-        error = result.error;
-        count = result.count;
-      } catch (timeoutError) {
-        console.warn('Main query timed out, trying fallback query:', timeoutError);
-        
-        // Fallback query with minimal fields and no complex operations
-        const fallbackQuery = supabase
-          .from('artist_list_summary')
-          .select('canonical_id, name, agency, territory, monthly_listeners, followers', { count: 'exact' })
-          .order('name')
-          .limit(params.limit || 20);
-          
-        const fallbackResult = await fallbackQuery;
-        data = fallbackResult.data;
-        error = fallbackResult.error;
-        count = fallbackResult.count;
-      }
+      const { data, error } = await supabase.functions.invoke('search-artists', {
+        body: {
+          search_term: params.searchTerm || null,
+          min_events: params.minListeners || null,
+          has_upcoming_events: null,
+          page: params.page || 1,
+          page_size: params.limit || 50
+        }
+      });
 
       if (error) {
-        console.error('Error fetching artists:', error);
-        throw error;
+        console.error('Error searching artists:', error);
+        throw new Error(`Failed to search artists: ${error.message}`);
+      }
+
+      if (!data || !data.artists || !Array.isArray(data.artists)) {
+        throw new Error('Invalid response format from artists search API');
       }
 
       console.log('Artists search results:', { 
-        count: data?.length, 
-        total: count,
-        first_artist: data?.[0]?.name 
+        count: data.artists.length, 
+        total: data.pagination?.total_count || 0,
+        first_artist: data.artists[0]?.name 
       });
 
-      return {
-        artists: data || [],
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          totalPages: Math.ceil((count || 0) / limit)
-        }
-      };
+      return data;
     },
     enabled: true,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -148,20 +126,12 @@ export const useArtistFilterOptions = () => {
           .sort()
       )] as string[];
 
-      const genres = [...new Set(
-        artists
-          ?.flatMap(a => a.top_genres || [])  // Use top_genres
-          .filter(Boolean)
-          .sort()
-      )] as string[];
-
       console.log('Filter options extracted:', { 
         agencies: agencies.length, 
-        territories: territories.length, 
-        genres: genres.length 
+        territories: territories.length
       });
 
-      return { agencies, territories, genres };
+      return { agencies, territories };
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,

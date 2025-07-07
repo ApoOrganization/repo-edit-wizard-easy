@@ -19,10 +19,6 @@ export const transformArtistFromDB = (dbArtist: ArtistListItem): TransformedArti
     return 'Unknown Agent';
   };
 
-  // Extract primary genre from top_genres array
-  const primaryGenre = Array.isArray(dbArtist.top_genres) && dbArtist.top_genres.length > 0 
-    ? dbArtist.top_genres[0] 
-    : 'Unknown';
 
   // Generate email from agency and normalize it
   const generateEmail = (agency: string | null): string => {
@@ -74,18 +70,17 @@ export const transformArtistFromDB = (dbArtist: ArtistListItem): TransformedArti
   };
 
   return {
-    // Use canonical_id instead of id, keep as string
-    id: dbArtist.canonical_id || 'unknown',
+    // Use id from Edge Function response
+    id: dbArtist.id || 'unknown',
     name: dbArtist.name || 'Unknown Artist',
-    agency: dbArtist.agency || 'Unknown Agency',
-    agent: extractAgentName(dbArtist.booking_emails, dbArtist.agency),
-    territory: dbArtist.territory || 'Unknown Territory',
-    monthlyListeners: typeof dbArtist.monthly_listeners === 'number' ? dbArtist.monthly_listeners : 0,
-    followers: typeof dbArtist.followers === 'number' ? dbArtist.followers : 0,
-    topCities: extractTopCities(dbArtist.top_cities, dbArtist.territory),
-    genre: primaryGenre,
-    email: dbArtist.booking_emails || generateEmail(dbArtist.agency),
+    agency: 'Unknown Agency', // Not available in simple list
+    agent: 'Unknown Agent', // Not available in simple list
+    territory: 'Unknown Territory', // Not available in simple list
+    monthlyListeners: 0, // Not available in simple list
+    followers: 0, // Not available in simple list
+    topCities: ['Unknown'], // Not available in simple list
+    email: 'unknown@example.com', // Not available in simple list
     profileUrl: generateProfileUrl(dbArtist.name || 'unknown'),
-    spotifyUrl: dbArtist.spotify_link || `https://spotify.com/artist/${dbArtist.normalized_name || 'unknown'}`
+    spotifyUrl: `https://spotify.com/artist/${dbArtist.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`
   };
 };
