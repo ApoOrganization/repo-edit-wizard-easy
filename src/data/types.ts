@@ -7,14 +7,14 @@ export interface Event {
   date: string;
   venue: string;
   city: string;
-  promoter: string;
+  promoter?: string;
   genre: string;
   status: 'On Sale' | 'Sold Out' | 'Cancelled' | 'Postponed';
   providers: string[];
-  image: string;
-  revenue: number;
-  ticketsSold: number;
-  capacity: number;
+  image?: string;
+  revenue?: number;
+  ticketsSold?: number;
+  capacity?: number;
   artists: Artist[];
 }
 

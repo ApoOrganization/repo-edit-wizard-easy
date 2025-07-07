@@ -88,7 +88,7 @@ export const useEventSearch = (params: EventSearchParams) => {
         },
       };
     },
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 };
 

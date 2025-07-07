@@ -79,29 +79,37 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
               </span>
             </div>
             
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Users className="h-3 w-3 mr-2" />
-              <span 
-                className="truncate hover:text-primary transition-colors cursor-pointer"
-                onClick={handlePromoterNavigation}
-              >
-                {event.promoter}
-              </span>
-            </div>
+            {event.promoter && (
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Users className="h-3 w-3 mr-2" />
+                <span 
+                  className="truncate hover:text-primary transition-colors cursor-pointer"
+                  onClick={handlePromoterNavigation}
+                >
+                  {event.promoter}
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Revenue</p>
-              <p className="font-semibold font-manrope text-sm">{formatCurrency(event.revenue)}</p>
+          {(event.revenue !== undefined || event.ticketsSold !== undefined) && (
+            <div className="grid grid-cols-2 gap-3 pt-3 border-t border-border">
+              {event.revenue !== undefined && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Revenue</p>
+                  <p className="font-semibold font-manrope text-sm">{formatCurrency(event.revenue)}</p>
+                </div>
+              )}
+              {event.ticketsSold !== undefined && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">Sold</p>
+                  <p className="font-semibold font-manrope text-sm">
+                    {event.ticketsSold.toLocaleString()}
+                  </p>
+                </div>
+              )}
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Sold</p>
-              <p className="font-semibold font-manrope text-sm">
-                {event.ticketsSold.toLocaleString()}
-              </p>
-            </div>
-          </div>
+          )}
 
           <div className="flex flex-wrap gap-2">
             {event.providers.slice(0, 2).map((provider, index) => (

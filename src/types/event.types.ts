@@ -69,23 +69,26 @@ export interface TransformedEvent {
   date: string;
   venue: string;
   city: string;
-  promoter: string;
+  promoter?: string;
   genre: string;
   status: 'On Sale' | 'Sold Out' | 'Cancelled' | 'Postponed';
   providers: string[];
-  image: string;
-  revenue: number;
-  ticketsSold: number;
-  capacity: number;
+  image?: string;
+  revenue?: number;
+  ticketsSold?: number;
+  capacity?: number;
   artists: Array<{
     id: number;
     name: string;
-    agency?: string;
-    agent?: string;
-    territory?: string;
-    monthlyListeners?: number;
-    followers?: number;
-    topCities?: string[];
-    genre?: string;
+    agency: string;
+    agent: string;
+    territory: string;
+    monthlyListeners: number;
+    followers: number;
+    topCities: string[];
+    genre: string;
+    email?: string;
+    profileUrl?: string;
+    spotifyUrl?: string;
   }>;
 }

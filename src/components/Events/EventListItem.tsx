@@ -32,7 +32,7 @@ const EventListItem = ({ event }: EventListItemProps) => {
     }).format(value);
   };
 
-  const selloutPercentage = (event.ticketsSold / event.capacity) * 100;
+  const selloutPercentage = (event.ticketsSold && event.capacity) ? (event.ticketsSold / event.capacity) * 100 : 0;
 
   const handleVenueNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -86,38 +86,50 @@ const EventListItem = ({ event }: EventListItemProps) => {
                   >
                     {event.venue}
                   </span>
-                  <span className="mx-1">•</span>
-                  <span 
-                    className="truncate hover:text-primary transition-colors cursor-pointer"
-                    onClick={handlePromoterNavigation}
-                  >
-                    {event.promoter}
-                  </span>
+                  {event.promoter && (
+                    <>
+                      <span className="mx-1">•</span>
+                      <span 
+                        className="truncate hover:text-primary transition-colors cursor-pointer"
+                        onClick={handlePromoterNavigation}
+                      >
+                        {event.promoter}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Right side - Metrics */}
-            <div className="flex-shrink-0 text-right space-y-2">
-              <div>
-                <p className="text-xs text-muted-foreground">Revenue</p>
-                <p className="font-semibold font-manrope text-sm">{formatCurrency(event.revenue)}</p>
+            {(event.revenue !== undefined || event.ticketsSold !== undefined) && (
+              <div className="flex-shrink-0 text-right space-y-2">
+                {event.revenue !== undefined && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Revenue</p>
+                    <p className="font-semibold font-manrope text-sm">{formatCurrency(event.revenue)}</p>
+                  </div>
+                )}
+                
+                {event.ticketsSold !== undefined && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Sold</p>
+                    <p className="font-semibold font-manrope text-sm">
+                      {event.ticketsSold.toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                
+                {selloutPercentage > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground">Sellout</p>
+                    <p className="font-semibold font-manrope text-sm">
+                      {selloutPercentage.toFixed(0)}%
+                    </p>
+                  </div>
+                )}
               </div>
-              
-              <div>
-                <p className="text-xs text-muted-foreground">Sold</p>
-                <p className="font-semibold font-manrope text-sm">
-                  {event.ticketsSold.toLocaleString()}
-                </p>
-              </div>
-              
-              <div>
-                <p className="text-xs text-muted-foreground">Sellout</p>
-                <p className="font-semibold font-manrope text-sm">
-                  {selloutPercentage.toFixed(0)}%
-                </p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Bottom row - Artists and providers */}

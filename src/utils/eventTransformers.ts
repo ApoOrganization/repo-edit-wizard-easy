@@ -1,4 +1,3 @@
-
 import { EventListItem, TransformedEvent } from '@/types/event.types';
 
 export const transformEventFromDB = (dbEvent: EventListItem): TransformedEvent => {
@@ -24,7 +23,13 @@ export const transformEventFromDB = (dbEvent: EventListItem): TransformedEvent =
     ? dbEvent.top_artists.map((artist: any, index: number) => ({
         id: index,
         name: artist?.name || 'Unknown Artist',
+        agency: 'Unknown Agency',
+        agent: 'Unknown Agent',
+        territory: 'Unknown Territory',
         monthlyListeners: artist?.monthly_listeners || 0,
+        followers: 0,
+        topCities: [],
+        genre: dbEvent.genre || 'Unknown',
       }))
     : [];
 
@@ -37,14 +42,15 @@ export const transformEventFromDB = (dbEvent: EventListItem): TransformedEvent =
     date: dbEvent.date,
     venue: dbEvent.venue_name || 'Unknown Venue',
     city: dbEvent.venue_city || 'Unknown City',
-    promoter: 'Unknown', // We'll fix this when promoter data is available
     genre: dbEvent.genre || 'Unknown',
     status: mapStatus(dbEvent.status),
     providers: providers,
-    image: '/placeholder.svg', // Default image
-    revenue: 0, // Not available in list view
-    ticketsSold: 0, // Not available in list view
-    capacity: 0, // Not available in list view
     artists: artists,
+    // Optional fields - only include if you need them
+    // promoter: undefined,
+    // image: '/placeholder.svg',
+    // revenue: undefined,
+    // ticketsSold: undefined,
+    // capacity: undefined,
   };
 };
