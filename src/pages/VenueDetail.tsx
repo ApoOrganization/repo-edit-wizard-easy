@@ -1,98 +1,131 @@
-
 import { useParams, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { mockVenues, mockEvents } from "@/data/mockData";
-import { ArrowLeft, MapPin, Users, Star, Building2, Calendar, DollarSign } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, MapPin, Users, Star, Building2, Calendar, DollarSign, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import UpcomingEventsCard from "@/components/shared/UpcomingEventsCard";
-import { EnhancedCalendar } from "@/components/shared/EnhancedCalendar";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useVenueAnalytics, useVenueUpcomingEvents, useVenuePastEvents, useIsVenueAnalyticsFallback, useIsVenueAnalyticsError } from "@/hooks/useVenueAnalytics";
+import { formatNumber, formatCurrency, formatScore, formatDecimalPercentage } from "@/utils/formatters";
 
 const VenueDetail = () => {
   const { id } = useParams();
+  const [activeTab, setActiveTab] = useState('overview');
+  const [timeRange, setTimeRange] = useState<'month' | 'quarter' | 'year' | 'all'>('year');
   
-  const { data: venue, isLoading } = useQuery({
-    queryKey: ['venue', id],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      return mockVenues.find(v => v.id === id);
-    },
+  // Main analytics data
+  const {
+    data: analyticsData,
+    isLoading,
+    error
+  } = useVenueAnalytics(id, timeRange);
+  
+  // Events data (lazy loaded based on tab)
+  const { data: upcomingEventsData } = useVenueUpcomingEvents(id, activeTab === 'events');
+  const { data: pastEventsData } = useVenuePastEvents(id, activeTab === 'events');
+
+  // Destructure analytics data
+  const venue = analyticsData?.venue;
+  const analytics = analyticsData?.analytics;
+  const timeSeries = analyticsData?.timeSeries || [];
+  const upcomingEvents = upcomingEventsData?.events || [];
+  const pastEvents = pastEventsData?.events || [];
+  
+  // Check data status
+  const isFallbackData = useIsVenueAnalyticsFallback(analyticsData);
+  const isErrorState = useIsVenueAnalyticsError(analyticsData);
+  const hasFullAnalytics = !isFallbackData && !isErrorState && analytics;
+  
+  console.log('🏟️ Venue Detail Status:', {
+    venueId: id,
+    venueName: venue?.name,
+    isFallbackData,
+    isErrorState,
+    hasFullAnalytics,
+    timeRange
   });
 
-  const { data: venueEvents } = useQuery({
-    queryKey: ['venue-events', id],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 200));
-      return mockEvents.filter(event => event.venue === venue?.name);
-    },
-    enabled: !!venue,
-  });
+  // Helper functions
+  const renderGrowthIcon = (value: number) => {
+    if (value > 0) return <TrendingUp className="h-3 w-3 text-green-600" />;
+    if (value < 0) return <TrendingDown className="h-3 w-3 text-red-600" />;
+    return <Minus className="h-3 w-3 text-muted-foreground" />;
+  };
 
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="hero">
-          <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Loading Venue...</h1>
+        <div className="space-y-6">
+          {/* Loading Skeleton */}
+          <div className="flex items-center gap-4">
+            <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+          </div>
+          
+          <div className="py-2">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="h-8 w-64 bg-muted rounded animate-pulse" />
+              <div className="h-6 w-20 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+          
+          <div className="border-t border-border" />
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-2">
+                    <div className="h-8 w-16 bg-muted rounded animate-pulse mx-auto" />
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse mx-auto" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="text-center py-8">
+            <div className="h-4 w-48 bg-muted rounded animate-pulse mx-auto" />
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!venue) {
+  if (error || !venue) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="hero">
-          <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Venue Not Found</h1>
+        <div className="text-center space-y-6">
+          <div className="py-12">
+            <h1 className="text-2xl font-bold text-foreground mb-4 font-manrope">
+              {isErrorState ? 'Data Temporarily Unavailable' : 'Venue Not Found'}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              {isErrorState 
+                ? 'We are experiencing technical difficulties. Please try again later.' 
+                : error instanceof Error ? error.message : 'Unable to load venue data'
+              }
+            </p>
+            <div className="space-x-4">
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/venues">Back to Venues</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const utilizationRate = ((venue.events / 365) * 100);
-  const avgRevenuePerEvent = venue.revenue / venue.events;
-
-  // Calculate top performers (artists who performed most at this venue)
-  const artistPerformances = venueEvents?.reduce((acc, event) => {
-    event.artists.forEach(artist => {
-      acc[artist.name] = (acc[artist.name] || 0) + 1;
-    });
-    return acc;
-  }, {} as Record<string, number>) || {};
-
-  const topPerformers = Object.entries(artistPerformances)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5);
-
-  // Calculate top promoters
-  const promoterCounts = venueEvents?.reduce((acc, event) => {
-    acc[event.promoter] = (acc[event.promoter] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>) || {};
-
-  const topPromoters = Object.entries(promoterCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
-
-  const recentEvents = venueEvents?.slice(0, 5) || [];
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-4">
       <div className="space-y-6">
-        {/* Compact Navigation */}
+        {/* Navigation */}
         <div className="flex items-center gap-4">
-          <Link 
-            to="/venues" 
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
+          <Link to="/venues" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="h-4 w-4" />
             Venues
           </Link>
@@ -100,159 +133,400 @@ const VenueDetail = () => {
 
         {/* Header Section */}
         <div className="py-2">
-          <div className="flex items-center gap-4 mb-4">
-            <Badge variant="outline">{venue.type}</Badge>
-            <div className="flex items-center space-x-1">
-              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-              <span className="font-medium">{venue.rating}</span>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-4">
+              <h1 className="text-2xl font-bold text-foreground font-manrope">{venue?.name}</h1>
+              <Badge variant="secondary" className="text-xs">
+                <MapPin className="h-3 w-3 mr-1" />
+                {venue?.city}
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                <Users className="h-3 w-3 mr-1" />
+                {formatNumber(venue?.capacity)} capacity
+              </Badge>
             </div>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">{venue.name}</h1>
-          <div className="flex items-center text-muted-foreground">
-            <MapPin className="h-4 w-4 mr-2" />
-            <span>{venue.city}</span>
+            
+            {/* Time Range Selector */}
+            <Select value={timeRange} onValueChange={(value: any) => setTimeRange(value)}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Time Range" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Last Month</SelectItem>
+                <SelectItem value="quarter">Last Quarter</SelectItem>
+                <SelectItem value="year">Last Year</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Divider */}
         <div className="border-t border-border" />
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
-          {/* Left Column - Venue Overview (70%) */}
-          <div className="lg:col-span-7">
-            <Card className="h-[480px] relative overflow-hidden">
-              {/* Background Image with Overlay */}
-              {venue.image && (
-                <div className="absolute inset-0 z-0">
-                  <img 
-                    src={venue.image} 
-                    alt={venue.name}
-                    className="w-full h-full object-cover opacity-10"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-card to-transparent" />
-                </div>
-              )}
-              
-              {/* Content */}
-              <CardHeader className="relative z-10">
-                <CardTitle className="text-lg">Venue Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="relative z-10 space-y-6">
-                {/* Key Metrics Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <Users className="h-6 w-6 mx-auto mb-2 text-blue-600" />
-                    <p className="text-xs text-muted-foreground">Capacity</p>
-                    <p className="text-lg font-bold font-manrope">{venue.capacity.toLocaleString()}</p>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <Calendar className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                    <p className="text-xs text-muted-foreground">Total Events</p>
-                    <p className="text-lg font-bold font-manrope">{venue.events}</p>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <Building2 className="h-6 w-6 mx-auto mb-2 text-purple-600" />
-                    <p className="text-xs text-muted-foreground">Utilization Rate</p>
-                    <p className="text-lg font-bold font-manrope">{utilizationRate.toFixed(1)}%</p>
-                  </div>
-                  
-                  <div className="text-center p-4 bg-muted/30 rounded-lg">
-                    <DollarSign className="h-6 w-6 mx-auto mb-2 text-orange-600" />
-                    <p className="text-xs text-muted-foreground">Total Revenue</p>
-                    <p className="text-lg font-bold font-manrope">{formatCurrency(venue.revenue)}</p>
-                  </div>
-                </div>
-
-                {/* Top Performers Section */}
-                <div>
-                  <h4 className="text-sm font-semibold mb-3">Top Performers</h4>
-                  <div className="space-y-2">
-                    {topPerformers.length > 0 ? (
-                      topPerformers.map(([artistName, count], index) => (
-                        <div key={artistName} className="flex justify-between items-center text-sm">
-                          <span className="font-medium">{index + 1}. {artistName}</span>
-                          <span className="text-muted-foreground">{count} show{count !== 1 ? 's' : ''}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No performance data available</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Top Promoters Section */}
-                <div>
-                  <h4 className="text-sm font-semibold mb-3">Top Promoters</h4>
-                  <div className="space-y-2">
-                    {topPromoters.length > 0 ? (
-                      topPromoters.map(([promoterName, count], index) => (
-                        <div key={promoterName} className="flex justify-between items-center text-sm">
-                          <span className="font-medium">{index + 1}. {promoterName}</span>
-                          <span className="text-muted-foreground">{count} event{count !== 1 ? 's' : ''}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No promoter data available</p>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column (30%) */}
-          <div className="lg:col-span-3 space-y-4">
-            {/* Recent Events */}
-            <UpcomingEventsCard 
-              events={recentEvents} 
-              title="Recent Events"
-              maxEvents={5}
-            />
-
-            {/* Venue Information - Simple Card */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Building2 className="h-4 w-4" />
-                  Venue Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Type:</span>
-                    <Badge variant="outline">{venue.type}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Capacity:</span>
-                    <span className="font-semibold">{venue.capacity.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Rating:</span>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                      <span className="font-semibold">{venue.rating}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Avg Revenue/Event:</span>
-                    <span className="font-semibold">{formatCurrency(avgRevenuePerEvent)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Metrics Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{venue?.event_stats?.total_events || 0}</div>
+                <p className="text-xs text-muted-foreground">Total Events</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{analytics?.uniqueArtists || 0}</div>
+                <p className="text-xs text-muted-foreground">Unique Artists</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{formatScore(venue?.utilization_metrics?.capacity_utilization)}%</div>
+                <p className="text-xs text-muted-foreground">Utilization Rate</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold">{formatCurrency(venue?.pricing_analytics?.avg_ticket_price)}</div>
+                <p className="text-xs text-muted-foreground">Avg Ticket Price</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Calendar Section */}
-        <EnhancedCalendar 
-          events={venueEvents || []} 
-          title="Event Calendar"
-          entityType="venue"
-        />
+        {/* Performance Analytics - Only show with full analytics */}
+        {hasFullAnalytics && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatScore(analytics.artistReturnRate)}%</div>
+                  <p className="text-xs text-muted-foreground">Artist Return Rate</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{venue?.utilization_metrics?.avg_events_per_month.toFixed(1) || '0.0'}</div>
+                  <p className="text-xs text-muted-foreground">Events per Month</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{venue?.pricing_analytics?.price_range?.max ? formatCurrency(venue.pricing_analytics.price_range.max) : '$0'}</div>
+                  <p className="text-xs text-muted-foreground">Max Ticket Price</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+        
+        {/* Fallback Analytics Message */}
+        {isFallbackData && (
+          <Card className="mb-8 border-orange-200 bg-orange-50">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm text-orange-700">
+                  📊 Advanced analytics temporarily unavailable. Showing basic venue information.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Time Series Chart - Only show with full analytics */}
+        {hasFullAnalytics && timeSeries.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-sm font-semibold">Revenue & Events Trends</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 flex items-center justify-center text-muted-foreground">
+                {/* Placeholder for chart - would implement with Recharts */}
+                📈 Revenue and Events Chart ({timeSeries.length} data points)
+                <br />
+                <small>Chart visualization would be implemented here with Recharts</small>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabbed Content */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="events">Events</TabsTrigger>
+            <TabsTrigger value="analytics" disabled={!hasFullAnalytics}>
+              Analytics {!hasFullAnalytics && '(Unavailable)'}
+            </TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Top Artists */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Top Performing Artists</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {venue?.top_artists?.slice(0, 5).map((artist, index) => (
+                      <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                        <Link 
+                          to={`/artists/${artist.artist_id}`}
+                          className="text-sm hover:text-primary transition-colors"
+                        >
+                          {artist.artist_name}
+                        </Link>
+                        <div className="text-sm font-medium">{artist.performance_count} shows</div>
+                      </div>
+                    )) || <p className="text-sm text-muted-foreground">No artist data available</p>}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Day of Week Distribution */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Peak Days</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {venue?.day_of_week_distribution?.map((day, index) => (
+                      <div key={index} className="flex justify-between items-center py-1">
+                        <span className="text-sm">{day.day_of_week}</span>
+                        <div className="text-right">
+                          <div className="text-sm font-medium">{day.event_count} events</div>
+                          <div className="text-xs text-muted-foreground">{formatDecimalPercentage(day.percentage)}</div>
+                        </div>
+                      </div>
+                    )) || <p className="text-sm text-muted-foreground">No schedule data available</p>}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Utilization Metrics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Utilization Metrics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Capacity Utilization</span>
+                      <span className="text-sm font-medium">{formatScore(venue?.utilization_metrics?.capacity_utilization)}%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Avg Events/Month</span>
+                      <span className="text-sm font-medium">{venue?.utilization_metrics?.avg_events_per_month.toFixed(1) || '0.0'}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm">Peak Months</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {venue?.utilization_metrics?.peak_months?.map((month, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {month}
+                          </Badge>
+                        )) || <span className="text-xs text-muted-foreground">No peak data</span>}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Pricing Analytics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Pricing Analytics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Average Price</span>
+                      <span className="text-sm font-medium">{formatCurrency(venue?.pricing_analytics?.avg_ticket_price)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Price Range</span>
+                      <span className="text-sm font-medium">
+                        {formatCurrency(venue?.pricing_analytics?.price_range?.min)} - {formatCurrency(venue?.pricing_analytics?.price_range?.max)}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="events" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Upcoming Events */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Upcoming Events</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {upcomingEvents.length > 0 ? (
+                      upcomingEvents.map((event: any) => (
+                        <div key={event.event_id} className="p-3 border border-border rounded-md">
+                          <div className="font-medium text-sm">{event.event_name}</div>
+                          <div className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</div>
+                          <div className="text-xs text-muted-foreground">{event.status}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No upcoming events</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Past Events */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Recent Past Events</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {pastEvents.length > 0 ? (
+                      pastEvents.map((event: any) => (
+                        <div key={event.event_id} className="p-3 border border-border rounded-md">
+                          <div className="font-medium text-sm">{event.event_name}</div>
+                          <div className="text-xs text-muted-foreground">{new Date(event.date).toLocaleDateString()}</div>
+                          <div className="text-xs text-muted-foreground">{event.status}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No past events</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            {hasFullAnalytics ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Peak Days Chart */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Peak Days Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {analytics?.peakDays?.map((day, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-sm">{day.day_of_week}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{day.event_count} events</div>
+                          </div>
+                        </div>
+                      )) || <p className="text-sm text-muted-foreground">No peak days data available</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Time Series Summary */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Performance Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Time Range</span>
+                        <span className="text-sm font-medium">{analytics.timeRange}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Data Points</span>
+                        <span className="text-sm font-medium">{timeSeries.length}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Unique Artists</span>
+                        <span className="text-sm font-medium">{analytics.uniqueArtists}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                      📊 Advanced analytics are temporarily unavailable for this venue.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => window.location.reload()}
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="performance" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Event Statistics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Event Statistics</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Total Events</span>
+                      <span className="text-sm font-medium">{venue?.event_stats?.total_events || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Upcoming Events</span>
+                      <span className="text-sm font-medium">{venue?.event_stats?.upcoming_events || 0}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Recent Events</span>
+                      <span className="text-sm font-medium">{venue?.event_stats?.recent_events || 0}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Capacity Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-semibold">Capacity Information</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Total Capacity</span>
+                      <span className="text-sm font-medium">{formatNumber(venue?.capacity)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Utilization Rate</span>
+                      <span className="text-sm font-medium">{formatScore(venue?.utilization_metrics?.capacity_utilization)}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

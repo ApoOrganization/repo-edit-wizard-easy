@@ -66,3 +66,138 @@ export interface VenueFilterOptions {
     max: number;
   };
 }
+
+// Venue Analytics Response Interface
+export interface VenueAnalyticsResponse {
+  venue: VenueDetailsFull;
+  analytics: {
+    timeRange: string;
+    uniqueArtists: number;
+    artistReturnRate: number;
+    peakDays: Array<{
+      day_of_week: string;
+      event_count: number;
+    }>;
+    comparison?: VenueComparison[];
+  };
+  timeSeries: Array<{
+    month: string;
+    revenue: number;
+    events: number;
+    avg_attendance: number;
+  }>;
+}
+
+// Comprehensive Venue Details Interface
+export interface VenueDetailsFull {
+  id: string;
+  name: string;
+  city: string;
+  capacity: number;
+  event_stats: {
+    total_events: number;
+    upcoming_events: number;
+    recent_events: number;
+  };
+  utilization_metrics: {
+    avg_events_per_month: number;
+    capacity_utilization: number;
+    peak_months: string[];
+  };
+  pricing_analytics: {
+    avg_ticket_price: number;
+    price_range: {
+      min: number;
+      max: number;
+    };
+  };
+  top_artists: Array<{
+    artist_name: string;
+    artist_id: string;
+    performance_count: number;
+  }>;
+  day_of_week_distribution: Array<{
+    day_of_week: string;
+    event_count: number;
+    percentage: number;
+  }>;
+}
+
+// Venue Comparison Interface
+export interface VenueComparison {
+  venue_id: string;
+  venue_name: string;
+  similarity_score: number;
+  total_events: number;
+  capacity: number;
+  avg_ticket_price: number;
+}
+
+// Time Series Data Point
+export interface VenueTimeSeriesData {
+  month: string;
+  revenue: number;
+  events: number;
+  avg_attendance: number;
+}
+
+// Venue Analytics Query Parameters
+export interface VenueAnalyticsParams {
+  venueId: string;
+  timeRange?: 'month' | 'quarter' | 'year' | 'all';
+  compareWith?: string[];
+}
+
+// Peak Day Data
+export interface VenuePeakDay {
+  day_of_week: string;
+  event_count: number;
+  percentage?: number;
+}
+
+// Top Artist Performance
+export interface VenueTopArtist {
+  artist_name: string;
+  artist_id: string;
+  performance_count: number;
+  last_performance?: string;
+  avg_attendance?: number;
+}
+
+// Venue Utilization Metrics
+export interface VenueUtilizationMetrics {
+  avg_events_per_month: number;
+  capacity_utilization: number;
+  peak_months: string[];
+  occupancy_rate?: number;
+  booking_frequency?: number;
+}
+
+// Venue Pricing Analytics
+export interface VenuePricingAnalytics {
+  avg_ticket_price: number;
+  price_range: {
+    min: number;
+    max: number;
+  };
+  price_trends?: Array<{
+    month: string;
+    avg_price: number;
+  }>;
+}
+
+// Legacy interface for backward compatibility
+export interface VenueDetails {
+  id: string;
+  name: string;
+  city: string;
+  capacity: number;
+  totalEvents: number;
+  upcomingEvents: number;
+  recentEvents: number;
+  avgPrice: number | null;
+  topGenres: string[];
+  type: string;
+  rating: number;
+  utilization: number;
+}
