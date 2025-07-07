@@ -8,20 +8,20 @@ export const useArtistSearch = (params: ArtistSearchParams) => {
     queryFn: async () => {
       console.log('Searching artists with params:', params);
 
-      // Use direct Supabase query (same pattern as Events page)
+      // Use direct Supabase query with limited fields to improve performance
       let query = supabase
         .from('artist_list_summary')
-        .select('*', { count: 'exact' });
+        .select('canonical_id, name, normalized_name, spotify_link, monthly_listeners, followers, agency, territory, booking_emails, social_presence, total_events, upcoming_events, past_events, top_genres, top_cities', { count: 'exact' });
 
       // Apply search term across multiple fields
       if (params.searchTerm) {
         query = query.or(`name.ilike.%${params.searchTerm}%,agency.ilike.%${params.searchTerm}%,territory.ilike.%${params.searchTerm}%`);
       }
 
-      // Apply genre filter for array field
+      // Apply genre filter for array field - use top_genres not genres
       if (params.genres && params.genres.length > 0) {
-        // Use overlaps operator for array fields - check if any selected genres exist in the artist's genres array
-        query = query.overlaps('genres', params.genres);
+        // Use overlaps operator for array fields
+        query = query.overlaps('top_genres', params.genres);
       }
 
       // Apply agency filter
@@ -39,10 +39,10 @@ export const useArtistSearch = (params: ArtistSearchParams) => {
         query = query.gte('monthly_listeners', params.minListeners);
       }
 
-      // Apply sorting
+      // Apply sorting with null handling
       const sortBy = params.sortBy || 'monthly_listeners';
       const sortOrder = params.sortOrder || 'desc';
-      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+      query = query.order(sortBy, { ascending: sortOrder === 'asc', nullsFirst: false });
 
       // Apply pagination
       const page = params.page || 1;
@@ -86,9 +86,11 @@ export const useArtistFilterOptions = () => {
     queryFn: async () => {
       console.log('Fetching artist filter options...');
 
+      // Use correct column names based on actual schema
       const { data: artists, error } = await supabase
         .from('artist_list_summary')
-        .select('agency, territory, genres');
+        .select('agency, territory, top_genres')
+        .limit(1000); // Limit to prevent timeout
 
       if (error) {
         console.error('Error fetching artist filter options:', error);
@@ -112,7 +114,7 @@ export const useArtistFilterOptions = () => {
 
       const genres = [...new Set(
         artists
-          ?.flatMap(a => a.genres || [])
+          ?.flatMap(a => a.top_genres || [])  // Use top_genres
           .filter(Boolean)
           .sort()
       )] as string[];

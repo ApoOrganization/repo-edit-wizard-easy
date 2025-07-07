@@ -1,7 +1,7 @@
 export interface ArtistListItem {
-  id: string;
-  name: string;
-  normalized_name: string;
+  canonical_id: string | null;  // UUID in database
+  name: string | null;
+  normalized_name: string | null;
   spotify_link: string | null;
   monthly_listeners: number | null;
   followers: number | null;
@@ -14,14 +14,22 @@ export interface ArtistListItem {
     facebook?: string;
     website?: string;
   } | null;
-  total_events: number;
-  upcoming_events: number;
-  past_events: number;
-  genres: string[];
+  total_events: number | null;
+  upcoming_events: number | null;
+  past_events: number | null;
+  recent_events: number | null;
+  unique_venues: number | null;
+  cities_performed: number | null;
+  top_genres: string[] | null;  // This is the actual column name
+  last_performance: string | null;
+  next_performance: string | null;
+  top_cities: any | null;  // JSONB field
+  activity_status: string | null;
+  popularity_tier: string | null;
 }
 
 export interface TransformedArtist {
-  id: number;
+  id: number | string;
   name: string;
   agency: string;
   agent: string;

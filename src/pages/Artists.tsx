@@ -82,7 +82,7 @@ const Artists = () => {
       options: (filterOptions?.genres || []).map(genre => ({
         value: genre,
         label: genre,
-        count: rawArtists.filter(a => a.genres?.includes(genre)).length,
+        count: rawArtists.filter(a => a.top_genres?.includes(genre)).length,
       })),
       collapsible: true,
       defaultOpen: true,

@@ -19,9 +19,9 @@ export const transformArtistFromDB = (dbArtist: ArtistListItem): TransformedArti
     return 'Unknown Agent';
   };
 
-  // Extract primary genre from genres array
-  const primaryGenre = Array.isArray(dbArtist.genres) && dbArtist.genres.length > 0 
-    ? dbArtist.genres[0] 
+  // Extract primary genre from top_genres array
+  const primaryGenre = Array.isArray(dbArtist.top_genres) && dbArtist.top_genres.length > 0 
+    ? dbArtist.top_genres[0] 
     : 'Unknown';
 
   // Generate email from agency and normalize it
@@ -47,8 +47,21 @@ export const transformArtistFromDB = (dbArtist: ArtistListItem): TransformedArti
     return `https://example.com/${slug}`;
   };
 
-  // Generate top cities based on territory and genre
-  const generateTopCities = (territory: string | null, genre: string): string[] => {
+  // Extract top cities from JSONB field or generate based on territory
+  const extractTopCities = (topCitiesJsonb: any, territory: string | null): string[] => {
+    // If top_cities JSONB has data, extract city names
+    if (topCitiesJsonb && Array.isArray(topCitiesJsonb)) {
+      return topCitiesJsonb
+        .slice(0, 5)
+        .map((city: any) => {
+          if (typeof city === 'string') return city;
+          if (city?.city_name) return city.city_name;
+          if (city?.name) return city.name;
+          return 'Unknown City';
+        });
+    }
+
+    // Fallback to territory-based cities
     const territoryMap: { [key: string]: string[] } = {
       'North America': ['Los Angeles', 'New York', 'Toronto', 'Chicago', 'Nashville'],
       'Global': ['Los Angeles', 'London', 'New York', 'Berlin', 'Tokyo'],
@@ -61,14 +74,15 @@ export const transformArtistFromDB = (dbArtist: ArtistListItem): TransformedArti
   };
 
   return {
-    id: parseInt(dbArtist.id) || 0,
+    // Use canonical_id instead of id, keep as string
+    id: dbArtist.canonical_id || 'unknown',
     name: dbArtist.name || 'Unknown Artist',
     agency: dbArtist.agency || 'Unknown Agency',
     agent: extractAgentName(dbArtist.booking_emails, dbArtist.agency),
     territory: dbArtist.territory || 'Unknown Territory',
     monthlyListeners: typeof dbArtist.monthly_listeners === 'number' ? dbArtist.monthly_listeners : 0,
     followers: typeof dbArtist.followers === 'number' ? dbArtist.followers : 0,
-    topCities: generateTopCities(dbArtist.territory, primaryGenre),
+    topCities: extractTopCities(dbArtist.top_cities, dbArtist.territory),
     genre: primaryGenre,
     email: dbArtist.booking_emails || generateEmail(dbArtist.agency),
     profileUrl: generateProfileUrl(dbArtist.name || 'unknown'),
