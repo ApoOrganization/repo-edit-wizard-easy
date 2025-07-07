@@ -28,25 +28,81 @@ export const ArtistCalendarView: React.FC<ArtistCalendarViewProps> = ({
 
   // Transform calendar events to EnhancedCalendar format
   const transformToCalendarFormat = (events: CalendarEventData[]): Event[] => {
-    return events.map(event => ({
-      id: event.id,
-      name: event.name,
-      date: event.datetime,
-      venue: event.venue,
-      status: event.has_tickets ? 'On Sale' : 'Unknown',
-      // Add additional properties for display
-      has_tickets: event.has_tickets,
-      time: event.time,
-      city: event.city,
-      genre: '', // Not available in calendar function
-      providers: [], // Not available in calendar function
-      artists: [] // Not available in calendar function
-    }));
+    console.log('🔄 [ARTIST CALENDAR VIEW] Transforming events for calendar:', {
+      eventsCount: events.length,
+      sampleEvent: events[0] ? {
+        id: events[0].id,
+        idType: typeof events[0].id,
+        name: events[0].name,
+        status: events[0].status,
+        has_tickets: events[0].has_tickets
+      } : null
+    });
+
+    return events.map(event => {
+      // Map status from database to valid Event status values
+      let eventStatus: 'On Sale' | 'Sold Out' | 'Cancelled' | 'Postponed' = 'On Sale';
+      
+      if (event.status === 'cancelled') {
+        eventStatus = 'Cancelled';
+      } else if (event.status === 'sold_out') {
+        eventStatus = 'Sold Out';
+      } else if (event.status === 'postponed') {
+        eventStatus = 'Postponed';
+      } else if (event.has_tickets) {
+        eventStatus = 'On Sale';
+      } else {
+        eventStatus = 'Cancelled'; // Default for events without tickets
+      }
+
+      const transformedEvent = {
+        id: String(event.id), // Ensure ID is string
+        name: event.name,
+        date: event.datetime,
+        venue: event.venue,
+        status: eventStatus,
+        // Add additional properties for display
+        has_tickets: event.has_tickets,
+        time: event.time,
+        city: event.city,
+        genre: '', // Not available in calendar function
+        providers: [], // Not available in calendar function
+        artists: [] // Not available in calendar function
+      };
+
+      console.log('🎯 [ARTIST CALENDAR VIEW] Transformed event:', {
+        originalId: event.id,
+        transformedId: transformedEvent.id,
+        idType: typeof transformedEvent.id,
+        name: transformedEvent.name,
+        status: transformedEvent.status
+      });
+
+      return transformedEvent;
+    });
   };
 
   const handleEventClick = (eventId: string) => {
+    console.log('🔗 [ARTIST CALENDAR] Event clicked:', { 
+      eventId, 
+      eventIdType: typeof eventId,
+      artistId,
+      isValidUUID: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)
+    });
+
+    // Validate event ID before navigation
+    if (!eventId || eventId === 'NaN' || eventId === 'undefined') {
+      console.error('❌ [ARTIST CALENDAR] Invalid event ID:', eventId);
+      return;
+    }
+
+    // Check if it's a valid UUID format
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
+      console.error('❌ [ARTIST CALENDAR] Invalid UUID format:', eventId);
+      return;
+    }
+
     // Navigate to event detail page
-    console.log('🔗 [ARTIST CALENDAR] Event clicked:', { eventId, artistId });
     navigate(`/events/${eventId}`);
   };
 

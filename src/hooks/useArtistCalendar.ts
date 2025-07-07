@@ -7,21 +7,44 @@ import { format, getYear, getMonth } from 'date-fns';
 const transformCalendarData = (calendarData: ArtistCalendarResponse): CalendarEventData[] => {
   if (!calendarData) return [];
 
+  console.log('🔄 [ARTIST CALENDAR] Raw calendar data sample:', {
+    totalDates: Object.keys(calendarData).length,
+    firstDate: Object.keys(calendarData)[0],
+    firstDateEvents: Object.values(calendarData)[0]?.length || 0,
+    sampleEvent: Object.values(calendarData)[0]?.[0] ? {
+      id: Object.values(calendarData)[0][0].id,
+      idType: typeof Object.values(calendarData)[0][0].id,
+      name: Object.values(calendarData)[0][0].name,
+      status: Object.values(calendarData)[0][0].status
+    } : null
+  });
+
   const events: CalendarEventData[] = [];
 
   Object.entries(calendarData).forEach(([date, dayEvents]) => {
     dayEvents.forEach((event: ArtistCalendarEvent) => {
-      events.push({
-        id: event.id,
+      const transformedEvent = {
+        id: String(event.id), // Ensure ID is string
         date: date,
         name: event.name,
         venue: `${event.venue_name}, ${event.venue_city}`,
         city: event.venue_city,
         time: event.time || '',
-        status: event.status || 'Unknown',
+        status: event.status || 'active',
         has_tickets: event.has_tickets,
         datetime: `${date}T${event.time || '00:00'}:00Z`
+      };
+
+      console.log('📝 [ARTIST CALENDAR] Transforming event:', {
+        originalId: event.id,
+        originalIdType: typeof event.id,
+        transformedId: transformedEvent.id,
+        transformedIdType: typeof transformedEvent.id,
+        name: event.name,
+        date: date
       });
+
+      events.push(transformedEvent);
     });
   });
 
