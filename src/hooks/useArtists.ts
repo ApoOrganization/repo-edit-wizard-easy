@@ -22,15 +22,18 @@ export const useArtistsList = (params: { searchQuery?: string; page?: number; pa
         throw new Error(`Failed to fetch artists: ${error.message}`);
       }
 
-      if (!data || !Array.isArray(data)) {
+      if (!data || !data.success) {
         throw new Error('Invalid response format from artists list API');
       }
 
-      const totalCount = data[0]?.total_count || 0;
-      const artists = data.map((item: any) => ({
+      if (!data.artists || !Array.isArray(data.artists)) {
+        throw new Error('Artists array not found in response');
+      }
+
+      const totalCount = data.pagination?.totalCount || 0;
+      const artists = data.artists.map((item: any) => ({
         id: item.id,
-        name: item.name,
-        total_count: item.total_count
+        name: item.name
       }));
 
       console.log('Artists list results:', { 
