@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useArtistAnalytics, useArtistUpcomingEvents, useArtistPastEvents } from "@/hooks/useArtistAnalytics";
+import { useArtistAnalytics, useArtistUpcomingEvents, useArtistPastEvents, useIsAnalyticsFallback, useIsAnalyticsError } from "@/hooks/useArtistAnalytics";
 import { formatNumber, formatPercentage, formatCurrency, formatScore, formatDecimalPercentage, formatSimilarityScore, formatDayOfWeek, getPrimaryGenre } from "@/utils/formatters";
 
 const ArtistDetail = () => {
@@ -31,6 +31,20 @@ const ArtistDetail = () => {
   const upcomingEvents = upcomingEventsData?.events || [];
   const pastEvents = pastEventsData?.events || [];
   const allEvents = [...upcomingEvents, ...pastEvents];
+  
+  // Check data status
+  const isFallbackData = useIsAnalyticsFallback(analyticsData);
+  const isErrorState = useIsAnalyticsError(analyticsData);
+  const hasFullAnalytics = !isFallbackData && !isErrorState && analytics;
+  
+  console.log('🎭 Artist Detail Status:', {
+    artistId: id,
+    artistName: artist?.name,
+    isFallbackData,
+    isErrorState,
+    hasFullAnalytics,
+    hasComparisons: comparisons.length > 0
+  });
 
   // Helper functions
   const renderGrowthIcon = (value: number) => {
@@ -53,8 +67,37 @@ const ArtistDetail = () => {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="hero">
-          <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Loading Artist...</h1>
+        <div className="space-y-6">
+          {/* Loading Skeleton */}
+          <div className="flex items-center gap-4">
+            <div className="h-4 w-16 bg-muted rounded animate-pulse" />
+          </div>
+          
+          <div className="py-2">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="h-8 w-64 bg-muted rounded animate-pulse" />
+              <div className="h-6 w-20 bg-muted rounded animate-pulse" />
+            </div>
+          </div>
+          
+          <div className="border-t border-border" />
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Card key={i}>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-2">
+                    <div className="h-8 w-16 bg-muted rounded animate-pulse mx-auto" />
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse mx-auto" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="text-center py-8">
+            <div className="h-4 w-48 bg-muted rounded animate-pulse mx-auto" />
+          </div>
         </div>
       </div>
     );
@@ -63,14 +106,26 @@ const ArtistDetail = () => {
   if (error || !artist) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="hero">
-          <h1 className="text-2xl font-bold text-foreground mb-1 font-manrope">Artist Not Found</h1>
-          <p className="text-muted-foreground">
-            {error instanceof Error ? error.message : 'Unable to load artist data'}
-          </p>
-          <Button className="mt-4" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
+        <div className="text-center space-y-6">
+          <div className="py-12">
+            <h1 className="text-2xl font-bold text-foreground mb-4 font-manrope">
+              {isErrorState ? 'Data Temporarily Unavailable' : 'Artist Not Found'}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              {isErrorState 
+                ? 'We are experiencing technical difficulties. Please try again later.' 
+                : error instanceof Error ? error.message : 'Unable to load artist data'
+              }
+            </p>
+            <div className="space-x-4">
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/artists">Back to Artists</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -146,8 +201,8 @@ const ArtistDetail = () => {
           </Card>
         </div>
 
-        {/* Performance Analytics */}
-        {analytics && (
+        {/* Performance Analytics - Only show with full analytics */}
+        {hasFullAnalytics && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Card>
               <CardContent className="pt-6">
@@ -175,9 +230,22 @@ const ArtistDetail = () => {
             </Card>
           </div>
         )}
+        
+        {/* Fallback Analytics Message */}
+        {isFallbackData && (
+          <Card className="mb-8 border-orange-200 bg-orange-50">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <p className="text-sm text-orange-700">
+                  📊 Advanced analytics temporarily unavailable. Showing basic artist information.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Growth Trends */}
-        {analytics?.growth && (
+        {/* Growth Trends - Only show with full analytics */}
+        {hasFullAnalytics && analytics?.growth && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-sm font-semibold">Growth Trends</CardTitle>
@@ -236,8 +304,12 @@ const ArtistDetail = () => {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="similar">Similar Artists</TabsTrigger>
+            <TabsTrigger value="analytics" disabled={!hasFullAnalytics}>
+              Analytics {!hasFullAnalytics && '(Unavailable)'}
+            </TabsTrigger>
+            <TabsTrigger value="similar" disabled={comparisons.length === 0}>
+              Similar Artists {comparisons.length === 0 && '(Unavailable)'}
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -401,27 +473,47 @@ const ArtistDetail = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Day of Week Preferences */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Day of Week Preferences</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {artist?.day_of_week_preferences?.map((day, index) => (
-                      <div key={index} className="flex justify-between items-center py-1">
-                        <span className="text-sm">{formatDayOfWeek(day.day)}</span>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">{day.event_count} events</div>
-                          <div className="text-xs text-muted-foreground">{formatDecimalPercentage(day.percentage)}</div>
+            {hasFullAnalytics ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Day of Week Preferences */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Day of Week Preferences</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {artist?.day_of_week_preferences?.map((day, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-sm">{formatDayOfWeek(day.day)}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{day.event_count} events</div>
+                            <div className="text-xs text-muted-foreground">{formatDecimalPercentage(day.percentage)}</div>
+                          </div>
                         </div>
-                      </div>
-                    )) || <p className="text-sm text-muted-foreground">No analytics data available</p>}
+                      )) || <p className="text-sm text-muted-foreground">No analytics data available</p>}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                      📊 Advanced analytics are temporarily unavailable for this artist.
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => window.location.reload()}
+                    >
+                      Try Again
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
-            </div>
+            )}
           </TabsContent>
 
           <TabsContent value="similar" className="space-y-6">
@@ -434,7 +526,17 @@ const ArtistDetail = () => {
                   {comparisons.length > 0 ? (
                     comparisons.map((comparison) => (
                       <div key={comparison.artist_id} className="p-4 border border-border rounded-md hover:bg-muted/50 transition-colors">
-                        <Link to={`/artists/${comparison.artist_id}`} className="block">
+                        <Link 
+                          to={`/artists/${comparison.artist_id}`} 
+                          className="block"
+                          onClick={() => {
+                            console.log('🔗 Navigating to similar artist:', {
+                              from: id,
+                              to: comparison.artist_id,
+                              artistName: comparison.artist_name
+                            });
+                          }}
+                        >
                           <div className="font-medium text-sm mb-1">{comparison.artist_name}</div>
                           <div className="text-xs text-muted-foreground mb-2">
                             {formatSimilarityScore(comparison.similarity_score)} similarity
@@ -447,7 +549,23 @@ const ArtistDetail = () => {
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-muted-foreground col-span-full">No similar artists found</p>
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {isFallbackData 
+                          ? '🔗 Similar artists feature requires full analytics data.' 
+                          : 'No similar artists found for this artist.'
+                        }
+                      </p>
+                      {isFallbackData && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => window.location.reload()}
+                        >
+                          Try Again
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               </CardContent>

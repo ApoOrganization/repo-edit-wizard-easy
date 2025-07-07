@@ -81,59 +81,226 @@ export interface ArtistEventsResponse {
   }>;
 }
 
-// Main artist analytics hook
+// Fallback function to get basic artist data
+const getBasicArtistData = async (artistId: string) => {
+  const { data, error } = await supabase.functions.invoke('get-artist-details', {
+    body: { artistId }
+  });
+  
+  if (error) {
+    console.error('Fallback get-artist-details error:', error);
+    throw error;
+  }
+  
+  return data;
+};
+
+// Transform basic artist data to analytics format
+const transformToAnalyticsFormat = (basicData: any): ArtistAnalyticsResponse => {
+  const artist = basicData?.artist;
+  
+  return {
+    artist: {
+      id: artist?.id || '',
+      name: artist?.name || 'Unknown Artist',
+      normalized_name: artist?.normalized_name || '',
+      genres: ['Artist'], // Default fallback
+      agency: null,
+      territory: null,
+      spotify_link: artist?.spotify_link || null,
+      booking_emails: [],
+      monthly_listeners: null,
+      event_stats: {
+        total_events: basicData?.stats?.total_events || 0,
+        avg_ticket_price: 0
+      },
+      performance_cities: [],
+      favorite_venues: [],
+      genre_distribution: [],
+      day_of_week_preferences: [],
+      social_presence: null
+    },
+    analytics: {
+      diversityScore: 0,
+      touringIntensity: 0,
+      marketPenetration: 0,
+      growth: {
+        listener_growth_rate: 0,
+        event_growth_rate: 0,
+        venue_diversity_trend: 0
+      }
+    },
+    insights: [
+      {
+        type: 'info',
+        message: 'Analytics data temporarily unavailable. Showing basic information.'
+      }
+    ],
+    comparisons: []
+  };
+};
+
+// Main artist analytics hook with robust error handling
 export const useArtistAnalytics = (artistId: string | undefined) => {
   return useQuery<ArtistAnalyticsResponse>({
     queryKey: ['artist-analytics', artistId],
     queryFn: async () => {
-      if (!artistId) throw new Error('Artist ID is required');
+      if (!artistId) {
+        throw new Error('Artist ID is required');
+      }
       
-      const { data, error } = await supabase.functions.invoke('artist-analytics', {
-        body: {
-          artistId,
-          includeComparisons: true,
-          timeRange: 'year'
+      console.log('🔍 Fetching analytics for artist:', artistId);
+      
+      try {
+        // Try analytics function first
+        const { data, error } = await supabase.functions.invoke('artist-analytics', {
+          body: {
+            artistId,
+            includeComparisons: true,
+            timeRange: 'year'
+          }
+        });
+
+        if (error) {
+          console.error('❌ Analytics function error:', {
+            artistId,
+            error: error.message,
+            status: error.context?.res?.status
+          });
+          
+          // Check if it's a 500 error or other server error
+          if (error.context?.res?.status >= 500) {
+            console.warn('🔄 Server error detected, falling back to basic data');
+            const fallbackData = await getBasicArtistData(artistId);
+            return transformToAnalyticsFormat(fallbackData);
+          }
+          
+          throw new Error(`Analytics function failed: ${error.message}`);
         }
-      });
 
-      if (error) {
-        console.error('Error fetching artist analytics:', error);
-        throw new Error(`Failed to fetch artist analytics: ${error.message}`);
+        if (!data || !data.artist) {
+          console.warn('⚠️ No artist data returned, falling back to basic data');
+          const fallbackData = await getBasicArtistData(artistId);
+          return transformToAnalyticsFormat(fallbackData);
+        }
+
+        console.log('✅ Analytics data loaded successfully for:', data.artist.name);
+        return data;
+        
+      } catch (analyticsError: any) {
+        console.error('💥 Analytics function completely failed:', {
+          artistId,
+          error: analyticsError.message
+        });
+        
+        // Fall back to basic artist data
+        try {
+          console.log('🔄 Attempting fallback to basic artist data...');
+          const fallbackData = await getBasicArtistData(artistId);
+          console.log('✅ Fallback data loaded successfully');
+          return transformToAnalyticsFormat(fallbackData);
+        } catch (fallbackError: any) {
+          console.error('💥 Both analytics and fallback failed:', {
+            artistId,
+            analyticsError: analyticsError.message,
+            fallbackError: fallbackError.message
+          });
+          
+          // Return minimal data structure to prevent complete failure
+          return {
+            artist: {
+              id: artistId,
+              name: 'Artist Not Found',
+              normalized_name: '',
+              genres: ['Unknown'],
+              agency: null,
+              territory: null,
+              spotify_link: null,
+              booking_emails: [],
+              monthly_listeners: null,
+              event_stats: { total_events: 0, avg_ticket_price: 0 },
+              performance_cities: [],
+              favorite_venues: [],
+              genre_distribution: [],
+              day_of_week_preferences: [],
+              social_presence: null
+            },
+            analytics: {
+              diversityScore: 0,
+              touringIntensity: 0,
+              marketPenetration: 0,
+              growth: {
+                listener_growth_rate: 0,
+                event_growth_rate: 0,
+                venue_diversity_trend: 0
+              }
+            },
+            insights: [
+              {
+                type: 'error',
+                message: 'Unable to load artist data. Please try again later.'
+              }
+            ],
+            comparisons: []
+          };
+        }
       }
-
-      if (!data || !data.artist) {
-        throw new Error('Artist not found');
-      }
-
-      return data;
     },
     enabled: !!artistId,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 2,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 404 or 400 errors (client errors)
+      if (error?.context?.res?.status >= 400 && error?.context?.res?.status < 500) {
+        return false;
+      }
+      // Retry up to 3 times for server errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 
-// Events data hook (lazy loading for Events tab)
+// Events data hook (lazy loading for Events tab) with error handling
 export const useArtistEvents = (artistId: string | undefined, includePast: boolean = false, enabled: boolean = false) => {
   return useQuery<ArtistEventsResponse>({
     queryKey: ['artist-events', artistId, includePast],
     queryFn: async () => {
       if (!artistId) throw new Error('Artist ID is required');
       
-      const { data, error } = await supabase.rpc('get_artist_events', {
-        artist_uuid: artistId,
-        include_past: includePast,
-        limit_count: 10
-      });
+      console.log('🎫 Fetching events for artist:', { artistId, includePast });
+      
+      try {
+        const { data, error } = await supabase.rpc('get_artist_events', {
+          artist_uuid: artistId,
+          include_past: includePast,
+          limit_count: 10
+        });
 
-      if (error) {
-        console.error('Error fetching artist events:', error);
-        throw new Error(`Failed to fetch artist events: ${error.message}`);
+        if (error) {
+          console.error('❌ Events RPC error:', {
+            artistId,
+            includePast,
+            error: error.message
+          });
+          throw new Error(`Failed to fetch artist events: ${error.message}`);
+        }
+
+        console.log('✅ Events loaded successfully:', data?.length || 0, 'events');
+        return {
+          events: data || []
+        };
+      } catch (eventsError: any) {
+        console.error('💥 Events fetch completely failed:', {
+          artistId,
+          includePast,
+          error: eventsError.message
+        });
+        
+        // Return empty events instead of failing completely
+        return {
+          events: []
+        };
       }
-
-      return {
-        events: data || []
-      };
     },
     enabled: !!artistId && enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -149,4 +316,19 @@ export const useArtistUpcomingEvents = (artistId: string | undefined, enabled: b
 // Past events hook
 export const useArtistPastEvents = (artistId: string | undefined, enabled: boolean = false) => {
   return useArtistEvents(artistId, true, enabled);
+};
+
+// Hook to check if analytics data is from fallback
+export const useIsAnalyticsFallback = (analyticsData: ArtistAnalyticsResponse | undefined) => {
+  return analyticsData?.insights?.some(insight => 
+    insight.type === 'info' && 
+    insight.message?.includes('temporarily unavailable')
+  ) || false;
+};
+
+// Hook to check if analytics data is error state
+export const useIsAnalyticsError = (analyticsData: ArtistAnalyticsResponse | undefined) => {
+  return analyticsData?.insights?.some(insight => 
+    insight.type === 'error'
+  ) || false;
 };
