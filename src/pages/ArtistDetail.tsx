@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useArtistAnalytics, useArtistUpcomingEvents, useArtistPastEvents, useIsAnalyticsFallback, useIsAnalyticsError } from "@/hooks/useArtistAnalytics";
 import { formatNumber, formatPercentage, formatCurrency, formatScore, formatDecimalPercentage, formatSimilarityScore, formatDayOfWeek, getPrimaryGenre } from "@/utils/formatters";
+import { ArtistCalendarView } from "@/components/artist/ArtistCalendarView";
 
 const ArtistDetail = () => {
   const { id } = useParams();
@@ -572,6 +573,14 @@ const ArtistDetail = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Event Calendar Section */}
+        <div className="mt-8">
+          <ArtistCalendarView 
+            artistId={id || ''}
+            artistName={artist?.name}
+          />
+        </div>
       </div>
     </div>
   );

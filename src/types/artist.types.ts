@@ -196,3 +196,33 @@ export interface ArtistFilterOptions {
   agencies: string[];
   territories: string[];
 }
+
+// Artist Calendar Interfaces for get_artist_calendar function
+export interface ArtistCalendarResponse {
+  [date: string]: ArtistCalendarEvent[];
+}
+
+export interface ArtistCalendarEvent {
+  event_id: string;
+  event_name: string;
+  venue_id: string;
+  venue_name: string;
+  city: string;
+  start_time: string;
+  end_time: string | null;
+  ticket_status: string;
+  artist_role: string;
+}
+
+// Transformed format for calendar UI component
+export interface CalendarEventData {
+  id: string;
+  date: string;
+  name: string;
+  venue: string;
+  city: string;
+  time: string;
+  status: string;
+  role: string;
+  datetime: string;
+}

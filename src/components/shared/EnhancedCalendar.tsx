@@ -24,6 +24,8 @@ interface EnhancedCalendarProps {
   events: Event[];
   title?: string;
   entityType?: 'artist' | 'promoter' | 'venue';
+  onEventClick?: (eventId: string) => void;
+  onMonthChange?: (month: Date) => void;
 }
 
 const colStartClasses = [
@@ -36,7 +38,7 @@ const colStartClasses = [
   "col-start-7",
 ];
 
-export function EnhancedCalendar({ events, title, entityType }: EnhancedCalendarProps) {
+export function EnhancedCalendar({ events, title, entityType, onEventClick, onMonthChange }: EnhancedCalendarProps) {
   const today = startOfToday();
   const [selectedDay, setSelectedDay] = React.useState(today);
   const [currentMonth, setCurrentMonth] = React.useState(format(today, "MMM-yyyy"));
@@ -66,16 +68,19 @@ export function EnhancedCalendar({ events, title, entityType }: EnhancedCalendar
   function previousMonth() {
     const firstDayPrevMonth = add(firstDayCurrentMonth, { months: -1 });
     setCurrentMonth(format(firstDayPrevMonth, "MMM-yyyy"));
+    onMonthChange?.(firstDayPrevMonth);
   }
 
   function nextMonth() {
     const firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 });
     setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"));
+    onMonthChange?.(firstDayNextMonth);
   }
 
   function goToToday() {
     setCurrentMonth(format(today, "MMM-yyyy"));
     setSelectedDay(today);
+    onMonthChange?.(today);
   }
 
   return (
@@ -180,14 +185,24 @@ export function EnhancedCalendar({ events, title, entityType }: EnhancedCalendar
                       <div
                         key={event.id}
                         className={cn(
-                          "px-1 py-0.5 rounded text-xs truncate",
+                          "px-1 py-0.5 rounded text-xs truncate cursor-pointer transition-colors",
                           "bg-primary/10 text-primary hover:bg-primary/20",
-                          event.status === 'Sold Out' && "bg-green-100 text-green-800",
-                          event.status === 'Cancelled' && "bg-red-100 text-red-800"
+                          event.status === 'Sold Out' && "bg-green-100 text-green-800 hover:bg-green-200",
+                          event.status === 'Cancelled' && "bg-red-100 text-red-800 hover:bg-red-200",
+                          entityType === 'artist' && "bg-blue-100 text-blue-800 hover:bg-blue-200"
                         )}
-                        title={`${event.name} - ${event.venue}`}
+                        title={`${event.name} - ${event.venue}${(event as any).artist_role ? ` (${(event as any).artist_role})` : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEventClick?.(event.id);
+                        }}
                       >
                         {event.name}
+                        {entityType === 'artist' && (event as any).artist_role && (
+                          <span className="ml-1 text-xs opacity-75">
+                            ({(event as any).artist_role})
+                          </span>
+                        )}
                       </div>
                     ))}
                   </div>
