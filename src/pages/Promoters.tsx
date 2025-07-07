@@ -1,67 +1,55 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { mockPromoters } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, BarChart3, MapPin, DollarSign, Star } from "lucide-react";
+import { Users, BarChart3, MapPin, DollarSign, Star, Loader2 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import PageHeader from "@/components/shared/PageHeader";
 import UniversalFilterPanel from "@/components/shared/UniversalFilterPanel";
 import type { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
+import { useTransformedPromoters, usePromoterFilterOptions, formatRevenue, getPromoterSpecialtyBadgeVariant } from "@/hooks/usePromoters";
+import { PromoterSearchParams } from "@/types/promoter.types";
 
 const Promoters = () => {
   const [activeTab, setActiveTab] = useState("list");
   const [filters, setFilters] = useState<UniversalFilterState>({
     search: '',
-    sortBy: 'eventCount',
+    sortBy: 'total_events',
     cities: [],
     specialties: [],
   });
 
-  const { data: promoters, isLoading } = useQuery({
-    queryKey: ['promoters'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockPromoters;
-    },
+  // Convert filters to search params
+  const [searchParams, setSearchParams] = useState<PromoterSearchParams>({
+    searchTerm: '',
+    sortBy: 'total_events',
+    sortOrder: 'desc',
+    page: 1,
+    limit: 20
   });
 
-  const cities = [...new Set(promoters?.map(promoter => promoter.city) || [])];
-  const specialties = [...new Set(promoters?.map(promoter => promoter.specialty) || [])];
+  // Sync filters with search params
+  useEffect(() => {
+    setSearchParams({
+      searchTerm: (filters.search as string) || '',
+      cities: (filters.cities as string[]).length > 0 ? (filters.cities as string[]) : undefined,
+      specialties: (filters.specialties as string[]).length > 0 ? (filters.specialties as string[]) : undefined,
+      sortBy: filters.sortBy as string || 'total_events',
+      sortOrder: 'desc',
+      page: 1,
+      limit: 20
+    });
+  }, [filters]);
 
-  const filteredPromoters = promoters?.filter(promoter => {
-    const searchTerm = (filters.search as string) || '';
-    const matchesSearch = searchTerm === '' || 
-                         promoter.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         promoter.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         promoter.specialty.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCity = (filters.cities as string[]).length === 0 || 
-                       (filters.cities as string[]).includes(promoter.city);
-    
-    const matchesSpecialty = (filters.specialties as string[]).length === 0 || 
-                            (filters.specialties as string[]).includes(promoter.specialty);
+  // Fetch promoters data
+  const { data: promotersResponse, isLoading, error } = useTransformedPromoters(searchParams);
+  const { data: filterOptions } = usePromoterFilterOptions();
 
-    return matchesSearch && matchesCity && matchesSpecialty;
-  });
-
-  const sortedPromoters = filteredPromoters?.sort((a, b) => {
-    switch (filters.sortBy) {
-      case "eventCount":
-        return b.eventsCount - a.eventsCount;
-      case "revenue":
-        return b.revenue - a.revenue;
-      case "rating":
-        return b.rating - a.rating;
-      case "name":
-        return a.name.localeCompare(b.name);
-      default:
-        return 0;
-    }
-  });
+  // Extract promoters and pagination from response
+  const promoters = promotersResponse?.promoters || [];
+  const pagination = promotersResponse?.pagination;
 
   const filterSections: FilterSection[] = [
     {
@@ -78,9 +66,9 @@ const Promoters = () => {
       type: "radio",
       icon: "building",
       options: [
-        { value: "eventCount", label: "Most Active (Event Count)" },
-        { value: "revenue", label: "Highest Revenue" },
-        { value: "rating", label: "Highest Rating" },
+        { value: "total_events", label: "Most Active (Event Count)" },
+        { value: "total_revenue", label: "Highest Revenue" },
+        { value: "venues_used", label: "Most Venues Used" },
         { value: "name", label: "Alphabetical" },
       ],
       collapsible: false,
@@ -90,7 +78,7 @@ const Promoters = () => {
       title: "Cities",
       type: "checkbox",
       icon: "location",
-      options: cities.map(city => ({
+      options: (filterOptions?.cities || []).map(city => ({
         value: city,
         label: city,
         count: promoters?.filter(p => p.city === city).length || 0,
@@ -103,7 +91,7 @@ const Promoters = () => {
       title: "Specialties",
       type: "checkbox",
       icon: "music",
-      options: specialties.map(specialty => ({
+      options: (filterOptions?.specialties || []).map(specialty => ({
         value: specialty,
         label: specialty,
         count: promoters?.filter(p => p.specialty === specialty).length || 0,
@@ -113,14 +101,8 @@ const Promoters = () => {
     },
   ];
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  // Use the imported formatRevenue function instead
+  // const formatCurrency function is replaced by formatRevenue from usePromoters
 
   const handleFiltersChange = (newFilters: UniversalFilterState) => {
     setFilters(newFilters);
@@ -133,6 +115,26 @@ const Promoters = () => {
           title="Promoters" 
           subtitle="Loading promoters..." 
         />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <PageHeader 
+          title="Promoters" 
+          subtitle="Error loading promoters" 
+        />
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">Failed to load promoters data</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -184,17 +186,19 @@ const Promoters = () => {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                  {sortedPromoters?.length || 0} promoters found
+                  {pagination?.total || 0} promoters found{pagination?.total ? ` (showing ${promoters.length})` : ''}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sortedPromoters?.map((promoter) => (
+                {promoters?.map((promoter) => (
                   <Link key={promoter.id} to={`/promoters/${promoter.id}`}>
                     <Card className="media-card hover-lift cursor-pointer">
                       <CardHeader className="pb-4">
                         <div className="flex justify-between items-start mb-2">
-                          <Badge variant="outline" className="text-xs">{promoter.specialty}</Badge>
+                          <Badge variant={getPromoterSpecialtyBadgeVariant(promoter.specialty)} className="text-xs">
+                            {promoter.specialty}
+                          </Badge>
                           <div className="flex items-center space-x-1">
                             <Star className="h-4 w-4 text-yellow-500 fill-current" />
                             <span className="text-sm font-medium">{promoter.rating}</span>
@@ -216,7 +220,7 @@ const Promoters = () => {
                           <div>
                             <p className="text-xs text-muted-foreground">Revenue</p>
                             <p className="font-bold text-sm font-manrope text-green-600">
-                              {formatCurrency(promoter.revenue)}
+                              {formatRevenue(promoter.revenue)}
                             </p>
                           </div>
                         </div>
@@ -274,7 +278,7 @@ const Promoters = () => {
                       <div>
                         <p className="text-purple-100 text-sm font-medium">Total Revenue</p>
                         <p className="text-3xl font-bold text-white font-manrope">
-                          {formatCurrency(promoters?.reduce((sum, promoter) => sum + promoter.revenue, 0) || 0).replace('$', '$').slice(0, 5)}M
+                          {formatRevenue(promoters?.reduce((sum, promoter) => sum + promoter.revenue, 0) || 0)}
                         </p>
                       </div>
                       <DollarSign className="h-8 w-8 text-purple-200" />
@@ -309,7 +313,7 @@ const Promoters = () => {
                         <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                         <XAxis dataKey="name" />
                         <YAxis tickFormatter={(value) => `$${value / 1000000}M`} />
-                        <Tooltip formatter={(value: any) => [formatCurrency(value), 'Revenue']} />
+                        <Tooltip formatter={(value: any) => [formatRevenue(value), 'Revenue']} />
                         <Bar dataKey="revenue" fill="#3B82F6" />
                       </BarChart>
                     </ResponsiveContainer>
