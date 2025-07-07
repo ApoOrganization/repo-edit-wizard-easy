@@ -24,6 +24,7 @@ interface EnhancedCalendarProps {
   events: Event[];
   title?: string;
   entityType?: 'artist' | 'promoter' | 'venue';
+  currentMonth?: Date;
   onEventClick?: (eventId: string) => void;
   onMonthChange?: (month: Date) => void;
 }
@@ -38,11 +39,13 @@ const colStartClasses = [
   "col-start-7",
 ];
 
-export function EnhancedCalendar({ events, title, entityType, onEventClick, onMonthChange }: EnhancedCalendarProps) {
+export function EnhancedCalendar({ events, title, entityType, currentMonth, onEventClick, onMonthChange }: EnhancedCalendarProps) {
   const today = startOfToday();
   const [selectedDay, setSelectedDay] = React.useState(today);
-  const [currentMonth, setCurrentMonth] = React.useState(format(today, "MMM-yyyy"));
-  const firstDayCurrentMonth = parse(currentMonth, "MMM-yyyy", new Date());
+  
+  // Use prop or default to today's month
+  const displayMonth = currentMonth || today;
+  const firstDayCurrentMonth = displayMonth;
 
   // Convert your Event type to calendar format
   const calendarData = events.map(event => ({
@@ -67,18 +70,15 @@ export function EnhancedCalendar({ events, title, entityType, onEventClick, onMo
 
   function previousMonth() {
     const firstDayPrevMonth = add(firstDayCurrentMonth, { months: -1 });
-    setCurrentMonth(format(firstDayPrevMonth, "MMM-yyyy"));
     onMonthChange?.(firstDayPrevMonth);
   }
 
   function nextMonth() {
     const firstDayNextMonth = add(firstDayCurrentMonth, { months: 1 });
-    setCurrentMonth(format(firstDayNextMonth, "MMM-yyyy"));
     onMonthChange?.(firstDayNextMonth);
   }
 
   function goToToday() {
-    setCurrentMonth(format(today, "MMM-yyyy"));
     setSelectedDay(today);
     onMonthChange?.(today);
   }

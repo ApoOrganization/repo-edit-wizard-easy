@@ -180,6 +180,7 @@ export const ArtistCalendarView: React.FC<ArtistCalendarViewProps> = ({
           events={events}
           title={calendarTitle}
           entityType="artist"
+          currentMonth={currentMonth}
           onEventClick={handleEventClick}
           onMonthChange={setCurrentMonth}
         />
