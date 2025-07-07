@@ -409,18 +409,31 @@ export const useVenueEvents = (
       console.log('🎫 Fetching events for venue:', { venueId, includePast });
       
       try {
-        // Try to call venue events RPC function if it exists
+        // Convert boolean includePast to string time_filter
+        const timeFilter = includePast ? 'past' : 'upcoming';
+        
+        console.log('🎫 [VENUE EVENTS] RPC parameters:', {
+          venue_uuid: venueId,
+          time_filter: timeFilter,
+          limit_count: 10,
+          offset_count: 0
+        });
+        
+        // Call venue events RPC function with correct parameters
         const { data, error } = await supabase.rpc('get_venue_events', {
           venue_uuid: venueId,
-          include_past: includePast,
-          limit_count: 10
+          time_filter: timeFilter,
+          limit_count: 10,
+          offset_count: 0
         });
 
         if (error) {
           console.error('❌ Venue events RPC error:', {
             venueId,
+            timeFilter,
             includePast,
-            error: error.message
+            error: error.message,
+            fullError: error
           });
           
           // Return empty events instead of failing
@@ -433,8 +446,10 @@ export const useVenueEvents = (
       } catch (eventsError: any) {
         console.error('💥 Venue events fetch completely failed:', {
           venueId,
+          timeFilter: includePast ? 'past' : 'upcoming',
           includePast,
-          error: eventsError.message
+          error: eventsError.message,
+          stack: eventsError.stack
         });
         
         // Return empty events instead of failing completely
