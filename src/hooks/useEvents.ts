@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { EventSearchParams, EventSearchResponse, EventListItem } from '@/types/event.types';
@@ -5,15 +6,89 @@ import { EventSearchParams, EventSearchResponse, EventListItem } from '@/types/e
 export const useEventSearch = (params: EventSearchParams) => {
   return useQuery({
     queryKey: ['events-search', params],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke<EventSearchResponse>('search-events', {
-        body: params
-      });
+    queryFn: async (): Promise<EventSearchResponse> => {
+      let query = supabase
+        .from('event_list_summary')
+        .select('*', { count: 'exact' });
+
+      // Apply search filter
+      if (params.searchTerm) {
+        query = query.or(`name.ilike.%${params.searchTerm}%,venue_name.ilike.%${params.searchTerm}%,venue_city.ilike.%${params.searchTerm}%`);
+      }
+
+      // Apply genre filter
+      if (params.genres && params.genres.length > 0) {
+        query = query.in('genre', params.genres);
+      }
+
+      // Apply status filter
+      if (params.status && params.status.length > 0) {
+        query = query.in('status', params.status);
+      }
+
+      // Apply city filter
+      if (params.cities && params.cities.length > 0) {
+        query = query.in('venue_city', params.cities);
+      }
+
+      // Apply venue filter
+      if (params.venues && params.venues.length > 0) {
+        query = query.in('venue_id', params.venues);
+      }
+
+      // Apply provider filter
+      if (params.providers && params.providers.length > 0) {
+        // Check if any of the specified providers are available
+        const providerConditions = params.providers.map(provider => 
+          `ticket_availability->>\'${provider}\' = \'true\'`
+        ).join(' or ');
+        query = query.or(providerConditions);
+      }
+
+      // Apply date range filter
+      if (params.dateRange) {
+        query = query.gte('date', params.dateRange.start).lte('date', params.dateRange.end);
+      }
+
+      // Apply price range filter
+      if (params.priceRange) {
+        if (params.priceRange.min) {
+          query = query.gte('price_range->>min_price', params.priceRange.min);
+        }
+        if (params.priceRange.max) {
+          query = query.lte('price_range->>max_price', params.priceRange.max);
+        }
+      }
+
+      // Apply sorting
+      const sortBy = params.sortBy || 'date';
+      const sortOrder = params.sortOrder || 'asc';
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+      // Apply pagination
+      const page = params.page || 1;
+      const limit = params.limit || 20;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
       
       if (error) throw error;
-      return data;
+
+      const totalPages = Math.ceil((count || 0) / limit);
+
+      return {
+        events: (data || []) as EventListItem[],
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          totalPages,
+        },
+      };
     },
-    keepPreviousData: true, // Important for smooth pagination
+    keepPreviousData: true,
   });
 };
 
@@ -22,27 +97,60 @@ export const useEventFilterOptions = () => {
   return useQuery({
     queryKey: ['event-filter-options'],
     queryFn: async () => {
-      // Get a sample of events to extract filter options
-      const { data: events, error } = await supabase
+      // Get genres
+      const { data: genreData, error: genreError } = await supabase
         .from('event_list_summary')
-        .select('genre, venue_city, status')
-        .limit(1000); // Get enough to have variety
-      
-      if (error) throw error;
-      
-      const genres = [...new Set(events?.map(e => e.genre).filter(Boolean) || [])].sort();
-      const cities = [...new Set(events?.map(e => e.venue_city).filter(Boolean) || [])].sort();
-      const statuses = [...new Set(events?.map(e => e.status).filter(Boolean) || [])].sort();
-      
-      // For providers, we need to flatten the arrays
-      const { data: providerData } = await supabase
-        .from('event_list_summary')
-        .select('providers')
+        .select('genre')
+        .not('genre', 'is', null)
         .limit(1000);
       
-      const providers = [...new Set(
-        providerData?.flatMap(e => e.providers || []) || []
-      )].sort();
+      if (genreError) throw genreError;
+      
+      const genres = [...new Set(genreData?.map(e => e.genre).filter(Boolean) || [])].sort();
+
+      // Get cities
+      const { data: cityData, error: cityError } = await supabase
+        .from('event_list_summary')
+        .select('venue_city')
+        .not('venue_city', 'is', null)
+        .limit(1000);
+      
+      if (cityError) throw cityError;
+      
+      const cities = [...new Set(cityData?.map(e => e.venue_city).filter(Boolean) || [])].sort();
+
+      // Get statuses
+      const { data: statusData, error: statusError } = await supabase
+        .from('event_list_summary')
+        .select('status')
+        .not('status', 'is', null)
+        .limit(1000);
+      
+      if (statusError) throw statusError;
+      
+      const statuses = [...new Set(statusData?.map(e => e.status).filter(Boolean) || [])].sort();
+
+      // Get providers from ticket_availability jsonb field
+      const { data: providerData, error: providerError } = await supabase
+        .from('event_list_summary')
+        .select('ticket_availability')
+        .not('ticket_availability', 'is', null)
+        .limit(1000);
+      
+      if (providerError) throw providerError;
+      
+      const providerSet = new Set<string>();
+      providerData?.forEach(item => {
+        if (item.ticket_availability && typeof item.ticket_availability === 'object') {
+          Object.keys(item.ticket_availability).forEach(key => {
+            if (key !== 'any_available' && item.ticket_availability[key] === true) {
+              providerSet.add(key);
+            }
+          });
+        }
+      });
+      
+      const providers = Array.from(providerSet).sort();
       
       return { genres, cities, statuses, providers };
     },
