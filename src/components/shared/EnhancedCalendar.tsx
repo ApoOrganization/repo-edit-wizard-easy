@@ -48,7 +48,7 @@ export function EnhancedCalendar({ events, title, entityType, onEventClick, onMo
   const calendarData = events.map(event => ({
     day: new Date(event.date),
     events: [{
-      id: parseInt(event.id),
+      id: event.id, // Keep ID as string (UUID)
       name: event.name,
       time: new Date(event.date).toLocaleTimeString('en-US', { 
         hour: '2-digit', 
