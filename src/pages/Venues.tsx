@@ -1,108 +1,123 @@
-
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { mockVenues } from "@/data/mockData";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, BarChart3, MapPin, Users, DollarSign, Star } from "lucide-react";
-import { Link } from "react-router-dom";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Building2, MapPin, Users, Calendar, Music, Loader2 } from "lucide-react";
 import PageHeader from "@/components/shared/PageHeader";
 import UniversalFilterPanel from "@/components/shared/UniversalFilterPanel";
 import type { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
+import { useVenueSearch, useVenueFilterOptions } from "@/hooks/useVenues";
+import { VenueSearchParams } from "@/types/venue.types";
+import { transformVenueFromDB, getPriceTier, getPriceTierVariant, formatPrice, formatCapacity } from "@/utils/venueTransformers";
+import { useDebouncedCallback } from 'use-debounce';
 
 const Venues = () => {
   const [activeTab, setActiveTab] = useState("list");
+  const [searchParams, setSearchParams] = useState<VenueSearchParams>({
+    page: 1,
+    limit: 20,
+    sortBy: 'name',
+    sortOrder: 'asc'
+  });
+
   const [filters, setFilters] = useState<UniversalFilterState>({
     search: '',
     capacityRange: [],
     cities: [],
     priceTiers: [],
-    venueTypes: [],
+    genres: [],
   });
 
-  const { data: venues, isLoading } = useQuery({
-    queryKey: ['venues'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockVenues.map(venue => ({
-        ...venue,
-        avgPrice: Math.floor(Math.random() * 200) + 25
-      }));
-    },
-  });
+  // Fetch data from backend
+  const { data: searchResults, isLoading, error } = useVenueSearch(searchParams);
+  const { data: filterOptions, isLoading: filterOptionsLoading } = useVenueFilterOptions();
 
-  const cities = [...new Set(venues?.map(venue => venue.city) || [])];
-  const venueTypes = [...new Set(venues?.map(venue => venue.type) || [])];
+  const rawVenues = searchResults?.venues || [];
+  const pagination = searchResults?.pagination;
 
-  const filteredVenues = venues?.filter(venue => {
-    const searchTerm = (filters.search as string) || '';
-    const matchesSearch = searchTerm === '' || 
-                         venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         venue.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         venue.type.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCapacity = (filters.capacityRange as string[]).length === 0 || 
-      (filters.capacityRange as string[]).some(range => {
-        switch (range) {
-          case 'small': return venue.capacity < 1000;
-          case 'medium': return venue.capacity >= 1000 && venue.capacity <= 10000;
-          case 'large': return venue.capacity > 10000;
-          default: return true;
-        }
-      });
-    
-    const matchesCity = (filters.cities as string[]).length === 0 || 
-                       (filters.cities as string[]).includes(venue.city);
-    
-    const avgPrice = venue.avgPrice || 75;
-    const matchesPriceTier = (filters.priceTiers as string[]).length === 0 ||
-      (filters.priceTiers as string[]).some(tier => {
-        switch (tier) {
-          case 'budget': return avgPrice < 50;
-          case 'mid': return avgPrice >= 50 && avgPrice <= 150;
-          case 'premium': return avgPrice > 150;
-          default: return true;
-        }
-      });
-    
-    const matchesType = (filters.venueTypes as string[]).length === 0 || 
-                       (filters.venueTypes as string[]).includes(venue.type);
-    
-    return matchesSearch && matchesCapacity && matchesCity && matchesPriceTier && matchesType;
-  });
+  // Transform raw venues to match component expectations
+  const venues = rawVenues.map(transformVenueFromDB);
 
+  // Debounced search to avoid excessive API calls
+  const debouncedUpdateSearch = useDebouncedCallback((search: string) => {
+    setSearchParams(prev => ({ ...prev, searchTerm: search, page: 1 }));
+  }, 300);
+
+  // Update search params when filters change
+  useEffect(() => {
+    const newParams: VenueSearchParams = {
+      ...searchParams,
+      cities: filters.cities.length > 0 ? filters.cities as string[] : undefined,
+      genres: filters.genres.length > 0 ? filters.genres as string[] : undefined,
+      page: 1
+    };
+
+    // Handle capacity range
+    if (filters.capacityRange && (filters.capacityRange as number[]).length === 2) {
+      newParams.capacityRange = {
+        min: (filters.capacityRange as number[])[0],
+        max: (filters.capacityRange as number[])[1]
+      };
+    }
+
+    // Handle price tiers - convert to price range
+    if (filters.priceTiers && (filters.priceTiers as string[]).length > 0) {
+      const priceTiers = filters.priceTiers as string[];
+      let minPrice = 0;
+      let maxPrice = 1000;
+      
+      if (priceTiers.length === 1) {
+        if (priceTiers[0] === 'budget') { minPrice = 0; maxPrice = 100; }
+        else if (priceTiers[0] === 'mid') { minPrice = 100; maxPrice = 300; }
+        else if (priceTiers[0] === 'premium') { minPrice = 300; maxPrice = 1000; }
+      } else {
+        // Multiple tiers selected - find range
+        if (priceTiers.includes('budget')) minPrice = 0;
+        if (priceTiers.includes('premium')) maxPrice = 1000;
+      }
+      
+      newParams.priceRange = { min: minPrice, max: maxPrice };
+    }
+
+    setSearchParams(newParams);
+  }, [filters.cities, filters.genres, filters.capacityRange, filters.priceTiers]);
+
+  // Handle search separately
+  useEffect(() => {
+    debouncedUpdateSearch(filters.search as string);
+  }, [filters.search]);
+
+  // Filter sections with real data
   const filterSections: FilterSection[] = [
     {
       key: "search",
       title: "Search",
       type: "search",
-      placeholder: "Search venues...",
-      icon: "search",
+      placeholder: "Search venues by name or city...",
       collapsible: false,
     },
     {
       key: "capacityRange",
       title: "Capacity",
-      type: "checkbox",
-      icon: "users",
-      options: [
-        { value: "small", label: "Under 1,000", count: venues?.filter(v => v.capacity < 1000).length || 0 },
-        { value: "medium", label: "1,000 - 10,000", count: venues?.filter(v => v.capacity >= 1000 && v.capacity <= 10000).length || 0 },
-        { value: "large", label: "Over 10,000", count: venues?.filter(v => v.capacity > 10000).length || 0 },
-      ],
-      collapsible: false,
+      type: "range",
+      range: {
+        min: filterOptions?.capacityRange.min || 0,
+        max: filterOptions?.capacityRange.max || 50000,
+        step: 1000,
+        formatLabel: (value) => formatCapacity(value)
+      },
+      collapsible: true,
+      defaultOpen: false,
     },
     {
       key: "cities",
       title: "Cities",
       type: "checkbox",
-      icon: "location",
-      options: cities.map(city => ({
+      options: (filterOptions?.cities || []).map(city => ({
         value: city,
         label: city,
-        count: venues?.filter(v => v.city === city).length || 0,
+        count: rawVenues.filter(v => v.city === city).length
       })),
       collapsible: true,
       defaultOpen: true,
@@ -111,301 +126,274 @@ const Venues = () => {
       key: "priceTiers",
       title: "Price Tiers",
       type: "checkbox",
-      icon: "money",
       options: [
-        { value: "budget", label: "Budget (Under $50 avg)", count: venues?.filter(v => (v.avgPrice || 75) < 50).length || 0 },
-        { value: "mid", label: "Mid-tier ($50-$150 avg)", count: venues?.filter(v => {
-          const price = v.avgPrice || 75;
-          return price >= 50 && price <= 150;
-        }).length || 0 },
-        { value: "premium", label: "Premium (Over $150 avg)", count: venues?.filter(v => (v.avgPrice || 75) > 150).length || 0 },
+        { 
+          value: "budget", 
+          label: "Budget (Under ₺100)", 
+          count: rawVenues.filter(v => v.avg_ticket_price && v.avg_ticket_price < 100).length 
+        },
+        { 
+          value: "mid", 
+          label: "Mid-tier (₺100-₺300)", 
+          count: rawVenues.filter(v => v.avg_ticket_price && v.avg_ticket_price >= 100 && v.avg_ticket_price <= 300).length 
+        },
+        { 
+          value: "premium", 
+          label: "Premium (Over ₺300)", 
+          count: rawVenues.filter(v => v.avg_ticket_price && v.avg_ticket_price > 300).length 
+        },
       ],
       collapsible: true,
       defaultOpen: false,
     },
     {
-      key: "venueTypes",
-      title: "Venue Types",
+      key: "genres",
+      title: "Top Genres",
       type: "checkbox",
-      icon: "building",
-      options: venueTypes.map(type => ({
-        value: type,
-        label: type,
-        count: venues?.filter(v => v.type === type).length || 0,
+      options: (filterOptions?.genres || []).map(genre => ({
+        value: genre,
+        label: genre,
+        count: rawVenues.filter(v => v.top_genres && v.top_genres.includes(genre)).length
       })),
       collapsible: true,
       defaultOpen: false,
     },
   ];
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+  // Handle pagination
+  const handlePageChange = (newPage: number) => {
+    setSearchParams(prev => ({ ...prev, page: newPage }));
   };
 
-  const getTierLabel = (avgPrice: number) => {
-    if (avgPrice < 50) return 'Budget';
-    if (avgPrice < 150) return 'Mid-tier';
-    return 'Premium';
-  };
-
-  const getTierVariant = (avgPrice: number): "default" | "secondary" | "destructive" => {
-    if (avgPrice < 50) return 'secondary';
-    if (avgPrice < 150) return 'default';
-    return 'destructive';
-  };
-
-  const handleFiltersChange = (newFilters: UniversalFilterState) => {
-    setFilters(newFilters);
-  };
-
-  // Mock analytics data
-  const capacityDistribution = [
-    { range: '0-5K', count: 25, color: '#3B82F6' },
-    { range: '5K-15K', count: 35, color: '#10B981' },
-    { range: '15K-30K', count: 20, color: '#8B5CF6' },
-    { range: '30K+', count: 10, color: '#F59E0B' },
-  ];
-
-  if (isLoading) {
+  if (error) {
     return (
-      <div className="space-y-6">
+      <div className="max-w-7xl mx-auto px-6 py-8">
         <PageHeader 
           title="Venues" 
-          subtitle="Loading venues..." 
+          subtitle="Error loading venues"
         />
+        <div className="mt-8 text-center">
+          <div className="text-red-600 mb-4">
+            <Building2 className="h-12 w-12 mx-auto mb-2" />
+            <h3 className="text-lg font-semibold">Error Loading Venues</h3>
+            <p className="text-sm text-muted-foreground">
+              {error instanceof Error ? error.message : 'Failed to load venues data'}
+            </p>
+          </div>
+          <Button onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-0">
+    <div className="max-w-7xl mx-auto px-6 py-8">
       <PageHeader 
         title="Venues" 
-        subtitle="Comprehensive venue database with performance analytics and capacity insights" 
+        subtitle={`${pagination?.total || 0} venues across Turkey`}
       />
 
-      {/* Tab Navigation */}
-      <div className="px-8 py-6 border-b border-border">
-        <div className="flex gap-2">
-          <Button 
-            variant={activeTab === 'list' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('list')}
-            className="rounded-full px-4"
-          >
-            <Building2 className="h-4 w-4 mr-2" />
-            Venues List
-          </Button>
-          <Button 
-            variant={activeTab === 'analytics' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveTab('analytics')}
-            className="rounded-full px-4"
-          >
-            <BarChart3 className="h-4 w-4 mr-2" />
-            Analytics
-          </Button>
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-8">
+        {/* Filter Panel */}
+        <div className="lg:sticky lg:top-8 lg:h-fit">
+          <UniversalFilterPanel
+            sections={filterSections}
+            filters={filters}
+            onFiltersChange={setFilters}
+            isLoading={filterOptionsLoading}
+          />
         </div>
-      </div>
 
-      <div className="flex">
-        {activeTab === 'list' && (
-          <div className="px-8 py-6">
-            <UniversalFilterPanel
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              sections={filterSections}
-            />
+        {/* Content Area */}
+        <div className="space-y-6">
+          {/* Sort Controls */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              <p className="text-sm text-muted-foreground">
+                {isLoading ? (
+                  'Loading venues...'
+                ) : (
+                  `Showing ${venues.length} of ${pagination?.total || 0} venues`
+                )}
+              </p>
+            </div>
+            
+            <select
+              className="px-3 py-1 border rounded-md text-sm bg-background"
+              value={`${searchParams.sortBy}-${searchParams.sortOrder}`}
+              onChange={(e) => {
+                const [sortBy, sortOrder] = e.target.value.split('-');
+                setSearchParams(prev => ({
+                  ...prev,
+                  sortBy: sortBy as any,
+                  sortOrder: sortOrder as any,
+                  page: 1
+                }));
+              }}
+            >
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="total_events-desc">Most Events</option>
+              <option value="total_events-asc">Least Events</option>
+              <option value="capacity-desc">Largest First</option>
+              <option value="capacity-asc">Smallest First</option>
+              <option value="avg_ticket_price-desc">Highest Price</option>
+              <option value="avg_ticket_price-asc">Lowest Price</option>
+            </select>
           </div>
-        )}
-        
-        <div className="flex-1 px-8 py-6">
-          {activeTab === 'list' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  {filteredVenues?.length || 0} venues found
+
+          {/* Venue Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {isLoading ? (
+              // Loading skeletons
+              Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="media-card">
+                  <CardHeader>
+                    <div className="h-6 bg-muted rounded animate-pulse" />
+                    <div className="h-4 bg-muted rounded w-2/3 animate-pulse" />
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
+                      <div className="h-4 bg-muted rounded w-3/4 animate-pulse" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : venues.length > 0 ? (
+              venues.map((venue) => (
+                <VenueCard key={venue.id} venue={venue} />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No venues found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your search criteria or filters
                 </p>
               </div>
+            )}
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredVenues?.map((venue) => (
-                  <Link key={venue.id} to={`/venues/${venue.id}`}>
-                    <Card className="media-card hover-lift h-full cursor-pointer">
-                      <CardHeader className="pb-4">
-                        <div className="flex justify-between items-start mb-2">
-                          <Badge className="text-xs" variant={getTierVariant(venue.avgPrice || 75)}>
-                            {getTierLabel(venue.avgPrice || 75)}
-                          </Badge>
-                          <div className="flex items-center space-x-1">
-                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                            <span className="text-sm font-medium">{venue.rating}</span>
-                          </div>
-                        </div>
-                        <CardTitle className="text-lg font-bold leading-tight">{venue.name}</CardTitle>
-                        <div className="flex items-center text-muted-foreground">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{venue.city}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground font-medium">{venue.type}</span>
-                      </CardHeader>
-                      
-                      <CardContent className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-muted-foreground">Capacity</p>
-                            <p className="font-bold text-lg font-manrope">{venue.capacity.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">Avg Price</p>
-                            <p className="font-bold text-lg font-manrope">${venue.avgPrice || 75}</p>
-                          </div>
-                        </div>
-
-                        <div className="pt-4 border-t border-border">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Total Revenue</span>
-                            <span className="font-bold text-green-600 font-manrope text-sm">
-                              {formatCurrency(venue.revenue)}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="w-full bg-muted rounded-full h-2">
-                          <div 
-                            className="bg-primary h-2 rounded-full" 
-                            style={{ width: `${Math.min((venue.events / 300) * 100, 100)}%` }}
-                          ></div>
-                        </div>
-                        <p className="text-xs text-muted-foreground text-center">Event Utilization</p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="space-y-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <Card className="kpi-card-blue animate-scale-in">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-blue-100 text-sm font-medium">Total Venues</p>
-                        <p className="text-3xl font-bold text-white font-manrope">
-                          {venues?.length || 0}
-                        </p>
-                      </div>
-                      <Building2 className="h-8 w-8 text-blue-200" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="kpi-card-green animate-scale-in">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-emerald-100 text-sm font-medium">Total Events</p>
-                        <p className="text-3xl font-bold text-white font-manrope">
-                          {venues?.reduce((sum, venue) => sum + venue.events, 0) || 0}
-                        </p>
-                      </div>
-                      <Users className="h-8 w-8 text-emerald-200" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="kpi-card-purple animate-scale-in">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-purple-100 text-sm font-medium">Total Capacity</p>
-                        <p className="text-3xl font-bold text-white font-manrope">
-                          {((venues?.reduce((sum, venue) => sum + venue.capacity, 0) || 0) / 1000).toFixed(0)}K
-                        </p>
-                      </div>
-                      <Users className="h-8 w-8 text-purple-200" />
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="kpi-card-orange animate-scale-in">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-orange-100 text-sm font-medium">Total Revenue</p>
-                        <p className="text-3xl font-bold text-white font-manrope">
-                          {formatCurrency(venues?.reduce((sum, venue) => sum + venue.revenue, 0) || 0).replace('$', '$').slice(0, 4)}M
-                        </p>
-                      </div>
-                      <DollarSign className="h-8 w-8 text-orange-200" />
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="media-card">
-                  <CardHeader>
-                    <CardTitle>Venue Types Distribution</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={capacityDistribution}
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="count"
-                            label={({ range, count }) => `${range}: ${count}`}
-                          >
-                            {capacityDistribution.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="media-card">
-                  <CardHeader>
-                    <CardTitle>Revenue by Venue</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-64">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={venues?.slice(0, 4)}>
-                          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                          <XAxis dataKey="name" />
-                          <YAxis tickFormatter={(value) => `$${value / 1000000}M`} />
-                          <Tooltip formatter={(value: any) => [formatCurrency(value), 'Revenue']} />
-                          <Bar dataKey="revenue" fill="#3B82F6" />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
+                disabled={pagination.page <= 1 || isLoading}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
+                disabled={pagination.page >= pagination.totalPages || isLoading}
+              >
+                Next
+              </Button>
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+};
+
+// Venue Card Component
+const VenueCard = ({ venue }: { venue: any }) => {
+  return (
+    <Link to={`/venues/${venue.id}`}>
+      <Card className="media-card group hover:shadow-lg transition-all duration-200 h-full">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-1">
+                {venue.name}
+              </CardTitle>
+              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{venue.city}</span>
+              </div>
+            </div>
+            <Badge variant="secondary" className="ml-2">
+              {venue.type}
+            </Badge>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-4">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Capacity</p>
+              <p className="font-semibold flex items-center gap-1">
+                <Users className="h-4 w-4" />
+                {formatCapacity(venue.capacity)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Avg. Ticket</p>
+              <Badge variant={getPriceTierVariant(venue.avgPrice)}>
+                {formatPrice(venue.avgPrice)}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Event Info */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>
+              {venue.upcomingEvents > 0 && `${venue.upcomingEvents} upcoming • `}
+              {venue.totalEvents} total events
+            </span>
+          </div>
+
+          {/* Genres */}
+          {venue.topGenres.length > 0 && (
+            <div className="flex items-start gap-2">
+              <Music className="h-4 w-4 text-muted-foreground mt-0.5" />
+              <div className="flex flex-wrap gap-1">
+                {venue.topGenres.slice(0, 3).map((genre: string) => (
+                  <Badge key={genre} variant="outline" className="text-xs">
+                    {genre}
+                  </Badge>
+                ))}
+                {venue.topGenres.length > 3 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{venue.topGenres.length - 3}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Utilization Bar */}
+          {venue.totalEvents > 0 && (
+            <div className="mt-4">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-muted-foreground">Activity</span>
+                <span className="text-xs font-medium">{venue.utilization.toFixed(0)}%</span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2">
+                <div 
+                  className="bg-primary rounded-full h-2 transition-all"
+                  style={{ width: `${Math.min(venue.utilization, 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   );
 };
 
