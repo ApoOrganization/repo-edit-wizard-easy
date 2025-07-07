@@ -16,10 +16,10 @@ interface FilterState {
   genres: string[];
   statuses: string[];
   cities: string[];
+  venues: string[];
+  artists: string[];
   promoters: string[];
-  dateRange: string;
-  revenueRange: string;
-  capacityRange: string;
+  dateOrder: 'asc' | 'desc';
 }
 
 const Events = () => {
@@ -36,10 +36,10 @@ const Events = () => {
     genres: [],
     statuses: [],
     cities: [],
+    venues: [],
+    artists: [],
     promoters: [],
-    dateRange: '',
-    revenueRange: '',
-    capacityRange: '',
+    dateOrder: 'desc',
   });
 
   // Fetch events from backend
@@ -65,41 +65,12 @@ const Events = () => {
       genres: filters.genres.length > 0 ? filters.genres : undefined,
       status: filters.statuses.length > 0 ? filters.statuses : undefined,
       cities: filters.cities.length > 0 ? filters.cities : undefined,
+      venues: filters.venues.length > 0 ? filters.venues : undefined,
+      artists: filters.artists.length > 0 ? filters.artists : undefined,
+      sortOrder: filters.dateOrder,
       page: searchParams.page, // Preserve current page
     };
 
-    // Handle date range
-    if (filters.dateRange) {
-      const now = new Date();
-      const today = now.toISOString().split('T')[0];
-      
-      switch (filters.dateRange) {
-        case 'today':
-          newParams.dateRange = { start: today, end: today };
-          break;
-        case 'week':
-          const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-          newParams.dateRange = { 
-            start: today, 
-            end: weekFromNow.toISOString().split('T')[0] 
-          };
-          break;
-        case 'month':
-          const monthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-          newParams.dateRange = { 
-            start: today, 
-            end: monthFromNow.toISOString().split('T')[0] 
-          };
-          break;
-        case 'quarter':
-          const quarterFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
-          newParams.dateRange = { 
-            start: today, 
-            end: quarterFromNow.toISOString().split('T')[0] 
-          };
-          break;
-      }
-    }
 
     // Don't update if only search changed (handled by debounce)
     if (filters.search !== searchParams.searchTerm) {
@@ -107,7 +78,7 @@ const Events = () => {
     }
 
     setSearchParams(newParams);
-  }, [filters.genres, filters.statuses, filters.cities, filters.dateRange, filters.revenueRange, filters.capacityRange]);
+  }, [filters.genres, filters.statuses, filters.cities, filters.venues, filters.artists, filters.dateOrder]);
 
   // Handle search separately with debouncing
   useEffect(() => {
@@ -130,6 +101,8 @@ const Events = () => {
   const availableGenres = filterOptions?.genres || [];
   const availableStatuses = filterOptions?.statuses || [];
   const availableCities = filterOptions?.cities || [];
+  const availableVenues = filterOptions?.venues || [];
+  const availableArtists = filterOptions?.artists || [];
   const availablePromoters = []; // TODO: Will be populated when promoter integration is complete
 
   if (error) {
@@ -151,7 +124,7 @@ const Events = () => {
           <h1 className="text-2xl font-bold text-foreground mb-2 font-manrope">Events</h1>
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             <span>{pagination?.total || 0} events found</span>
-            {(filters.search || filters.genres.length > 0 || filters.statuses.length > 0) && (
+            {(filters.search || filters.genres.length > 0 || filters.statuses.length > 0 || filters.cities.length > 0 || filters.venues.length > 0 || filters.artists.length > 0) && (
               <Badge variant="secondary" className="text-xs">
                 Filtered
               </Badge>
@@ -190,6 +163,8 @@ const Events = () => {
           availableGenres={availableGenres}
           availableStatuses={availableStatuses}
           availableCities={availableCities}
+          availableVenues={availableVenues}
+          availableArtists={availableArtists}
           availablePromoters={availablePromoters}
         />
 
@@ -216,10 +191,10 @@ const Events = () => {
                   genres: [],
                   statuses: [],
                   cities: [],
+                  venues: [],
+                  artists: [],
                   promoters: [],
-                  dateRange: '',
-                  revenueRange: '',
-                  capacityRange: '',
+                  dateOrder: 'desc',
                 })}
               >
                 Clear Filters

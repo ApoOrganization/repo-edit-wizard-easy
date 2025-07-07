@@ -33,7 +33,16 @@ export const useEventSearch = (params: EventSearchParams) => {
 
       // Apply venue filter
       if (params.venues && params.venues.length > 0) {
-        query = query.in('venue_id', params.venues);
+        query = query.in('venue_name', params.venues);
+      }
+
+      // Apply artist filter
+      if (params.artists && params.artists.length > 0) {
+        // Check if any of the specified artists are in the top_artists array
+        const artistConditions = params.artists.map(artist => 
+          `top_artists->0->>name.eq."${artist}" or top_artists->1->>name.eq."${artist}" or top_artists->2->>name.eq."${artist}"`
+        ).join(' or ');
+        query = query.or(artistConditions);
       }
 
       // Apply provider filter
@@ -130,6 +139,39 @@ export const useEventFilterOptions = () => {
       
       const statuses = [...new Set(statusData?.map(e => e.status).filter(Boolean) || [])].sort();
 
+      // Get venues
+      const { data: venueData, error: venueError } = await supabase
+        .from('event_list_summary')
+        .select('venue_name')
+        .not('venue_name', 'is', null)
+        .limit(1000);
+      
+      if (venueError) throw venueError;
+      
+      const venues = [...new Set(venueData?.map(e => e.venue_name).filter(Boolean) || [])].sort();
+
+      // Get artists from top_artists jsonb field
+      const { data: artistData, error: artistError } = await supabase
+        .from('event_list_summary')
+        .select('top_artists')
+        .not('top_artists', 'is', null)
+        .limit(1000);
+      
+      if (artistError) throw artistError;
+      
+      const artistSet = new Set<string>();
+      artistData?.forEach(item => {
+        if (Array.isArray(item.top_artists)) {
+          item.top_artists.forEach((artist: any) => {
+            if (artist?.name) {
+              artistSet.add(artist.name);
+            }
+          });
+        }
+      });
+      
+      const artists = Array.from(artistSet).sort();
+
       // Get providers from ticket_availability jsonb field
       const { data: providerData, error: providerError } = await supabase
         .from('event_list_summary')
@@ -152,7 +194,7 @@ export const useEventFilterOptions = () => {
       
       const providers = Array.from(providerSet).sort();
       
-      return { genres, cities, statuses, providers };
+      return { genres, cities, venues, artists, statuses, providers };
     },
     staleTime: 10 * 60 * 1000, // Cache for 10 minutes
   });

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,17 +7,18 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, ChevronDown, X, Calendar, MapPin, Users, DollarSign, Filter } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Search, ChevronDown, X, Calendar, MapPin, Users, Music, Filter } from "lucide-react";
 
 interface FilterState {
   search: string;
   genres: string[];
   statuses: string[];
   cities: string[];
+  venues: string[];
+  artists: string[];
   promoters: string[];
-  dateRange: string;
-  revenueRange: string;
-  capacityRange: string;
+  dateOrder: 'asc' | 'desc';
 }
 
 interface FilterPanelProps {
@@ -27,6 +27,8 @@ interface FilterPanelProps {
   availableGenres: string[];
   availableStatuses: string[];
   availableCities: string[];
+  availableVenues: string[];
+  availableArtists: string[];
   availablePromoters: string[];
 }
 
@@ -36,15 +38,29 @@ const FilterPanel = ({
   availableGenres,
   availableStatuses,
   availableCities,
+  availableVenues,
+  availableArtists,
   availablePromoters,
 }: FilterPanelProps) => {
   const [openSections, setOpenSections] = useState({
     basic: true,
     genre: true,
     status: true,
-    location: false,
+    city: false,
+    venue: false,
+    artist: false,
     promoter: false,
-    advanced: false,
+    dateOrder: false,
+  });
+
+  // Search states for each filter section
+  const [sectionSearches, setSectionSearches] = useState({
+    genre: '',
+    status: '',
+    cities: '',
+    venues: '',
+    artists: '',
+    promoters: '',
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -55,7 +71,11 @@ const FilterPanel = ({
     onFiltersChange({ ...filters, ...updates });
   };
 
-  const toggleArrayFilter = (key: keyof Pick<FilterState, 'genres' | 'statuses' | 'cities' | 'promoters'>, value: string) => {
+  const updateSectionSearch = (section: keyof typeof sectionSearches, value: string) => {
+    setSectionSearches(prev => ({ ...prev, [section]: value }));
+  };
+
+  const toggleArrayFilter = (key: keyof Pick<FilterState, 'genres' | 'statuses' | 'cities' | 'venues' | 'artists' | 'promoters'>, value: string) => {
     const currentArray = filters[key];
     const newArray = currentArray.includes(value)
       ? currentArray.filter(item => item !== value)
@@ -69,10 +89,19 @@ const FilterPanel = ({
       genres: [],
       statuses: [],
       cities: [],
+      venues: [],
+      artists: [],
       promoters: [],
-      dateRange: '',
-      revenueRange: '',
-      capacityRange: '',
+      dateOrder: 'desc',
+    });
+    // Clear section searches too
+    setSectionSearches({
+      genre: '',
+      status: '',
+      cities: '',
+      venues: '',
+      artists: '',
+      promoters: '',
     });
   };
 
@@ -82,10 +111,47 @@ const FilterPanel = ({
       filters.genres.length +
       filters.statuses.length +
       filters.cities.length +
+      filters.venues.length +
+      filters.artists.length +
       filters.promoters.length +
-      (filters.dateRange ? 1 : 0) +
-      (filters.revenueRange ? 1 : 0) +
-      (filters.capacityRange ? 1 : 0)
+      (filters.dateOrder !== 'desc' ? 1 : 0)
+    );
+  };
+
+  // Filter functions for each section
+  const getFilteredGenres = () => {
+    return availableGenres.filter(genre => 
+      genre.toLowerCase().includes(sectionSearches.genre.toLowerCase())
+    );
+  };
+
+  const getFilteredStatuses = () => {
+    return availableStatuses.filter(status => 
+      status.toLowerCase().includes(sectionSearches.status.toLowerCase())
+    );
+  };
+
+  const getFilteredCities = () => {
+    return availableCities.filter(city => 
+      city.toLowerCase().includes(sectionSearches.cities.toLowerCase())
+    );
+  };
+
+  const getFilteredVenues = () => {
+    return availableVenues.filter(venue => 
+      venue.toLowerCase().includes(sectionSearches.venues.toLowerCase())
+    );
+  };
+
+  const getFilteredArtists = () => {
+    return availableArtists.filter(artist => 
+      artist.toLowerCase().includes(sectionSearches.artists.toLowerCase())
+    );
+  };
+
+  const getFilteredPromoters = () => {
+    return availablePromoters.filter(promoter => 
+      promoter.toLowerCase().includes(sectionSearches.promoters.toLowerCase())
     );
   };
 
@@ -139,20 +205,45 @@ const FilterPanel = ({
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-0 h-auto">
             <span className="font-medium text-sm">Genre</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.genre ? 'rotate-180' : ''}`} />
+            <div className="flex items-center space-x-2">
+              {filters.genres.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-2">
+                  {filters.genres.length}
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.genre ? 'rotate-180' : ''}`} />
+            </div>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-2 mt-3">
-          {availableGenres.map(genre => (
-            <div key={genre} className="flex items-center space-x-2">
-              <Checkbox
-                id={`genre-${genre}`}
-                checked={filters.genres.includes(genre)}
-                onCheckedChange={() => toggleArrayFilter('genres', genre)}
+        <CollapsibleContent className="space-y-3 mt-3">
+          {availableGenres.length > 5 && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
+              <Input
+                placeholder="Search genres..."
+                value={sectionSearches.genre}
+                onChange={(e) => updateSectionSearch('genre', e.target.value)}
+                className="pl-9 h-8 text-xs"
               />
-              <label htmlFor={`genre-${genre}`} className="text-sm">{genre}</label>
             </div>
-          ))}
+          )}
+          <ScrollArea className="h-32">
+            <div className="space-y-2 pr-3">
+              {getFilteredGenres().map(genre => (
+                <div key={genre} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`genre-${genre}`}
+                    checked={filters.genres.includes(genre)}
+                    onCheckedChange={() => toggleArrayFilter('genres', genre)}
+                  />
+                  <label htmlFor={`genre-${genre}`} className="text-sm">{genre}</label>
+                </div>
+              ))}
+              {getFilteredGenres().length === 0 && (
+                <p className="text-xs text-muted-foreground py-2">No genres found</p>
+              )}
+            </div>
+          </ScrollArea>
         </CollapsibleContent>
       </Collapsible>
 
@@ -161,11 +252,18 @@ const FilterPanel = ({
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-0 h-auto">
             <span className="font-medium text-sm">Status</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.status ? 'rotate-180' : ''}`} />
+            <div className="flex items-center space-x-2">
+              {filters.statuses.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-2">
+                  {filters.statuses.length}
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.status ? 'rotate-180' : ''}`} />
+            </div>
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-2 mt-3">
-          {availableStatuses.map(status => (
+          {getFilteredStatuses().map(status => (
             <div key={status} className="flex items-center space-x-2">
               <Checkbox
                 id={`status-${status}`}
@@ -178,28 +276,99 @@ const FilterPanel = ({
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Location Filter */}
-      <Collapsible open={openSections.location} onOpenChange={() => toggleSection('location')}>
+      {/* City Filter */}
+      <Collapsible open={openSections.city} onOpenChange={() => toggleSection('city')}>
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-0 h-auto">
             <div className="flex items-center space-x-2">
               <MapPin className="h-3 w-3" />
-              <span className="font-medium text-sm">Location</span>
+              <span className="font-medium text-sm">City</span>
             </div>
-            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.location ? 'rotate-180' : ''}`} />
+            <div className="flex items-center space-x-2">
+              {filters.cities.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-2">
+                  {filters.cities.length}
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.city ? 'rotate-180' : ''}`} />
+            </div>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-2 mt-3">
-          {availableCities.slice(0, 8).map(city => (
-            <div key={city} className="flex items-center space-x-2">
-              <Checkbox
-                id={`city-${city}`}
-                checked={filters.cities.includes(city)}
-                onCheckedChange={() => toggleArrayFilter('cities', city)}
-              />
-              <label htmlFor={`city-${city}`} className="text-sm">{city}</label>
+        <CollapsibleContent className="space-y-3 mt-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
+            <Input
+              placeholder="Search cities..."
+              value={sectionSearches.cities}
+              onChange={(e) => updateSectionSearch('cities', e.target.value)}
+              className="pl-9 h-8 text-xs"
+            />
+          </div>
+          <ScrollArea className="h-40">
+            <div className="space-y-2 pr-3">
+              {getFilteredCities().map(city => (
+                <div key={city} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`city-${city}`}
+                    checked={filters.cities.includes(city)}
+                    onCheckedChange={() => toggleArrayFilter('cities', city)}
+                  />
+                  <label htmlFor={`city-${city}`} className="text-sm">{city}</label>
+                </div>
+              ))}
+              {getFilteredCities().length === 0 && (
+                <p className="text-xs text-muted-foreground py-2">No cities found</p>
+              )}
             </div>
-          ))}
+          </ScrollArea>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Venue Filter */}
+      <Collapsible open={openSections.venue} onOpenChange={() => toggleSection('venue')}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+            <div className="flex items-center space-x-2">
+              <MapPin className="h-3 w-3" />
+              <span className="font-medium text-sm">Venue</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              {filters.venues.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-2">
+                  {filters.venues.length}
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.venue ? 'rotate-180' : ''}`} />
+            </div>
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 mt-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
+            <Input
+              placeholder="Search venues..."
+              value={sectionSearches.venues}
+              onChange={(e) => updateSectionSearch('venues', e.target.value)}
+              className="pl-9 h-8 text-xs"
+            />
+          </div>
+          <ScrollArea className="h-40">
+            <div className="space-y-2 pr-3">
+              {getFilteredVenues().map(venue => (
+                <div key={venue} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`venue-${venue}`}
+                    checked={filters.venues.includes(venue)}
+                    onCheckedChange={() => toggleArrayFilter('venues', venue)}
+                  />
+                  <label htmlFor={`venue-${venue}`} className="text-sm">{venue}</label>
+                </div>
+              ))}
+              {getFilteredVenues().length === 0 && (
+                <p className="text-xs text-muted-foreground py-2">No venues found</p>
+              )}
+            </div>
+          </ScrollArea>
         </CollapsibleContent>
       </Collapsible>
 
@@ -211,79 +380,116 @@ const FilterPanel = ({
               <Users className="h-3 w-3" />
               <span className="font-medium text-sm">Promoter</span>
             </div>
-            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.promoter ? 'rotate-180' : ''}`} />
+            <div className="flex items-center space-x-2">
+              {filters.promoters.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-2">
+                  {filters.promoters.length}
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.promoter ? 'rotate-180' : ''}`} />
+            </div>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-2 mt-3">
-          {availablePromoters.slice(0, 6).map(promoter => (
-            <div key={promoter} className="flex items-center space-x-2">
-              <Checkbox
-                id={`promoter-${promoter}`}
-                checked={filters.promoters.includes(promoter)}
-                onCheckedChange={() => toggleArrayFilter('promoters', promoter)}
+        <CollapsibleContent className="space-y-3 mt-3">
+          {availablePromoters.length > 5 && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
+              <Input
+                placeholder="Search promoters..."
+                value={sectionSearches.promoters}
+                onChange={(e) => updateSectionSearch('promoters', e.target.value)}
+                className="pl-9 h-8 text-xs"
               />
-              <label htmlFor={`promoter-${promoter}`} className="text-sm text-left">{promoter}</label>
             </div>
-          ))}
+          )}
+          <ScrollArea className="h-32">
+            <div className="space-y-2 pr-3">
+              {getFilteredPromoters().map(promoter => (
+                <div key={promoter} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`promoter-${promoter}`}
+                    checked={filters.promoters.includes(promoter)}
+                    onCheckedChange={() => toggleArrayFilter('promoters', promoter)}
+                  />
+                  <label htmlFor={`promoter-${promoter}`} className="text-sm text-left">{promoter}</label>
+                </div>
+              ))}
+              {getFilteredPromoters().length === 0 && (
+                <p className="text-xs text-muted-foreground py-2">No promoters found</p>
+              )}
+            </div>
+          </ScrollArea>
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Advanced Filters */}
-      <Collapsible open={openSections.advanced} onOpenChange={() => toggleSection('advanced')}>
+      {/* Artist Filter */}
+      <Collapsible open={openSections.artist} onOpenChange={() => toggleSection('artist')}>
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-0 h-auto">
             <div className="flex items-center space-x-2">
-              <DollarSign className="h-3 w-3" />
-              <span className="font-medium text-sm">Advanced</span>
+              <Music className="h-3 w-3" />
+              <span className="font-medium text-sm">Artist</span>
             </div>
-            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.advanced ? 'rotate-180' : ''}`} />
+            <div className="flex items-center space-x-2">
+              {filters.artists.length > 0 && (
+                <Badge variant="secondary" className="text-xs h-5 px-2">
+                  {filters.artists.length}
+                </Badge>
+              )}
+              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.artist ? 'rotate-180' : ''}`} />
+            </div>
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-4 mt-3">
-          <div>
-            <label className="text-xs font-medium mb-2 block">Date Range</label>
-            <Select value={filters.dateRange} onValueChange={(value) => updateFilters({ dateRange: value })}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Any time" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Any time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This week</SelectItem>
-                <SelectItem value="month">This month</SelectItem>
-                <SelectItem value="quarter">This quarter</SelectItem>
-              </SelectContent>
-            </Select>
+        <CollapsibleContent className="space-y-3 mt-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
+            <Input
+              placeholder="Search artists..."
+              value={sectionSearches.artists}
+              onChange={(e) => updateSectionSearch('artists', e.target.value)}
+              className="pl-9 h-8 text-xs"
+            />
           </div>
+          <ScrollArea className="h-40">
+            <div className="space-y-2 pr-3">
+              {getFilteredArtists().map(artist => (
+                <div key={artist} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`artist-${artist}`}
+                    checked={filters.artists.includes(artist)}
+                    onCheckedChange={() => toggleArrayFilter('artists', artist)}
+                  />
+                  <label htmlFor={`artist-${artist}`} className="text-sm">{artist}</label>
+                </div>
+              ))}
+              {getFilteredArtists().length === 0 && (
+                <p className="text-xs text-muted-foreground py-2">No artists found</p>
+              )}
+            </div>
+          </ScrollArea>
+        </CollapsibleContent>
+      </Collapsible>
 
+      {/* Date Order */}
+      <Collapsible open={openSections.dateOrder} onOpenChange={() => toggleSection('dateOrder')}>
+        <CollapsibleTrigger asChild>
+          <Button variant="ghost" className="w-full justify-between p-0 h-auto">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-3 w-3" />
+              <span className="font-medium text-sm">Date Order</span>
+            </div>
+            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.dateOrder ? 'rotate-180' : ''}`} />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 mt-3">
           <div>
-            <label className="text-xs font-medium mb-2 block">Revenue Range</label>
-            <Select value={filters.revenueRange} onValueChange={(value) => updateFilters({ revenueRange: value })}>
+            <Select value={filters.dateOrder} onValueChange={(value: 'asc' | 'desc') => updateFilters({ dateOrder: value })}>
               <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Any amount" />
+                <SelectValue placeholder="Sort by date" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any amount</SelectItem>
-                <SelectItem value="0-100k">$0 - $100K</SelectItem>
-                <SelectItem value="100k-500k">$100K - $500K</SelectItem>
-                <SelectItem value="500k-1m">$500K - $1M</SelectItem>
-                <SelectItem value="1m+">$1M+</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-xs font-medium mb-2 block">Venue Capacity</label>
-            <Select value={filters.capacityRange} onValueChange={(value) => updateFilters({ capacityRange: value })}>
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Any capacity" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Any capacity</SelectItem>
-                <SelectItem value="0-1k">0 - 1,000</SelectItem>
-                <SelectItem value="1k-5k">1,000 - 5,000</SelectItem>
-                <SelectItem value="5k-10k">5,000 - 10,000</SelectItem>
-                <SelectItem value="10k+">10,000+</SelectItem>
+                <SelectItem value="desc">Newest First</SelectItem>
+                <SelectItem value="asc">Oldest First</SelectItem>
               </SelectContent>
             </Select>
           </div>

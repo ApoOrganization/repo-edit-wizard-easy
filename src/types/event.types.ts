@@ -37,6 +37,7 @@ export interface EventSearchParams {
   status?: string[];
   cities?: string[];
   venues?: string[];
+  artists?: string[];
   providers?: string[];
   dateRange?: {
     start: string;
