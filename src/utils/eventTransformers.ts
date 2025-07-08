@@ -13,6 +13,8 @@ export const transformEventFromDB = (dbEvent: EventListItem): TransformedEvent =
         return 'Cancelled';
       case 'postponed':
         return 'Postponed';
+      case 'past':
+        return 'Past';
       default:
         return 'On Sale';
     }
