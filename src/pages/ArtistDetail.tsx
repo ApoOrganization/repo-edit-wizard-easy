@@ -54,18 +54,33 @@ const ArtistDetail = () => {
     return <Minus className="h-3 w-3 text-muted-foreground" />;
   };
   
+  const getSocialButtonStyles = (platform: string) => {
+    switch (platform) {
+      case 'instagram': return 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 border-none';
+      case 'twitter': return 'bg-blue-500 text-white hover:bg-blue-600 border-none';
+      case 'facebook': return 'bg-blue-600 text-white hover:bg-blue-700 border-none';
+      case 'youtube': return 'bg-red-600 text-white hover:bg-red-700 border-none';
+      case 'spotify': return 'bg-green-500 text-white hover:bg-green-600 border-none';
+      case 'soundcloud': return 'bg-orange-500 text-white hover:bg-orange-600 border-none';
+      case 'apple_music': return 'bg-gray-900 text-white hover:bg-black border-none';
+      case 'wikipedia': return 'bg-gray-600 text-white hover:bg-gray-700 border-none';
+      case 'website': return 'border-border bg-background hover:bg-accent hover:text-accent-foreground';
+      default: return 'border-border bg-background hover:bg-accent hover:text-accent-foreground';
+    }
+  };
+
   const renderSocialIcon = (platform: string) => {
     switch (platform) {
-      case 'instagram': return <Instagram className="h-3 w-3" />;
-      case 'twitter': return <Twitter className="h-3 w-3" />;
-      case 'facebook': return <Facebook className="h-3 w-3" />;
-      case 'youtube': return <Youtube className="h-3 w-3" />;
-      case 'website': return <Globe className="h-3 w-3" />;
-      case 'wikipedia': return <BookOpen className="h-3 w-3" />;
-      case 'soundcloud': return <Volume2 className="h-3 w-3" />;
-      case 'apple_music': return <Music className="h-3 w-3" />;
-      case 'spotify': return <Music className="h-3 w-3" />;
-      default: return <ExternalLink className="h-3 w-3" />;
+      case 'instagram': return <Instagram className="h-5 w-5" />;
+      case 'twitter': return <Twitter className="h-5 w-5" />;
+      case 'facebook': return <Facebook className="h-5 w-5" />;
+      case 'youtube': return <Youtube className="h-5 w-5" />;
+      case 'website': return <Globe className="h-5 w-5" />;
+      case 'wikipedia': return <BookOpen className="h-5 w-5" />;
+      case 'soundcloud': return <Volume2 className="h-5 w-5" />;
+      case 'apple_music': return <Music className="h-5 w-5" />;
+      case 'spotify': return <Music className="h-5 w-5" />;
+      default: return <ExternalLink className="h-5 w-5" />;
     }
   };
 
@@ -502,7 +517,12 @@ const ArtistDetail = () => {
                           <h4 className="text-xs font-medium text-muted-foreground mb-2">Social Media</h4>
                           <div className="flex gap-2 flex-wrap">
                             {allSocialLinks.map(({ platform, url }, index) => (
-                              <Button key={`${platform}-${index}`} size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
+                              <Button 
+                                key={`${platform}-${index}`} 
+                                size="sm" 
+                                className={`h-10 w-10 p-0 transition-all duration-200 ${getSocialButtonStyles(platform)}`} 
+                                asChild
+                              >
                                 <a href={url} target="_blank" rel="noopener noreferrer">
                                   {renderSocialIcon(platform)}
                                 </a>
