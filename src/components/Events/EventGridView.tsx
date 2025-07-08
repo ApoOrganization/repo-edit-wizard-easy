@@ -36,7 +36,7 @@ const EventGridView = ({ event, analytics, eventData }: EventGridViewProps) => {
         
         {/* Artist Info Card */}
         <div className="h-[410px]">
-          <ArtistInfoCard event={event} />
+          <ArtistInfoCard event={event} eventData={eventData} />
         </div>
       </div>
     </div>

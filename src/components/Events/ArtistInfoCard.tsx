@@ -8,9 +8,10 @@ import { Link, useNavigate } from "react-router-dom";
 
 interface ArtistInfoCardProps {
   event: Event;
+  eventData?: any; // Raw event data from edge function response
 }
 
-const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
+const ArtistInfoCard = ({ event, eventData }: ArtistInfoCardProps) => {
   const navigate = useNavigate();
   // For now, we'll use the first artist from the event
   const primaryArtist = event.artists[0];
@@ -18,9 +19,18 @@ const ArtistInfoCard = ({ event }: ArtistInfoCardProps) => {
   const handleArtistNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Artist navigation clicked:', primaryArtist);
-    console.log('Navigating to:', `/artists/${primaryArtist.id}`);
-    navigate(`/artists/${primaryArtist.id}`);
+    
+    // Use real artist ID from eventData if available
+    const artistId = eventData?.artists?.[0]?.id;
+    
+    if (!artistId) {
+      console.error('No artist ID available for navigation');
+      return;
+    }
+    
+    console.log('Artist navigation clicked:', primaryArtist.name);
+    console.log('Navigating to artist ID:', artistId);
+    navigate(`/artists/${artistId}`);
   };
 
   if (!primaryArtist) {
