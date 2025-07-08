@@ -30,7 +30,7 @@ const transformPromoterCalendarData = (calendarData: PromoterCalendarResponse, p
         id: String(event.id), // Ensure ID is string
         date: date,
         name: event.name,
-        venue: `${event.venue_name}, ${event.venue_city}`,
+        venue: event.venue_name && event.venue_city ? `${event.venue_name}, ${event.venue_city}` : 'Venue TBA',
         city: event.venue_city,
         time: event.time || '',
         status: event.status || 'active',
@@ -47,7 +47,7 @@ const transformPromoterCalendarData = (calendarData: PromoterCalendarResponse, p
         transformedId: transformedEvent.id,
         transformedIdType: typeof transformedEvent.id,
         name: event.name,
-        venue: `${event.venue_name}, ${event.venue_city}`,
+        venue: event.venue_name && event.venue_city ? `${event.venue_name}, ${event.venue_city}` : 'Venue TBA',
         genre: event.genre,
         date: date
       });

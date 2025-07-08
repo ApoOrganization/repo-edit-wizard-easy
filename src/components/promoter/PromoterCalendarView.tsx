@@ -62,7 +62,7 @@ export const PromoterCalendarView: React.FC<PromoterCalendarViewProps> = ({
         id: String(event.id), // Ensure ID is string
         name: event.name,
         date: event.datetime,
-        venue: `${event.venue_name}, ${event.venue_city}`,
+        venue: event.venue_name && event.venue_city ? `${event.venue_name}, ${event.venue_city}` : 'Venue TBA',
         status: eventStatus,
         // Add promoter-specific properties for display
         has_tickets: event.has_tickets,
