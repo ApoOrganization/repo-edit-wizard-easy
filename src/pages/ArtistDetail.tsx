@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
-import { ArrowLeft, Instagram, Music, Mail, ExternalLink, Globe, Twitter, Facebook, Youtube, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { ArrowLeft, Instagram, Music, Mail, ExternalLink, Globe, Twitter, Facebook, Youtube, TrendingUp, TrendingDown, Minus, BookOpen, Volume2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -61,6 +61,10 @@ const ArtistDetail = () => {
       case 'facebook': return <Facebook className="h-3 w-3" />;
       case 'youtube': return <Youtube className="h-3 w-3" />;
       case 'website': return <Globe className="h-3 w-3" />;
+      case 'wikipedia': return <BookOpen className="h-3 w-3" />;
+      case 'soundcloud': return <Volume2 className="h-3 w-3" />;
+      case 'apple_music': return <Music className="h-3 w-3" />;
+      case 'spotify': return <Music className="h-3 w-3" />;
       default: return <ExternalLink className="h-3 w-3" />;
     }
   };
@@ -155,6 +159,11 @@ const ArtistDetail = () => {
                 {artist.agency}
               </Badge>
             )}
+            {artist?.description && (
+              <Badge variant="outline" className="text-xs">
+                Agent: {artist.description}
+              </Badge>
+            )}
             {artist?.territory && (
               <Badge variant="outline" className="text-xs">
                 {artist.territory}
@@ -168,14 +177,26 @@ const ArtistDetail = () => {
 
         {/* Metrics Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{formatNumber(artist?.monthly_listeners)}</div>
-                <p className="text-xs text-muted-foreground">Monthly Listeners</p>
-              </div>
-            </CardContent>
-          </Card>
+          {artist?.monthly_listeners && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatNumber(artist.monthly_listeners)}</div>
+                  <p className="text-xs text-muted-foreground">Monthly Listeners</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          {artist?.followers && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{formatNumber(artist.followers)}</div>
+                  <p className="text-xs text-muted-foreground">Followers</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
@@ -192,19 +213,18 @@ const ArtistDetail = () => {
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold">
-                  {artist?.pricing_analytics?.avg_ticket_price ? 
-                    formatCurrency(artist.pricing_analytics.avg_ticket_price, '₺') : 
-                    'No data available'
-                  }
+          {artist?.pricing_analytics?.avg_ticket_price && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(artist.pricing_analytics.avg_ticket_price, '₺')}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Avg Ticket Price</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Avg Ticket Price</p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Performance Analytics - Only show with full analytics */}
@@ -360,6 +380,27 @@ const ArtistDetail = () => {
                 </CardContent>
               </Card>
 
+              {/* Top Cities by Listeners */}
+              {artist?.top_cities && artist.top_cities.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Top Cities by Listeners</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {artist.top_cities.slice(0, 5).map((city, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                          <span className="text-sm">{city.city}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{formatNumber(city.listeners)} listeners</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Genre Distribution */}
               <Card>
                 <CardHeader>
@@ -433,25 +474,44 @@ const ArtistDetail = () => {
                     })()}
                     
                     {/* Social Links */}
-                    <div>
-                      <h4 className="text-xs font-medium text-muted-foreground mb-2">Social Media</h4>
-                      <div className="flex gap-2 flex-wrap">
-                        {artist?.social_presence && Object.entries(artist.social_presence).map(([platform, url]) => (
-                          <Button key={platform} size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
-                            <a href={url} target="_blank" rel="noopener noreferrer">
-                              {renderSocialIcon(platform)}
-                            </a>
-                          </Button>
-                        ))}
-                        {artist?.spotify_link && (
-                          <Button size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
-                            <a href={artist.spotify_link} target="_blank" rel="noopener noreferrer">
-                              <Music className="h-3 w-3" />
-                            </a>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                    {(() => {
+                      // Combine all social links from different sources
+                      const allSocialLinks = [];
+                      
+                      // Add legacy social_presence links
+                      if (artist?.social_presence) {
+                        Object.entries(artist.social_presence).forEach(([platform, url]) => {
+                          if (url) allSocialLinks.push({ platform, url });
+                        });
+                      }
+                      
+                      // Add new social_links
+                      if (artist?.social_links) {
+                        Object.entries(artist.social_links).forEach(([platform, url]) => {
+                          if (url) allSocialLinks.push({ platform, url });
+                        });
+                      }
+                      
+                      // Add spotify link
+                      if (artist?.spotify_link) {
+                        allSocialLinks.push({ platform: 'spotify', url: artist.spotify_link });
+                      }
+                      
+                      return allSocialLinks.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-medium text-muted-foreground mb-2">Social Media</h4>
+                          <div className="flex gap-2 flex-wrap">
+                            {allSocialLinks.map(({ platform, url }, index) => (
+                              <Button key={`${platform}-${index}`} size="sm" variant="outline" className="h-7 w-7 p-0" asChild>
+                                <a href={url} target="_blank" rel="noopener noreferrer">
+                                  {renderSocialIcon(platform)}
+                                </a>
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </CardContent>
               </Card>

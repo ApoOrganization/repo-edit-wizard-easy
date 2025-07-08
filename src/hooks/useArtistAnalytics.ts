@@ -13,6 +13,12 @@ export interface ArtistAnalyticsResponse {
     spotify_link: string | null;
     booking_emails: string | null;
     monthly_listeners: number | null;
+    followers: number | null;
+    description: string | null;
+    top_cities: Array<{
+      city: string;
+      listeners: number;
+    }> | null;
     event_stats: {
       total_events: number;
       avg_ticket_price: number;
@@ -42,6 +48,15 @@ export interface ArtistAnalyticsResponse {
       facebook?: string;
       website?: string;
       youtube?: string;
+    } | null;
+    social_links: {
+      twitter: string | null;
+      youtube: string | null;
+      facebook: string | null;
+      instagram: string | null;
+      wikipedia: string | null;
+      soundcloud: string | null;
+      apple_music: string | null;
     } | null;
   };
   analytics: {
@@ -120,6 +135,9 @@ const transformToAnalyticsFormat = (basicData: any): ArtistAnalyticsResponse => 
       spotify_link: artist?.spotify_link || null,
       booking_emails: null,
       monthly_listeners: null,
+      followers: null,
+      description: null,
+      top_cities: null,
       event_stats: {
         total_events: basicData?.stats?.total_events || 0,
         avg_ticket_price: 0
@@ -128,7 +146,8 @@ const transformToAnalyticsFormat = (basicData: any): ArtistAnalyticsResponse => 
       favorite_venues: [],
       genre_distribution: [],
       day_of_week_preferences: [],
-      social_presence: null
+      social_presence: null,
+      social_links: null
     },
     analytics: {
       diversityScore: 0,
@@ -228,12 +247,16 @@ export const useArtistAnalytics = (artistId: string | undefined) => {
               spotify_link: null,
               booking_emails: null,
               monthly_listeners: null,
+              followers: null,
+              description: null,
+              top_cities: null,
               event_stats: { total_events: 0, avg_ticket_price: 0 },
               performance_cities: [],
               favorite_venues: [],
               genre_distribution: [],
               day_of_week_preferences: [],
-              social_presence: null
+              social_presence: null,
+              social_links: null
             },
             analytics: {
               diversityScore: 0,

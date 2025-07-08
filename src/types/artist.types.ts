@@ -67,6 +67,12 @@ export interface ArtistAnalyticsResponse {
     spotify_link: string | null;
     booking_emails: string | null;
     monthly_listeners: number | null;
+    followers: number | null;
+    description: string | null;
+    top_cities: Array<{
+      city: string;
+      listeners: number;
+    }> | null;
     event_stats: {
       total_events: number;
       avg_ticket_price: number;
@@ -96,6 +102,15 @@ export interface ArtistAnalyticsResponse {
       facebook?: string;
       website?: string;
       youtube?: string;
+    } | null;
+    social_links: {
+      twitter: string | null;
+      youtube: string | null;
+      facebook: string | null;
+      instagram: string | null;
+      wikipedia: string | null;
+      soundcloud: string | null;
+      apple_music: string | null;
     } | null;
     pricing_analytics: {
       avg_ticket_price: number;
