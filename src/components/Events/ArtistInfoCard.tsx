@@ -13,8 +13,9 @@ interface ArtistInfoCardProps {
 
 const ArtistInfoCard = ({ event, eventData }: ArtistInfoCardProps) => {
   const navigate = useNavigate();
-  // For now, we'll use the first artist from the event
-  const primaryArtist = event.artists[0];
+  // Use real artist data from edge function response
+  const primaryArtist = event.artists[0]; // For display name and genre
+  const realArtistData = eventData?.artists?.[0]; // For real database values
 
   const handleArtistNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -33,7 +34,7 @@ const ArtistInfoCard = ({ event, eventData }: ArtistInfoCardProps) => {
     navigate(`/artists/${artistId}`);
   };
 
-  if (!primaryArtist) {
+  if (!primaryArtist && !realArtistData) {
     return (
       <Card className="media-card h-full">
         <CardContent className="p-6 text-center">
@@ -48,44 +49,55 @@ const ArtistInfoCard = ({ event, eventData }: ArtistInfoCardProps) => {
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
           <span className="hover:text-primary transition-colors cursor-pointer" onClick={handleArtistNavigation}>
-            {primaryArtist.name}
+            {realArtistData?.name || primaryArtist?.name || 'Unknown Artist'}
           </span>
-          <Badge variant="outline" className="text-xs">{primaryArtist.genre}</Badge>
+          <Badge variant="outline" className="text-xs">{primaryArtist?.genre || 'Unknown'}</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 gap-3">
           <div>
+            <p className="text-sm text-muted-foreground">Agency</p>
+            <p className="text-lg font-semibold">
+              {realArtistData?.agency || 'Agency will be added later'}
+            </p>
+          </div>
+          
+          <div>
             <p className="text-sm text-muted-foreground">Followers</p>
             <p className="text-lg font-semibold">
-              {primaryArtist.followers > 0 
-                ? primaryArtist.followers.toLocaleString() 
-                : 'Data loading...'}
+              {realArtistData?.followers ? 
+                realArtistData.followers.toLocaleString() : 
+                'Followers will be added later'}
             </p>
           </div>
           
           <div>
             <p className="text-sm text-muted-foreground">Monthly Listeners</p>
-            <p className="text-lg font-semibold">{primaryArtist.monthlyListeners.toLocaleString()}</p>
+            <p className="text-lg font-semibold">
+              {realArtistData?.monthly_listeners ? 
+                realArtistData.monthly_listeners.toLocaleString() : 
+                'Monthly listeners will be added later'}
+            </p>
           </div>
         </div>
 
         <div>
-          <p className="text-sm text-muted-foreground mb-2">Top 5 Cities</p>
-          <div className="space-y-1">
-            {primaryArtist.topCities && primaryArtist.topCities.length > 0 ? (
-              primaryArtist.topCities.slice(0, 5).map((city, index) => (
-                <div key={index} className="flex justify-between items-center text-sm">
-                  <span>{city}</span>
-                  <span className="text-muted-foreground">
-                    {Math.floor(Math.random() * 50000 + 10000).toLocaleString()}
-                  </span>
-                </div>
-              ))
+          <p className="text-sm text-muted-foreground mb-2">Spotify Link</p>
+          <p className="text-sm">
+            {realArtistData?.spotify_link ? (
+              <a 
+                href={realArtistData.spotify_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                View on Spotify
+              </a>
             ) : (
-              <p className="text-sm text-muted-foreground">City data loading...</p>
+              <span className="text-muted-foreground">Spotify link will be added later</span>
             )}
-          </div>
+          </p>
         </div>
 
         {/* Bottom Symbol Bar */}
@@ -107,7 +119,7 @@ const ArtistInfoCard = ({ event, eventData }: ArtistInfoCardProps) => {
             size="sm" 
             className="p-2 cursor-pointer hover:bg-accent transition-colors" 
             onClick={handleArtistNavigation}
-            title={`View ${primaryArtist.name} details`}
+            title={`View ${realArtistData?.name || primaryArtist?.name || 'artist'} details`}
           >
             <ArrowRight className="h-4 w-4" />
           </Button>
