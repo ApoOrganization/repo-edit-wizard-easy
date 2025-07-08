@@ -321,6 +321,38 @@ export interface EventPromoterRelationship {
   performance_bonus: number | null;
 }
 
+// Promoter Calendar Interfaces for get_promoter_calendar function
+export interface PromoterCalendarResponse {
+  [date: string]: PromoterCalendarEvent[];
+}
+
+export interface PromoterCalendarEvent {
+  id: string;
+  name: string;
+  time: string;
+  venue_name: string;
+  venue_city: string;
+  genre: string | null;
+  status: string;
+  has_tickets: boolean;
+}
+
+// Transformed format for promoter calendar UI component
+export interface PromoterCalendarEventData {
+  id: string;
+  date: string;
+  name: string;
+  venue: string;
+  city: string;
+  time: string;
+  status: string;
+  has_tickets: boolean;
+  genre: string | null;
+  venue_name: string;
+  venue_city: string;
+  datetime: string;
+}
+
 // Legacy interface for backward compatibility (matching existing mock data)
 export interface MockPromoter {
   id: string;

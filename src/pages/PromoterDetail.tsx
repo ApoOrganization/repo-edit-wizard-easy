@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { usePromoterAnalytics, useIsPromoterAnalyticsFallback, useIsPromoterAnalyticsError } from "@/hooks/usePromoterAnalytics";
 import { formatRevenue, getPromoterSpecialtyBadgeVariant } from "@/hooks/usePromoters";
 import { formatNumber, formatScore, formatDecimalPercentage } from "@/utils/formatters";
+import { PromoterCalendarView } from "@/components/promoter/PromoterCalendarView";
 
 const PromoterDetail = () => {
   const { id } = useParams();
@@ -451,6 +452,14 @@ const PromoterDetail = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Event Calendar Section */}
+        <div className="mt-8">
+          <PromoterCalendarView 
+            promoterId={id || ''}
+            promoterName={promoter?.name}
+          />
+        </div>
       </div>
     </div>
   );

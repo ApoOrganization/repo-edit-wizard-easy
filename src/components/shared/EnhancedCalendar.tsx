@@ -191,9 +191,10 @@ export function EnhancedCalendar({ events, title, entityType, currentMonth, onEv
                           event.status === 'Sold Out' && "bg-green-100 text-green-800 hover:bg-green-200",
                           event.status === 'Cancelled' && "bg-red-100 text-red-800 hover:bg-red-200",
                           entityType === 'artist' && "bg-blue-100 text-blue-800 hover:bg-blue-200",
-                          entityType === 'venue' && "bg-purple-100 text-purple-800 hover:bg-purple-200"
+                          entityType === 'venue' && "bg-purple-100 text-purple-800 hover:bg-purple-200",
+                          entityType === 'promoter' && "bg-orange-100 text-orange-800 hover:bg-orange-200"
                         )}
-                        title={`${event.name} - ${event.venue}${(event as any).has_tickets ? ' (Tickets Available)' : ' (No Tickets)'}${entityType === 'venue' && (event as any).genre ? ` - ${(event as any).genre}` : ''}`}
+                        title={`${event.name} - ${event.venue}${(event as any).has_tickets ? ' (Tickets Available)' : ' (No Tickets)'}${entityType === 'venue' && (event as any).genre ? ` - ${(event as any).genre}` : ''}${entityType === 'promoter' && (event as any).genre ? ` - ${(event as any).genre}` : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onEventClick?.(event.id);
@@ -208,6 +209,11 @@ export function EnhancedCalendar({ events, title, entityType, currentMonth, onEv
                         {entityType === 'venue' && (event as any).genre && (event as any).genre !== 'No Genre' && (
                           <span className="ml-1 text-xs opacity-75 truncate">
                             ({(event as any).genre})
+                          </span>
+                        )}
+                        {entityType === 'promoter' && (event as any).venue_name && (
+                          <span className="ml-1 text-xs opacity-75 truncate">
+                            @{(event as any).venue_name}
                           </span>
                         )}
                       </div>
