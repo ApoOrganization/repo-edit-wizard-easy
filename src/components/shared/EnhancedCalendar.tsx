@@ -200,7 +200,9 @@ export function EnhancedCalendar({ events, title, entityType, currentMonth, onEv
                           onEventClick?.(event.id);
                         }}
                       >
-                        {entityType === 'artist' ? event.venue : event.name}
+                        {entityType === 'artist' ? event.venue : 
+                         entityType === 'promoter' ? `${event.name} @ ${(event as any).venue_name}` : 
+                         event.name}
                         {entityType === 'artist' && (event as any).has_tickets && (
                           <span className="ml-1 text-xs opacity-75">
                             🎟️
@@ -209,11 +211,6 @@ export function EnhancedCalendar({ events, title, entityType, currentMonth, onEv
                         {entityType === 'venue' && (event as any).genre && (event as any).genre !== 'No Genre' && (
                           <span className="ml-1 text-xs opacity-75 truncate">
                             ({(event as any).genre})
-                          </span>
-                        )}
-                        {entityType === 'promoter' && (event as any).venue_name && (
-                          <span className="ml-1 text-xs opacity-75 truncate">
-                            @{(event as any).venue_name}
                           </span>
                         )}
                       </div>
