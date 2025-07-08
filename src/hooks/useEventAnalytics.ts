@@ -50,7 +50,7 @@ export const useEventAnalytics = (eventId: string | undefined) => {
 
       console.log('Fetching analytics for event:', eventId);
 
-      const { data, error } = await supabase.functions.invoke('get_event_analytics', {
+      const { data, error } = await supabase.functions.invoke('event-analytics', {
         body: { eventId }
       });
 
