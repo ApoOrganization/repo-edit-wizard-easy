@@ -60,17 +60,22 @@ const transformEdgeFunctionResponse = (data: PromoterAnalyticsEdgeFunctionRespon
         years_active: promoterData.time_analytics.years_active
       },
       financial_metrics: {
-        total_revenue: 0, // Not available
-        avg_event_revenue: 0, // Not available
-        revenue_growth_rate: 0, // Not available
-        profit_margin: 0 // Not available
+        total_revenue: null, // Not available in API
+        avg_event_revenue: null, // Not available in API
+        revenue_growth_rate: null, // Not available in API
+        profit_margin: null // Not available in API
       },
       performance_metrics: {
         success_rate: 85, // Estimated based on growth trend
         artist_retention_rate: promoterData.artist_metrics.artist_loyalty_rate,
         venue_loyalty_score: 75, // Estimated
         market_reputation: calculatePerformanceScore()
-      }
+      },
+      // Add raw API fields for direct access
+      city_distribution: promoterData.venue_analytics.city_distribution,
+      day_of_week_preference: promoterData.time_analytics.day_of_week_preference,
+      growth_trend: promoterData.business_metrics.growth_trend,
+      primary_genre: promoterData.genre_analytics.primary_genre
     },
     analytics: {
       timeRange: 'year',

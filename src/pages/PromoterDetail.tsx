@@ -174,8 +174,8 @@ const PromoterDetail = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-2xl font-bold">{formatRevenue(promoter?.financial_metrics?.total_revenue)}</div>
-                <p className="text-xs text-muted-foreground">Total Revenue</p>
+                <div className="text-2xl font-bold">{promoter?.business_stats?.years_active || 0}</div>
+                <p className="text-xs text-muted-foreground">Years Active</p>
               </div>
             </CardContent>
           </Card>
@@ -195,14 +195,6 @@ const PromoterDetail = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{formatRevenue(analytics.businessMetrics?.revenue_performance?.avg_event_revenue)}</div>
-                  <p className="text-xs text-muted-foreground">Avg Event Revenue</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
                   <div className="text-2xl font-bold">{analytics.businessMetrics?.operational_efficiency?.events_per_month?.toFixed(1) || '0.0'}</div>
                   <p className="text-xs text-muted-foreground">Events per Month</p>
                 </div>
@@ -212,7 +204,15 @@ const PromoterDetail = () => {
               <CardContent className="pt-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold">{analytics?.marketPosition || 'Unknown'}</div>
-                  <p className="text-xs text-muted-foreground">Market Position</p>
+                  <p className="text-xs text-muted-foreground">Scale Classification</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <div className="text-2xl font-bold">{promoter?.business_stats?.genres_promoted || 0}</div>
+                  <p className="text-xs text-muted-foreground">Genres Promoted</p>
                 </div>
               </CardContent>
             </Card>
@@ -257,7 +257,7 @@ const PromoterDetail = () => {
                       <span className="text-sm font-medium">{promoter?.specialty || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Location</span>
+                      <span className="text-sm">Primary Location</span>
                       <span className="text-sm font-medium">{promoter?.city || 'N/A'}</span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -287,13 +287,76 @@ const PromoterDetail = () => {
                       <span className="text-sm">Website</span>
                       <span className="text-sm font-medium">{promoter?.contact_info?.website || 'Not Available'}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Instagram</span>
-                      <span className="text-sm font-medium">{promoter?.contact_info?.instagram_link || 'Not Available'}</span>
-                    </div>
+                    {promoter?.contact_info?.instagram_link && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Instagram</span>
+                        <a 
+                          href={promoter.contact_info.instagram_link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          @{promoter.name}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* City Performance Distribution */}
+              {promoter?.city_distribution && promoter.city_distribution.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Geographic Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground mb-3">
+                        Active in {promoter?.business_stats?.venues_used || 0} venues across {promoter.city_distribution.length} cities
+                      </div>
+                      {promoter.city_distribution.slice(0, 5).map((city, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-sm">{city.city}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{city.event_count} events</div>
+                            <div className="text-xs text-muted-foreground">{formatDecimalPercentage(city.percentage)}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Artist Collaboration Overview */}
+              {hasFullAnalytics && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Artist Collaborations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Artist Loyalty Rate</span>
+                        <span className="text-sm font-medium">{formatScore(promoter?.performance_metrics?.artist_retention_rate)}%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Primary Genre</span>
+                        <span className="text-sm font-medium">{promoter?.primary_genre || 'Mixed'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Growth Trend</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{promoter?.growth_trend || 'stable'}</span>
+                          {promoter?.growth_trend === 'growing' && <TrendingUp className="h-3 w-3 text-green-600" />}
+                          {promoter?.growth_trend === 'declining' && <TrendingDown className="h-3 w-3 text-red-600" />}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
@@ -339,7 +402,11 @@ const PromoterDetail = () => {
                     <div className="space-y-2">
                       {genreAnalytics.slice(0, 5).map((genre, index) => (
                         <div key={index} className="flex justify-between items-center py-1">
-                          <span className="text-sm">{genre.genre}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm">{genre.genre}</span>
+                            {genre.growth_trend > 0 && <TrendingUp className="h-3 w-3 text-green-600" />}
+                            {genre.growth_trend < 0 && <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />}
+                          </div>
                           <div className="text-right">
                             <div className="text-sm font-medium">{genre.event_count} events</div>
                             <div className="text-xs text-muted-foreground">{formatDecimalPercentage(genre.percentage)}</div>
@@ -350,24 +417,67 @@ const PromoterDetail = () => {
                   </CardContent>
                 </Card>
 
-                {/* Business Metrics Summary */}
+                {/* City Performance Distribution */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm font-semibold">Business Metrics</CardTitle>
+                    <CardTitle className="text-sm font-semibold">City Performance</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground mb-3">
+                        Event distribution across {promoter?.city_distribution?.length || 0} cities
+                      </div>
+                      {promoter?.city_distribution && promoter.city_distribution.length > 0 ? (
+                        promoter.city_distribution.slice(0, 8).map((city, index) => (
+                          <div key={index} className="flex justify-between items-center py-1">
+                            <span className="text-sm">{city.city}</span>
+                            <div className="text-right">
+                              <div className="text-sm font-medium">{city.event_count} events</div>
+                              <div className="text-xs text-muted-foreground">{formatDecimalPercentage(city.percentage)}</div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-xs text-muted-foreground">No city distribution data available</div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Monthly Activity Patterns */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Monthly Activity Patterns</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {timeSeries.slice(-6).map((month, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-sm">{month.month}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{month.events} events</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Artist Collaboration Analytics */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Artist Relationships</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Revenue Growth Rate</span>
-                        <span className="text-sm font-medium">{formatScore(analytics.businessMetrics?.revenue_performance?.revenue_growth_rate)}%</span>
+                      <div className="text-xs text-muted-foreground mb-3">
+                        Artist collaboration and loyalty metrics
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Market Share</span>
-                        <span className="text-sm font-medium">{formatScore(analytics.businessMetrics?.market_metrics?.market_share)}%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">Brand Recognition</span>
-                        <span className="text-sm font-medium">{formatScore(analytics.businessMetrics?.market_metrics?.brand_recognition_score)}</span>
+                      {/* Artist collaboration data will be shown here */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center py-1 text-xs text-muted-foreground">
+                          <span>Artist metrics available in API response</span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -404,51 +514,109 @@ const PromoterDetail = () => {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Success Rate</span>
-                      <span className="text-sm font-medium">{formatScore(promoter?.performance_metrics?.success_rate)}%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
                       <span className="text-sm">Artist Retention Rate</span>
                       <span className="text-sm font-medium">{formatScore(promoter?.performance_metrics?.artist_retention_rate)}%</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Venue Loyalty Score</span>
-                      <span className="text-sm font-medium">{formatScore(promoter?.performance_metrics?.venue_loyalty_score)}</span>
+                      <span className="text-sm">Performance Score</span>
+                      <span className="text-sm font-medium">{formatScore(analytics?.performanceScore)}%</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Market Reputation</span>
-                      <span className="text-sm font-medium">{formatScore(promoter?.performance_metrics?.market_reputation)}</span>
+                      <span className="text-sm">Scale Classification</span>
+                      <span className="text-sm font-medium">{analytics?.marketPosition || 'Unknown'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Events per Month</span>
+                      <span className="text-sm font-medium">{analytics.businessMetrics?.operational_efficiency?.events_per_month?.toFixed(1) || '0.0'}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Financial Performance */}
+              {/* Business Intelligence */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Financial Performance</CardTitle>
+                  <CardTitle className="text-sm font-semibold">Business Intelligence</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Total Revenue</span>
-                      <span className="text-sm font-medium">{formatRevenue(promoter?.financial_metrics?.total_revenue)}</span>
+                      <span className="text-sm">Total Events</span>
+                      <span className="text-sm font-medium">{promoter?.business_stats?.total_events || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Avg Event Revenue</span>
-                      <span className="text-sm font-medium">{formatRevenue(promoter?.financial_metrics?.avg_event_revenue)}</span>
+                      <span className="text-sm">Upcoming Events</span>
+                      <span className="text-sm font-medium">{promoter?.business_stats?.upcoming_events || 0}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Revenue Growth Rate</span>
-                      <span className="text-sm font-medium">{formatScore(promoter?.financial_metrics?.revenue_growth_rate)}%</span>
+                      <span className="text-sm">Venue Relationships</span>
+                      <span className="text-sm font-medium">{promoter?.business_stats?.venues_used || 0} venues</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm">Profit Margin</span>
-                      <span className="text-sm font-medium">{formatScore(promoter?.financial_metrics?.profit_margin)}%</span>
+                      <span className="text-sm">Genre Diversity</span>
+                      <span className="text-sm font-medium">{promoter?.business_stats?.genres_promoted || 0} genres</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Day of Week Performance */}
+              {hasFullAnalytics && promoter?.day_of_week_preference && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Preferred Event Days</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="text-xs text-muted-foreground mb-3">
+                        Event scheduling patterns and preferences
+                      </div>
+                      {promoter.day_of_week_preference.map((day, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-sm">{day.day}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{day.count} events</div>
+                            <div className="text-xs text-muted-foreground">{formatDecimalPercentage(day.percentage)}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Growth and Trends */}
+              {hasFullAnalytics && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Growth Analysis</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Growth Trend</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium capitalize">{promoter?.growth_trend || 'stable'}</span>
+                          {promoter?.growth_trend === 'growing' && <TrendingUp className="h-3 w-3 text-green-600" />}
+                          {promoter?.growth_trend === 'declining' && <TrendingDown className="h-3 w-3 text-red-600" />}
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Scale Classification</span>
+                        <span className="text-sm font-medium capitalize">{analytics?.marketPosition || 'Unknown'}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Activity Level</span>
+                        <span className="text-sm font-medium">{analytics.businessMetrics?.operational_efficiency?.events_per_month?.toFixed(1) || '0.0'} events/month</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Years in Business</span>
+                        <span className="text-sm font-medium">{promoter?.business_stats?.years_active || 0} years</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
         </Tabs>

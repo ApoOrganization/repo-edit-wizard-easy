@@ -219,6 +219,19 @@ export interface PromoterDetailsFull {
     venue_loyalty_score: number;
     market_reputation: number;
   };
+  // Raw API fields for direct access
+  city_distribution?: Array<{
+    city: string;
+    percentage: number;
+    event_count: number;
+  }>;
+  day_of_week_preference?: Array<{
+    day: string;
+    count: number;
+    percentage: number;
+  }>;
+  growth_trend?: string;
+  primary_genre?: string;
 }
 
 // Business Metrics Interface
