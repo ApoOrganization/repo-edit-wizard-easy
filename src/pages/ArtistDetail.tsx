@@ -285,8 +285,12 @@ const ArtistDetail = () => {
           </Card>
         )}
 
-        {/* Growth Trends - Only show with full analytics */}
+        {/* Growth Trends - Only show with full analytics and meaningful data */}
         {hasFullAnalytics && analytics?.growth && (
+          analytics.growth.listener_growth_rate !== 0 || 
+          analytics.growth.event_growth_rate !== 0 || 
+          analytics.growth.venue_diversity_trend !== 0
+        ) && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="text-sm font-semibold">Growth Trends</CardTitle>
@@ -356,44 +360,48 @@ const ArtistDetail = () => {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Performance Cities */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Top Performance Cities</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {artist?.performance_cities?.slice(0, 5).map((city, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
-                        <span className="text-sm">{city.city_name}</span>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">{city.event_count} events</div>
-                          <div className="text-xs text-muted-foreground">{formatNumber(city.avg_attendance)} avg attendance</div>
+              {artist?.performance_cities && artist.performance_cities.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Top Performance Cities</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {artist.performance_cities.slice(0, 5).map((city, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                          <span className="text-sm">{city.city_name}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{city.event_count} events</div>
+                            <div className="text-xs text-muted-foreground">{formatNumber(city.avg_attendance)} avg attendance</div>
+                          </div>
                         </div>
-                      </div>
-                    )) || <p className="text-sm text-muted-foreground">No city data available</p>}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Favorite Venues */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Favorite Venues</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {artist?.favorite_venues?.slice(0, 5).map((venue, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
-                        <div>
-                          <div className="text-sm font-medium">{venue.venue_name}</div>
-                          <div className="text-xs text-muted-foreground">{venue.city}</div>
+              {artist?.favorite_venues && artist.favorite_venues.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Favorite Venues</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {artist.favorite_venues.slice(0, 5).map((venue, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                          <div>
+                            <div className="text-sm font-medium">{venue.venue_name}</div>
+                            <div className="text-xs text-muted-foreground">{venue.city}</div>
+                          </div>
+                          <div className="text-sm font-medium">{venue.performance_count}</div>
                         </div>
-                        <div className="text-sm font-medium">{venue.performance_count}</div>
-                      </div>
-                    )) || <p className="text-sm text-muted-foreground">No venue data available</p>}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Top Cities by Listeners */}
               {artist?.top_cities && artist.top_cities.length > 0 && (
@@ -417,21 +425,23 @@ const ArtistDetail = () => {
               )}
 
               {/* Genre Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Genre Distribution</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {artist?.genre_distribution?.map((genre, index) => (
-                      <div key={index} className="flex justify-between items-center py-1">
-                        <span className="text-sm">{genre.genre}</span>
-                        <span className="text-sm font-medium">{formatDecimalPercentage(genre.percentage)}</span>
-                      </div>
-                    )) || <p className="text-sm text-muted-foreground">No genre data available</p>}
-                  </div>
-                </CardContent>
-              </Card>
+              {artist?.genre_distribution && artist.genre_distribution.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Genre Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {artist.genre_distribution.map((genre, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-sm">{genre.genre}</span>
+                          <span className="text-sm font-medium">{formatDecimalPercentage(genre.percentage)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Pricing Analytics */}
               {artist?.pricing_analytics && (
@@ -541,14 +551,14 @@ const ArtistDetail = () => {
           <TabsContent value="events" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Upcoming Events */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Upcoming Events</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {upcomingEvents.length > 0 ? (
-                      upcomingEvents.map((event) => (
+              {upcomingEvents.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Upcoming Events</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {upcomingEvents.map((event) => (
                         <div key={event.event_id} className="p-3 border border-border rounded-md">
                           <div className="font-medium text-sm">{event.event_name}</div>
                           <div className="text-xs text-muted-foreground">{event.venue_name}, {event.city}</div>
@@ -557,23 +567,21 @@ const ArtistDetail = () => {
                             <div className="text-xs font-medium">{formatCurrency(event.ticket_price)}</div>
                           )}
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No upcoming events</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Past Events */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Recent Past Events</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {pastEvents.length > 0 ? (
-                      pastEvents.map((event) => (
+              {pastEvents.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Recent Past Events</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {pastEvents.map((event) => (
                         <div key={event.event_id} className="p-3 border border-border rounded-md">
                           <div className="font-medium text-sm">{event.event_name}</div>
                           <div className="text-xs text-muted-foreground">{event.venue_name}, {event.city}</div>
@@ -582,13 +590,11 @@ const ArtistDetail = () => {
                             <div className="text-xs font-medium">{formatNumber(event.attendance)} attendance</div>
                           )}
                         </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No past events</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
