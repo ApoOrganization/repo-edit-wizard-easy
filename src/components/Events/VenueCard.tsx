@@ -4,21 +4,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getVenueIdFromName } from "@/data/venues";
 
 interface VenueCardProps {
   event: Event;
+  eventData?: any; // Raw event data from edge function response
 }
 
-const VenueCard = ({ event }: VenueCardProps) => {
+const VenueCard = ({ event, eventData }: VenueCardProps) => {
   const navigate = useNavigate();
   
   const handleVenueNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const venueId = getVenueIdFromName(event.venue);
+    
+    // Use direct venue_id from event data if available, otherwise fallback to name lookup
+    const venueId = eventData?.venue_id;
+    
+    if (!venueId) {
+      console.error('No venue_id available for navigation');
+      return;
+    }
+    
     console.log('Venue navigation clicked:', event.venue);
-    console.log('Navigating to:', `/venues/${venueId}`);
+    console.log('Navigating to venue ID:', venueId);
     navigate(`/venues/${venueId}`);
   };
 
