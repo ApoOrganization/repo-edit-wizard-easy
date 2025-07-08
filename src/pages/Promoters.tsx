@@ -11,6 +11,15 @@ import UniversalFilterPanel from "@/components/shared/UniversalFilterPanel";
 import type { FilterSection, UniversalFilterState } from "@/components/shared/UniversalFilterPanel";
 import { useTransformedPromoters, usePromoterFilterOptions, formatRevenue, getPromoterSpecialtyBadgeVariant } from "@/hooks/usePromoters";
 import { PromoterSearchParams } from "@/types/promoter.types";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis
+} from "@/components/ui/pagination";
 
 const Promoters = () => {
   const [activeTab, setActiveTab] = useState("list");
@@ -33,16 +42,16 @@ const Promoters = () => {
 
   // Sync filters with search params
   useEffect(() => {
-    setSearchParams({
+    setSearchParams(prev => ({
       searchTerm: (filters.search as string) || '',
       cities: (filters.cities as string[]).length > 0 ? (filters.cities as string[]) : undefined,
       activityStatuses: (filters.activityStatuses as string[]).length > 0 ? (filters.activityStatuses as string[]) : undefined,
       scaleTiers: (filters.scaleTiers as string[]).length > 0 ? (filters.scaleTiers as string[]) : undefined,
       sortBy: filters.sortBy as string || 'total_events',
       sortOrder: 'desc',
-      page: 1,
-      limit: 20
-    });
+      page: 1, // Reset to page 1 when filters change
+      limit: prev.limit || 20
+    }));
   }, [filters]);
 
   // Fetch promoters data
@@ -121,6 +130,52 @@ const Promoters = () => {
 
   const handleFiltersChange = (newFilters: UniversalFilterState) => {
     setFilters(newFilters);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams(prev => ({
+      ...prev,
+      page: newPage
+    }));
+  };
+
+  // Generate page numbers for pagination
+  const generatePageNumbers = () => {
+    if (!pagination) return [];
+    
+    const totalPages = pagination.totalPages;
+    const currentPage = pagination.page;
+    const pages: (number | 'ellipsis')[] = [];
+    
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (currentPage > 3) {
+        pages.push('ellipsis');
+      }
+      
+      // Show pages around current page
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        if (i !== 1 && i !== totalPages) {
+          pages.push(i);
+        }
+      }
+      
+      if (currentPage < totalPages - 2) {
+        pages.push('ellipsis');
+      }
+      
+      // Always show last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
   };
 
   if (isLoading) {
@@ -252,6 +307,45 @@ const Promoters = () => {
                   </Link>
                 ))}
               </div>
+
+              {/* Pagination */}
+              {pagination && pagination.totalPages > 1 && (
+                <div className="mt-8">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => handlePageChange(pagination.page - 1)}
+                          className={pagination.page === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      
+                      {generatePageNumbers().map((pageNum, index) => (
+                        <PaginationItem key={index}>
+                          {pageNum === 'ellipsis' ? (
+                            <PaginationEllipsis />
+                          ) : (
+                            <PaginationLink
+                              onClick={() => handlePageChange(pageNum as number)}
+                              isActive={pageNum === pagination.page}
+                              className="cursor-pointer"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          )}
+                        </PaginationItem>
+                      ))}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => handlePageChange(pagination.page + 1)}
+                          className={pagination.page === pagination.totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </div>
           )}
 
