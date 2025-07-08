@@ -2,7 +2,7 @@ import { Event } from "@/data/types";
 import { EventAnalytics } from "@/hooks/useEventAnalytics";
 import OverviewCard from "./OverviewCard";
 import VenueCard from "./VenueCard";
-import CampaignInfoCard from "./CampaignInfoCard";
+import PromoterInfoCard from "./PromoterInfoCard";
 import ArtistInfoCard from "./ArtistInfoCard";
 
 interface EventGridViewProps {
@@ -29,9 +29,9 @@ const EventGridView = ({ event, analytics, eventData }: EventGridViewProps) => {
 
       {/* Right Column */}
       <div className="space-y-8">
-        {/* Campaign & Info Card */}
+        {/* Promoter Info Card */}
         <div className="h-[350px]">
-          <CampaignInfoCard event={event} />
+          <PromoterInfoCard event={event} eventData={eventData} />
         </div>
         
         {/* Artist Info Card */}
