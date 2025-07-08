@@ -2,7 +2,7 @@ import { Event } from "@/data/types";
 import { EventAnalytics } from "@/hooks/useEventAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, AlertCircle, Loader2, Calendar, Users, DollarSign } from "lucide-react";
+import { Calendar, Users, DollarSign, Loader2, CheckCircle, XCircle, Ticket } from "lucide-react";
 
 interface OverviewCardProps {
   event: Event;
@@ -19,35 +19,31 @@ const OverviewCard = ({ event, analytics }: OverviewCardProps) => {
     }).format(value);
   };
 
-  // Check if event is listed on Bubilet for detailed analytics
-  const isBubiletEvent = event.providers.some(provider => 
-    provider.toLowerCase().includes('bubilet')
-  );
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('tr-TR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
 
-  // Use analytics data when available, fallback for missing data
-  const ticketsSold = analytics?.overview?.ticketsSold || 0;
-  const totalCapacity = analytics?.overview?.totalCapacity || 0;
-  const selloutPercentage = totalCapacity > 0 ? (ticketsSold / totalCapacity) * 100 : 0;
-  const daysOnSale = analytics?.overview?.daysOnSale || 0;
-  const hasAnalyticsData = analytics?.overview && ticketsSold > 0 && totalCapacity > 0;
-
-  // Sales velocity calculations
-  const salesVelocity = analytics?.salesVelocity;
-  const ticketsPerDay = salesVelocity?.ticketsPerDay ? parseFloat(salesVelocity.ticketsPerDay) : 0;
-  const estimatedSelloutDays = salesVelocity?.estimatedSelloutDays;
-
-  // Price comparison data
-  const priceComparison = analytics?.priceComparison;
-  const currentPrice = priceComparison?.currentPrice;
-  const percentageDiff = priceComparison?.percentageDiff;
-
-  // Determine trend icon based on sales velocity and percentage difference
-  const getTrendIcon = () => {
-    if (!priceComparison) return null;
-    const diff = parseFloat(percentageDiff || "0");
-    if (diff > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
-    if (diff < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
-    return null;
+  // Get status color for badge
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active':
+      case 'onsale':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'soldout':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      case 'postponed':
+        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'past':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
   };
 
   return (
@@ -59,112 +55,125 @@ const OverviewCard = ({ event, analytics }: OverviewCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Event Status & Timeline Section */}
         <div className="space-y-3">
-          {/* Sales Started */}
+          {/* Event Status Badge */}
+          {analytics?.overview?.status && (
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <Badge className={`${getStatusColor(analytics.overview.status)} text-xs px-2 py-1`}>
+                {analytics.overview.status.charAt(0).toUpperCase() + analytics.overview.status.slice(1)}
+              </Badge>
+            </div>
+          )}
+          
+          {/* Days on Sale */}
           <div className="flex items-center gap-3">
             <Calendar className="h-4 w-4 text-blue-500" />
             <span className="text-base">
-              {analytics?.overview?.salesStarted ? (
-                `Sales started ${analytics.overview.salesStarted}`
+              {analytics?.overview?.daysOnSale ? (
+                `${analytics.overview.daysOnSale} days on sale`
               ) : analytics ? (
-                `${daysOnSale} days on sale`
+                'Sales information not available'
               ) : (
                 <div className="flex items-center gap-2">
                   <Loader2 className="h-3 w-3 animate-spin" />
-                  Sales information loading...
+                  Loading sales information...
                 </div>
               )}
             </span>
           </div>
+          
+          {/* Sales Started Date */}
+          {analytics?.overview?.salesStarted && (
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-base">
+                Sales started {formatDate(analytics.overview.salesStarted)}
+              </span>
+            </div>
+          )}
           
           {/* Event Date */}
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span className="text-base">Event scheduled for {new Date(event.date).toLocaleDateString('tr-TR')}</span>
-          </div>
-          
-          {/* Ticket Sales Status */}
-          <div className="flex items-center gap-3">
-            <Users className={`h-4 w-4 ${selloutPercentage >= 100 ? 'text-red-500' : 'text-yellow-500'}`} />
+            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
             <span className="text-base">
-              {hasAnalyticsData ? (
-                <div className="flex items-center gap-2">
-                  {selloutPercentage >= 100 ? (
-                    <>
-                      <span className="font-semibold text-red-600">Sold out</span>
-                      <span>({ticketsSold.toLocaleString()} tickets)</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="font-semibold">{selloutPercentage.toFixed(1)}% sold</span>
-                      <span>({ticketsSold.toLocaleString()} / {totalCapacity.toLocaleString()} tickets)</span>
-                    </>
-                  )}
-                </div>
-              ) : analytics ? (
-                'No sales data available'
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Ticket sales data loading...
-                </div>
-              )}
+              Event date: {formatDate(event.date)}
             </span>
           </div>
+        </div>
 
-          {/* Sales Velocity - Only for Bubilet events */}
-          {isBubiletEvent && salesVelocity && ticketsPerDay > 0 && (
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Ticket Information Section */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-muted-foreground">Ticket Information</h4>
+          
+          {/* Price Range */}
+          {analytics?.event?.price_analytics && (
             <div className="flex items-center gap-3">
-              <TrendingUp className="h-4 w-4 text-blue-500" />
+              <DollarSign className="h-4 w-4 text-purple-500" />
               <span className="text-base">
-                <span className="font-semibold">{ticketsPerDay.toFixed(1)} tickets/day</span>
-                {estimatedSelloutDays && estimatedSelloutDays > 0 && (
+                Price range: {formatCurrency(analytics.event.price_analytics.min_price)} - {formatCurrency(analytics.event.price_analytics.max_price)}
+                <span className="text-muted-foreground ml-2">
+                  ({analytics.event.price_analytics.total_categories} categories)
+                </span>
+              </span>
+            </div>
+          )}
+
+          {/* Detailed Ticket Categories */}
+          {analytics?.event?.pricing && (
+            <div className="space-y-2">
+              {Object.entries(analytics.event.pricing).map(([provider, providerData]: [string, any]) => (
+                providerData?.prices && Array.isArray(providerData.prices) && (
+                  <div key={provider} className="ml-6 space-y-1">
+                    {providerData.prices.map((priceItem: any, index: number) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Ticket className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm">
+                          {priceItem.category} - {formatCurrency(priceItem.price)}
+                          {!priceItem.is_active && (
+                            <span className="text-red-500 ml-1">(Inactive)</span>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-border" />
+
+        {/* Availability Status Section */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-muted-foreground">Availability</h4>
+          
+          {/* Tickets Available */}
+          {analytics?.event?.availability && (
+            <div className="flex items-center gap-3">
+              {analytics.event.availability.has_tickets ? (
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              ) : (
+                <XCircle className="h-4 w-4 text-red-500" />
+              )}
+              <span className="text-base">
+                Tickets {analytics.event.availability.has_tickets ? 'available' : 'not available'}
+                {analytics.event.availability.providers_with_tickets?.length > 0 && (
                   <span className="text-muted-foreground ml-2">
-                    (Est. sellout in {estimatedSelloutDays} days)
+                    on {analytics.event.availability.providers_with_tickets.length} platform(s)
                   </span>
                 )}
               </span>
             </div>
           )}
-          
-          {/* Current Price with Trend */}
-          <div className="flex items-center gap-3">
-            <DollarSign className="h-4 w-4 text-purple-500" />
-            <span className="text-base flex items-center gap-2">
-              {currentPrice ? (
-                <>
-                  <span>Current price: {formatCurrency(currentPrice)}</span>
-                  {getTrendIcon()}
-                  {percentageDiff && (
-                    <span className={`text-sm ${parseFloat(percentageDiff) > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ({percentageDiff})
-                    </span>
-                  )}
-                </>
-              ) : analytics ? (
-                'Price information not available'
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Price information loading...
-                </div>
-              )}
-            </span>
-          </div>
 
-          {/* Bubilet Notice for non-Bubilet events */}
-          {!isBubiletEvent && analytics && (
-            <div className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-yellow-600" />
-              <span className="text-sm text-yellow-800 dark:text-yellow-200">
-                Detailed sales data only available for Bubilet events
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="pt-4 border-t border-border">
-          <h4 className="text-sm font-semibold mb-3 text-muted-foreground">Listed on Platforms</h4>
+          {/* Provider Platforms */}
           <div className="flex flex-wrap gap-2">
             {event.providers && event.providers.length > 0 ? (
               event.providers.map((provider, index) => (
