@@ -9,15 +9,18 @@ export const transformPromoterFromDB = (dbPromoter: PromoterListItem): Transform
     let score = 0;
     
     // Event count factor (0-2 points)
-    const eventScore = Math.min(promoter.total_events / 500, 1) * 2;
+    // 100+ events = max score, 50 events = 1 point
+    const eventScore = Math.min(promoter.total_events / 100, 1) * 2;
     score += eventScore;
     
     // Venue diversity factor (0-2 points)
-    const venueScore = Math.min(promoter.venues_used / 50, 1) * 2;
+    // 15+ venues = max score, 7-8 venues = 1 point
+    const venueScore = Math.min(promoter.venues_used / 15, 1) * 2;
     score += venueScore;
     
     // Artist diversity factor (0-1 point)
-    const artistScore = Math.min(promoter.unique_artists_count / 100, 1);
+    // 30+ artists = max score
+    const artistScore = Math.min(promoter.unique_artists_count / 30, 1);
     score += artistScore;
     
     return Math.round(score * 10) / 10; // Round to 1 decimal place
