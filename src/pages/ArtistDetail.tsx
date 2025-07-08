@@ -36,6 +36,16 @@ const ArtistDetail = () => {
   // Check data status
   const isFallbackData = useIsAnalyticsFallback(analyticsData);
   const isErrorState = useIsAnalyticsError(analyticsData);
+  const hasMeaningfulAnalytics = !isFallbackData && !isErrorState && analytics && (
+    analytics.diversityScore > 0 || 
+    analytics.touringIntensity > 0 || 
+    analytics.marketPenetration > 0 ||
+    (analytics.growth && (
+      analytics.growth.listener_growth_rate !== 0 || 
+      analytics.growth.event_growth_rate !== 0 || 
+      analytics.growth.venue_diversity_trend !== 0
+    ))
+  );
   const hasFullAnalytics = !isFallbackData && !isErrorState && analytics;
   
   console.log('🎭 Artist Detail Status:', {
@@ -44,6 +54,7 @@ const ArtistDetail = () => {
     isFallbackData,
     isErrorState,
     hasFullAnalytics,
+    hasMeaningfulAnalytics,
     hasComparisons: comparisons.length > 0
   });
 
@@ -242,8 +253,12 @@ const ArtistDetail = () => {
           )}
         </div>
 
-        {/* Performance Analytics - Only show with full analytics */}
-        {hasFullAnalytics && (
+        {/* Performance Analytics - Only show with meaningful analytics data */}
+        {hasMeaningfulAnalytics && (
+          analytics.diversityScore > 0 || 
+          analytics.touringIntensity > 0 || 
+          analytics.marketPenetration > 0
+        ) && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <Card>
               <CardContent className="pt-6">
@@ -285,8 +300,8 @@ const ArtistDetail = () => {
           </Card>
         )}
 
-        {/* Growth Trends - Only show with full analytics and meaningful data */}
-        {hasFullAnalytics && analytics?.growth && (
+        {/* Growth Trends - Only show with meaningful growth data */}
+        {hasMeaningfulAnalytics && analytics?.growth && (
           analytics.growth.listener_growth_rate !== 0 || 
           analytics.growth.event_growth_rate !== 0 || 
           analytics.growth.venue_diversity_trend !== 0
@@ -349,8 +364,8 @@ const ArtistDetail = () => {
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="analytics" disabled={!hasFullAnalytics}>
-              Analytics {!hasFullAnalytics && '(Unavailable)'}
+            <TabsTrigger value="analytics" disabled={!hasMeaningfulAnalytics}>
+              Analytics {!hasMeaningfulAnalytics && '(Unavailable)'}
             </TabsTrigger>
             <TabsTrigger value="similar" disabled={comparisons.length === 0}>
               Similar Artists {comparisons.length === 0 && '(Unavailable)'}
@@ -599,7 +614,7 @@ const ArtistDetail = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            {hasFullAnalytics ? (
+            {hasMeaningfulAnalytics ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Day of Week Preferences */}
                 <Card>
