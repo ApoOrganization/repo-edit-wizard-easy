@@ -1,6 +1,8 @@
 export interface ArtistListItem {
   id: string;  // UUID from Edge Function
   name: string;
+  eventCount: number;  // Number of events for this artist
+  favouritePromoter: string | null;  // Most worked with promoter
   total_count?: number;  // For pagination from Edge Function
 }
 
@@ -16,6 +18,8 @@ export interface TransformedArtist {
   email: string;
   profileUrl: string;
   spotifyUrl: string;
+  eventCount: number;  // Real event count from edge function
+  favouritePromoter: string | null;  // Real favourite promoter or null
 }
 
 export interface ArtistSearchParams {

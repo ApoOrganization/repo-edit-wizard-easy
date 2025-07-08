@@ -9,7 +9,7 @@ export const useArtistsList = (params: { searchQuery?: string; page?: number; pa
     queryFn: async () => {
       console.log('Fetching artists list with params:', params);
 
-      const { data, error } = await supabase.functions.invoke('get-artists-list', {
+      const { data, error } = await supabase.functions.invoke('get-artist-list-new', {
         body: {
           searchQuery: params.searchQuery || '',
           page: params.page || 1,
@@ -33,7 +33,9 @@ export const useArtistsList = (params: { searchQuery?: string; page?: number; pa
       const totalCount = data.pagination?.totalCount || 0;
       const artists = data.artists.map((item: any) => ({
         id: item.id,
-        name: item.name
+        name: item.name,
+        eventCount: item.eventCount || 0,
+        favouritePromoter: item.favouritePromoter || null
       }));
 
       console.log('Artists list results:', { 

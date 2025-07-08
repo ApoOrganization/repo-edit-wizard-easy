@@ -81,6 +81,8 @@ export const transformArtistFromDB = (dbArtist: ArtistListItem): TransformedArti
     topCities: ['Unknown'], // Not available in simple list
     email: 'unknown@example.com', // Not available in simple list
     profileUrl: generateProfileUrl(dbArtist.name || 'unknown'),
-    spotifyUrl: `https://spotify.com/artist/${dbArtist.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`
+    spotifyUrl: `https://spotify.com/artist/${dbArtist.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`,
+    eventCount: dbArtist.eventCount || 0, // Real event count from edge function
+    favouritePromoter: dbArtist.favouritePromoter || null // Real favourite promoter or null
   };
 };
