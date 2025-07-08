@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { Event } from "@/data/types";
 import { EventAnalytics } from "@/hooks/useEventAnalytics";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, DollarSign, Loader2, CheckCircle, XCircle, Ticket } from "lucide-react";
+import { Calendar, Users, DollarSign, Loader2, CheckCircle, XCircle, Ticket, ChevronDown, ChevronUp } from "lucide-react";
 
 interface OverviewCardProps {
   event: Event;
@@ -11,6 +12,8 @@ interface OverviewCardProps {
 }
 
 const OverviewCard = ({ event, analytics, eventData }: OverviewCardProps) => {
+  const [isTicketInfoExpanded, setIsTicketInfoExpanded] = useState(true);
+  
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -55,7 +58,7 @@ const OverviewCard = ({ event, analytics, eventData }: OverviewCardProps) => {
           {!analytics && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 overflow-y-auto max-h-[400px]">
         {/* Event Status & Timeline Section */}
         <div className="space-y-3">
           {/* Event Status Badge */}
@@ -109,42 +112,61 @@ const OverviewCard = ({ event, analytics, eventData }: OverviewCardProps) => {
 
         {/* Ticket Information Section */}
         <div className="space-y-3">
-          <h4 className="text-sm font-semibold text-muted-foreground">Ticket Information</h4>
+          <button
+            onClick={() => setIsTicketInfoExpanded(!isTicketInfoExpanded)}
+            className="flex items-center justify-between w-full text-left"
+          >
+            <h4 className="text-sm font-semibold text-muted-foreground">Ticket Information</h4>
+            {isTicketInfoExpanded ? (
+              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            )}
+          </button>
           
-          {/* Price Range */}
-          {eventData?.price_analytics && (
-            <div className="flex items-center gap-3">
-              <DollarSign className="h-4 w-4 text-purple-500" />
-              <span className="text-base">
-                Price range: {formatCurrency(eventData.price_analytics.min_price)} - {formatCurrency(eventData.price_analytics.max_price)}
-                <span className="text-muted-foreground ml-2">
-                  ({eventData.price_analytics.total_categories} categories)
-                </span>
-              </span>
-            </div>
-          )}
+          {isTicketInfoExpanded && (
+            <>
+              {/* Price Range */}
+              {eventData?.price_analytics && (
+                <div className="flex items-center gap-3">
+                  <DollarSign className="h-4 w-4 text-purple-500" />
+                  <span className="text-base">
+                    Price range: {formatCurrency(eventData.price_analytics.min_price)} - {formatCurrency(eventData.price_analytics.max_price)}
+                    <span className="text-muted-foreground ml-2">
+                      ({eventData.price_analytics.total_categories} categories)
+                    </span>
+                  </span>
+                </div>
+              )}
 
-          {/* Detailed Ticket Categories */}
-          {eventData?.pricing && (
-            <div className="space-y-2">
-              {Object.entries(eventData.pricing).map(([provider, providerData]: [string, any]) => (
-                providerData?.prices && Array.isArray(providerData.prices) && (
-                  <div key={provider} className="ml-6 space-y-1">
-                    {providerData.prices.map((priceItem: any, index: number) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <Ticket className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-sm">
-                          {priceItem.category} - {formatCurrency(priceItem.price)}
-                          {!priceItem.is_active && (
-                            <span className="text-red-500 ml-1">(Inactive)</span>
-                          )}
-                        </span>
+              {/* Detailed Ticket Categories */}
+              {eventData?.pricing && (
+                <div className="space-y-3">
+                  {Object.entries(eventData.pricing).map(([provider, providerData]: [string, any]) => (
+                    providerData?.prices && Array.isArray(providerData.prices) && (
+                      <div key={provider} className="space-y-2">
+                        <h5 className="text-sm font-medium text-foreground capitalize">
+                          {provider} Tickets
+                        </h5>
+                        <div className="ml-4 space-y-1">
+                          {providerData.prices.map((priceItem: any, index: number) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Ticket className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-sm">
+                                {priceItem.category} - {formatCurrency(priceItem.price)}
+                                {!priceItem.is_active && (
+                                  <span className="text-red-500 ml-1">(Inactive)</span>
+                                )}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )
-              ))}
-            </div>
+                    )
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
