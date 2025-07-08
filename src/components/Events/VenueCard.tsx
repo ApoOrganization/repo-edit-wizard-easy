@@ -54,7 +54,12 @@ const VenueCard = ({ event, eventData }: VenueCardProps) => {
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span className="text-sm">Capacity information loading...</span>
+              <span className="text-sm">
+                {eventData?.venue_capacity ? 
+                  `Capacity: ${eventData.venue_capacity.toLocaleString()}` : 
+                  'Capacity will be added later'
+                }
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
