@@ -159,7 +159,7 @@ export function EnhancedCalendar({ events, title, entityType, currentMonth, onEv
               key={dayIdx}
               onClick={() => setSelectedDay(day)}
               className={cn(
-                "relative min-h-[100px] p-2 border-b border-r hover:bg-muted/50 cursor-pointer transition-colors",
+                "relative min-h-[140px] p-2 border-b border-r hover:bg-muted/50 cursor-pointer transition-colors",
                 !isCurrentMonth && "bg-muted/20 text-muted-foreground",
                 isSelected && "bg-accent",
                 dayIdx % 7 === 6 && "border-r-0",
@@ -186,7 +186,7 @@ export function EnhancedCalendar({ events, title, entityType, currentMonth, onEv
                       <div
                         key={event.id}
                         className={cn(
-                          "px-1 py-0.5 rounded text-xs truncate cursor-pointer transition-colors",
+                          "px-1 py-0.5 rounded text-xs line-clamp-2 cursor-pointer transition-colors",
                           "bg-primary/10 text-primary hover:bg-primary/20",
                           event.status === 'Sold Out' && "bg-green-100 text-green-800 hover:bg-green-200",
                           event.status === 'Cancelled' && "bg-red-100 text-red-800 hover:bg-red-200",
