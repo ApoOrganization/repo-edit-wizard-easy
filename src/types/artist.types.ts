@@ -97,6 +97,15 @@ export interface ArtistAnalyticsResponse {
       website?: string;
       youtube?: string;
     } | null;
+    pricing_analytics: {
+      avg_ticket_price: number;
+      max_ticket_price: number;
+      min_ticket_price: number;
+      typical_price_range: {
+        low: number;
+        high: number;
+      };
+    } | null;
   };
   analytics: {
     diversityScore: number;

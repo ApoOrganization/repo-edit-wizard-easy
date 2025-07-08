@@ -195,7 +195,12 @@ const ArtistDetail = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-2xl font-bold">{formatCurrency(artist?.event_stats?.avg_ticket_price)}</div>
+                <div className="text-2xl font-bold">
+                  {artist?.pricing_analytics?.avg_ticket_price ? 
+                    formatCurrency(artist.pricing_analytics.avg_ticket_price, '₺') : 
+                    'No data available'
+                  }
+                </div>
                 <p className="text-xs text-muted-foreground">Avg Ticket Price</p>
               </div>
             </CardContent>
@@ -371,6 +376,37 @@ const ArtistDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Pricing Analytics */}
+              {artist?.pricing_analytics && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Pricing Analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2 border-b border-border">
+                        <span className="text-sm">Average Price</span>
+                        <span className="text-sm font-medium">
+                          {formatCurrency(artist.pricing_analytics.avg_ticket_price, '₺')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-border">
+                        <span className="text-sm">Price Range</span>
+                        <span className="text-sm font-medium">
+                          {formatCurrency(artist.pricing_analytics.min_ticket_price, '₺')} - {formatCurrency(artist.pricing_analytics.max_ticket_price, '₺')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm">Typical Range</span>
+                        <span className="text-sm font-medium">
+                          {formatCurrency(artist.pricing_analytics.typical_price_range.low, '₺')} - {formatCurrency(artist.pricing_analytics.typical_price_range.high, '₺')}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Contact Information */}
               <Card>

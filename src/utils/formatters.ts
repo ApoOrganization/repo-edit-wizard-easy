@@ -48,11 +48,16 @@ export function formatPercentage(value: number | null | undefined): string {
  * Format currency amounts
  * @param amount - Amount to format
  * @param currency - Currency symbol (default: '$')
- * @returns Formatted string (e.g., "$45.50", "$1,234.00")
+ * @returns Formatted string (e.g., "$45.50", "$1,234.00", "₺1,234.00")
  */
 export function formatCurrency(amount: number | null | undefined, currency: string = '$'): string {
   if (amount === null || amount === undefined || isNaN(amount)) {
     return `${currency}0.00`;
+  }
+  
+  // For Turkish Lira, format with thousands separator
+  if (currency === '₺') {
+    return `${currency}${amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   }
   
   return `${currency}${amount.toFixed(2)}`;
