@@ -247,7 +247,7 @@ const VenueDetail = () => {
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <div className="text-2xl font-bold">{venue?.pricing_analytics?.price_range?.max ? formatCurrency(venue.pricing_analytics.price_range.max) : '$0'}</div>
+                  <div className="text-2xl font-bold">{venue?.pricing_analytics?.max_ticket_price ? formatCurrency(venue.pricing_analytics.max_ticket_price, '₺') : '₺0.00'}</div>
                   <p className="text-xs text-muted-foreground">Max Ticket Price</p>
                 </div>
               </CardContent>

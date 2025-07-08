@@ -106,7 +106,10 @@ export interface VenueDetailsFull {
   };
   pricing_analytics: {
     avg_ticket_price: number;
-    price_range: {
+    max_ticket_price: number;
+    min_ticket_price: number;
+    total_price_points: number;
+    price_range?: {
       min: number;
       max: number;
     };
@@ -193,7 +196,10 @@ export interface VenueUtilizationMetrics {
 // Venue Pricing Analytics
 export interface VenuePricingAnalytics {
   avg_ticket_price: number;
-  price_range: {
+  max_ticket_price: number;
+  min_ticket_price: number;
+  total_price_points: number;
+  price_range?: {
     min: number;
     max: number;
   };
