@@ -200,7 +200,12 @@ const VenueDetail = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-2xl font-bold">{formatScore(venue?.utilization_metrics?.capacity_utilization)}%</div>
+                <div className="text-2xl font-bold">
+                  {venue?.utilization_metrics?.utilization_rate ? 
+                    `${Math.round(venue.utilization_metrics.utilization_rate)}%` : 
+                    'N/A'
+                  }
+                </div>
                 <p className="text-xs text-muted-foreground">Utilization Rate</p>
               </div>
             </CardContent>
@@ -208,7 +213,12 @@ const VenueDetail = () => {
           <Card>
             <CardContent className="pt-6">
               <div className="text-center">
-                <div className="text-2xl font-bold">{formatCurrency(venue?.pricing_analytics?.avg_ticket_price)}</div>
+                <div className="text-2xl font-bold">
+                  {venue?.pricing_analytics?.avg_ticket_price ? 
+                    formatCurrency(venue.pricing_analytics.avg_ticket_price, '₺') : 
+                    'N/A'
+                  }
+                </div>
                 <p className="text-xs text-muted-foreground">Avg Ticket Price</p>
               </div>
             </CardContent>
@@ -289,96 +299,198 @@ const VenueDetail = () => {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Top Artists */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Top Performing Artists</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {venue?.top_artists?.slice(0, 5).map((artist, index) => (
-                      <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
-                        <Link 
-                          to={`/artists/${artist.artist_id}`}
-                          className="text-sm hover:text-primary transition-colors"
-                        >
-                          {artist.artist_name}
-                        </Link>
-                        <div className="text-sm font-medium">{artist.performance_count} shows</div>
-                      </div>
-                    )) || <p className="text-sm text-muted-foreground">No artist data available</p>}
-                  </div>
-                </CardContent>
-              </Card>
+              {venue?.top_artists && venue.top_artists.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Top Performing Artists</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {venue.top_artists.slice(0, 5).map((artist, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                          <Link 
+                            to={`/artists/${artist.artist_id}`}
+                            className="text-sm hover:text-primary transition-colors"
+                          >
+                            {artist.artist_name}
+                          </Link>
+                          <div className="text-sm font-medium">{artist.performance_count} shows</div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Day of Week Distribution */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Peak Days</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {venue?.day_of_week_distribution?.map((day, index) => (
-                      <div key={index} className="flex justify-between items-center py-1">
-                        <span className="text-sm">{day.day_of_week}</span>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">{day.event_count} events</div>
-                          <div className="text-xs text-muted-foreground">{formatDecimalPercentage(day.percentage)}</div>
+              {venue?.day_of_week_distribution && venue.day_of_week_distribution.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Peak Days</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {venue.day_of_week_distribution.map((day, index) => (
+                        <div key={index} className="flex justify-between items-center py-1">
+                          <span className="text-sm">{day.day_of_week}</span>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{day.event_count} events</div>
+                            <div className="text-xs text-muted-foreground">{formatDecimalPercentage(day.percentage)}</div>
+                          </div>
                         </div>
-                      </div>
-                    )) || <p className="text-sm text-muted-foreground">No schedule data available</p>}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Utilization Metrics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Utilization Metrics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Capacity Utilization</span>
-                      <span className="text-sm font-medium">{formatScore(venue?.utilization_metrics?.capacity_utilization)}%</span>
+                      ))}
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Avg Events/Month</span>
-                      <span className="text-sm font-medium">{venue?.utilization_metrics?.avg_events_per_month.toFixed(1) || '0.0'}</span>
-                    </div>
-                    <div>
-                      <span className="text-sm">Peak Months</span>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {venue?.utilization_metrics?.peak_months?.map((month, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {month}
-                          </Badge>
-                        )) || <span className="text-xs text-muted-foreground">No peak data</span>}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Pricing Analytics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Pricing Analytics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Average Price</span>
-                      <span className="text-sm font-medium">{formatCurrency(venue?.pricing_analytics?.avg_ticket_price)}</span>
+              {venue?.pricing_analytics && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Pricing Analytics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center py-2 border-b border-border">
+                        <span className="text-sm">Average Price</span>
+                        <span className="text-sm font-medium">
+                          {formatCurrency(venue.pricing_analytics.avg_ticket_price, '₺')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2 border-b border-border">
+                        <span className="text-sm">Price Range</span>
+                        <span className="text-sm font-medium">
+                          {formatCurrency(venue.pricing_analytics.min_ticket_price, '₺')} - {formatCurrency(venue.pricing_analytics.max_ticket_price, '₺')}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-sm">Total Price Points</span>
+                        <span className="text-sm font-medium">
+                          {venue.pricing_analytics.total_price_points}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Price Range</span>
-                      <span className="text-sm font-medium">
-                        {formatCurrency(venue?.pricing_analytics?.price_range?.min)} - {formatCurrency(venue?.pricing_analytics?.price_range?.max)}
-                      </span>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Utilization Metrics */}
+              {venue?.utilization_metrics && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Utilization Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {venue.utilization_metrics.utilization_rate && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Utilization Rate</span>
+                          <span className="text-sm font-medium">
+                            {Math.round(venue.utilization_metrics.utilization_rate)}%
+                          </span>
+                        </div>
+                      )}
+                      {venue.utilization_metrics.avg_events_per_month && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Avg Events/Month</span>
+                          <span className="text-sm font-medium">{venue.utilization_metrics.avg_events_per_month.toFixed(1)}</span>
+                        </div>
+                      )}
+                      {venue.utilization_metrics.max_events_per_month && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Max Events/Month</span>
+                          <span className="text-sm font-medium">{venue.utilization_metrics.max_events_per_month}</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Top Promoters */}
+              {venue?.top_promoters && venue.top_promoters.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Top Promoters</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {venue.top_promoters.slice(0, 5).map((promoter, index) => (
+                        <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                          <Link 
+                            to={`/promoters/${promoter.promoter_id}`}
+                            className="text-sm hover:text-primary transition-colors"
+                          >
+                            {promoter.promoter_name}
+                          </Link>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">{promoter.event_count} events</div>
+                            <div className="text-xs text-muted-foreground">Last: {new Date(promoter.last_event).toLocaleDateString()}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Genre Distribution */}
+              {venue?.genre_distribution && venue.genre_distribution.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Genre Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {venue.genre_distribution
+                        .filter(genre => genre.genre !== "") // Filter out empty genres
+                        .slice(0, 5)
+                        .map((genre, index) => (
+                          <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                            <span className="text-sm">{genre.genre || "Unspecified"}</span>
+                            <div className="text-right">
+                              <div className="text-sm font-medium">{genre.count} events</div>
+                              <div className="text-xs text-muted-foreground">{formatDecimalPercentage(genre.percentage)}</div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Similar Venues */}
+              {venue?.similar_venues && venue.similar_venues.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-semibold">Similar Venues</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {venue.similar_venues
+                        .filter(v => v.event_count > 0) // Only show venues with events
+                        .slice(0, 10)
+                        .map((similarVenue, index) => (
+                          <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                            <Link 
+                              to={`/venues/${similarVenue.id}`}
+                              className="text-sm hover:text-primary transition-colors flex-1"
+                            >
+                              {similarVenue.name}
+                            </Link>
+                            <div className="text-right">
+                              <div className="text-sm font-medium">{similarVenue.event_count} events</div>
+                              {similarVenue.capacity && (
+                                <div className="text-xs text-muted-foreground">{formatNumber(similarVenue.capacity)} cap</div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </TabsContent>
 
@@ -451,6 +563,32 @@ const VenueDetail = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Monthly Price Trends */}
+                {timeSeries && timeSeries.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-semibold">Monthly Price Trends</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {timeSeries.slice(-6).map((month, index) => (
+                          <div key={index} className="flex justify-between items-center py-2 border-b border-border last:border-0">
+                            <span className="text-sm">{month.month_name || month.month}</span>
+                            <div className="text-right">
+                              <div className="text-sm font-medium">
+                                {formatCurrency(month.avg_ticket_price, '₺')}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {month.event_count} events
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Time Series Summary */}
                 <Card>

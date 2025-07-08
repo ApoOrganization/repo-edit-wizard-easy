@@ -116,6 +116,23 @@ export interface VenueDetailsFull {
     artist_id: string;
     performance_count: number;
   }>;
+  top_promoters?: Array<{
+    promoter_name: string;
+    promoter_id: string;
+    event_count: number;
+    last_event: string;
+  }>;
+  genre_distribution?: Array<{
+    genre: string;
+    count: number;
+    percentage: number;
+  }>;
+  similar_venues?: Array<{
+    id: string;
+    name: string;
+    capacity: number | null;
+    event_count: number;
+  }>;
   day_of_week_distribution: Array<{
     day_of_week: string;
     event_count: number;
