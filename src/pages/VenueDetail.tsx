@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVenueAnalytics, useVenueUpcomingEvents, useVenuePastEvents, useIsVenueAnalyticsFallback, useIsVenueAnalyticsError } from "@/hooks/useVenueAnalytics";
 import { formatNumber, formatCurrency, formatScore, formatDecimalPercentage } from "@/utils/formatters";
+import { VenueCalendarView } from "@/components/venue/VenueCalendarView";
 
 const VenueDetail = () => {
   const { id } = useParams();
@@ -541,6 +542,15 @@ const VenueDetail = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Event Calendar Section */}
+        <div className="mt-8">
+          <VenueCalendarView 
+            venueId={id || ''}
+            venueName={venue?.name}
+            venueCity={venue?.city}
+          />
+        </div>
       </div>
     </div>
   );

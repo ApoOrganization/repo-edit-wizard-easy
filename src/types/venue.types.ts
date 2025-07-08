@@ -186,6 +186,34 @@ export interface VenuePricingAnalytics {
   }>;
 }
 
+// Venue Calendar Interfaces for get_venue_calendar function
+export interface VenueCalendarResponse {
+  [date: string]: VenueCalendarEvent[];
+}
+
+export interface VenueCalendarEvent {
+  id: string;
+  name: string;
+  time: string;
+  genre: string | null;
+  status: string;
+  has_tickets: boolean;
+}
+
+// Transformed format for venue calendar UI component
+export interface VenueCalendarEventData {
+  id: string;
+  date: string;
+  name: string;
+  venue: string;
+  city: string;
+  time: string;
+  status: string;
+  has_tickets: boolean;
+  genre: string | null;
+  datetime: string;
+}
+
 // Legacy interface for backward compatibility
 export interface VenueDetails {
   id: string;
