@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useArtistAnalytics, useArtistUpcomingEvents, useArtistPastEvents, useIsAnalyticsFallback, useIsAnalyticsError } from "@/hooks/useArtistAnalytics";
-import { formatNumber, formatPercentage, formatCurrency, formatScore, formatDecimalPercentage, formatSimilarityScore, formatDayOfWeek, getPrimaryGenre } from "@/utils/formatters";
+import { formatNumber, formatPercentage, formatCurrency, formatScore, formatDecimalPercentage, formatSimilarityScore, formatDayOfWeek, getPrimaryGenre, parseBookingEmails } from "@/utils/formatters";
 import { ArtistCalendarView } from "@/components/artist/ArtistCalendarView";
 
 const ArtistDetail = () => {
@@ -416,18 +416,21 @@ const ArtistDetail = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {/* Booking Emails */}
-                    {artist?.booking_emails && artist.booking_emails.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-medium text-muted-foreground mb-2">Booking</h4>
-                        <div className="space-y-1">
-                          {artist.booking_emails.map((email, index) => (
-                            <Button key={index} variant="outline" size="sm" className="h-auto p-2" asChild>
-                              <a href={`mailto:${email}`} className="text-xs">{email}</a>
-                            </Button>
-                          ))}
+                    {(() => {
+                      const bookingEmails = parseBookingEmails(artist?.booking_emails);
+                      return bookingEmails.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-medium text-muted-foreground mb-2">Booking</h4>
+                          <div className="space-y-1">
+                            {bookingEmails.map((email, index) => (
+                              <Button key={index} variant="outline" size="sm" className="h-auto p-2" asChild>
+                                <a href={`mailto:${email}`} className="text-xs">{email}</a>
+                              </Button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                     
                     {/* Social Links */}
                     <div>

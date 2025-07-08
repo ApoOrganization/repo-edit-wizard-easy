@@ -65,7 +65,7 @@ export interface ArtistAnalyticsResponse {
     agency: string | null;
     territory: string | null;
     spotify_link: string | null;
-    booking_emails: string[];
+    booking_emails: string | null;
     monthly_listeners: number | null;
     event_stats: {
       total_events: number;

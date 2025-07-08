@@ -11,7 +11,7 @@ export interface ArtistAnalyticsResponse {
     agency: string | null;
     territory: string | null;
     spotify_link: string | null;
-    booking_emails: string[];
+    booking_emails: string | null;
     monthly_listeners: number | null;
     event_stats: {
       total_events: number;
@@ -118,7 +118,7 @@ const transformToAnalyticsFormat = (basicData: any): ArtistAnalyticsResponse => 
       agency: null,
       territory: null,
       spotify_link: artist?.spotify_link || null,
-      booking_emails: [],
+      booking_emails: null,
       monthly_listeners: null,
       event_stats: {
         total_events: basicData?.stats?.total_events || 0,
@@ -226,7 +226,7 @@ export const useArtistAnalytics = (artistId: string | undefined) => {
               agency: null,
               territory: null,
               spotify_link: null,
-              booking_emails: [],
+              booking_emails: null,
               monthly_listeners: null,
               event_stats: { total_events: 0, avg_ticket_price: 0 },
               performance_cities: [],

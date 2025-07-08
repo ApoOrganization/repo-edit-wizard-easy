@@ -150,3 +150,20 @@ export function safeArrayAccess<T>(arr: T[] | null | undefined, index: number, f
 export function getPrimaryGenre(genres: string[] | null | undefined): string {
   return safeArrayAccess(genres, 0, 'Artist');
 }
+
+/**
+ * Parse comma-separated booking emails string into array
+ * @param emailsString - Comma-separated emails string
+ * @returns Array of cleaned email addresses
+ */
+export function parseBookingEmails(emailsString: string | null | undefined): string[] {
+  if (!emailsString || typeof emailsString !== 'string') {
+    return [];
+  }
+  
+  return emailsString
+    .split(',')
+    .map(email => email.trim())
+    .filter(email => email.length > 0)
+    .filter((email, index, array) => array.indexOf(email) === index); // Remove duplicates
+}
