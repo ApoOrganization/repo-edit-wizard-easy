@@ -7,9 +7,10 @@ import { Calendar, Users, DollarSign, Loader2, CheckCircle, XCircle, Ticket } fr
 interface OverviewCardProps {
   event: Event;
   analytics?: EventAnalytics['analytics'];
+  eventData?: any; // Raw event data from edge function response
 }
 
-const OverviewCard = ({ event, analytics }: OverviewCardProps) => {
+const OverviewCard = ({ event, analytics, eventData }: OverviewCardProps) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -111,22 +112,22 @@ const OverviewCard = ({ event, analytics }: OverviewCardProps) => {
           <h4 className="text-sm font-semibold text-muted-foreground">Ticket Information</h4>
           
           {/* Price Range */}
-          {analytics?.event?.price_analytics && (
+          {eventData?.price_analytics && (
             <div className="flex items-center gap-3">
               <DollarSign className="h-4 w-4 text-purple-500" />
               <span className="text-base">
-                Price range: {formatCurrency(analytics.event.price_analytics.min_price)} - {formatCurrency(analytics.event.price_analytics.max_price)}
+                Price range: {formatCurrency(eventData.price_analytics.min_price)} - {formatCurrency(eventData.price_analytics.max_price)}
                 <span className="text-muted-foreground ml-2">
-                  ({analytics.event.price_analytics.total_categories} categories)
+                  ({eventData.price_analytics.total_categories} categories)
                 </span>
               </span>
             </div>
           )}
 
           {/* Detailed Ticket Categories */}
-          {analytics?.event?.pricing && (
+          {eventData?.pricing && (
             <div className="space-y-2">
-              {Object.entries(analytics.event.pricing).map(([provider, providerData]: [string, any]) => (
+              {Object.entries(eventData.pricing).map(([provider, providerData]: [string, any]) => (
                 providerData?.prices && Array.isArray(providerData.prices) && (
                   <div key={provider} className="ml-6 space-y-1">
                     {providerData.prices.map((priceItem: any, index: number) => (
@@ -155,18 +156,18 @@ const OverviewCard = ({ event, analytics }: OverviewCardProps) => {
           <h4 className="text-sm font-semibold text-muted-foreground">Availability</h4>
           
           {/* Tickets Available */}
-          {analytics?.event?.availability && (
+          {eventData?.availability && (
             <div className="flex items-center gap-3">
-              {analytics.event.availability.has_tickets ? (
+              {eventData.availability.has_tickets ? (
                 <CheckCircle className="h-4 w-4 text-green-500" />
               ) : (
                 <XCircle className="h-4 w-4 text-red-500" />
               )}
               <span className="text-base">
-                Tickets {analytics.event.availability.has_tickets ? 'available' : 'not available'}
-                {analytics.event.availability.providers_with_tickets?.length > 0 && (
+                Tickets {eventData.availability.has_tickets ? 'available' : 'not available'}
+                {eventData.availability.providers_with_tickets?.length > 0 && (
                   <span className="text-muted-foreground ml-2">
-                    on {analytics.event.availability.providers_with_tickets.length} platform(s)
+                    on {eventData.availability.providers_with_tickets.length} platform(s)
                   </span>
                 )}
               </span>

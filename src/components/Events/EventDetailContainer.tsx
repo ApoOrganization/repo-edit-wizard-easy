@@ -9,14 +9,15 @@ import { EventAnalytics } from "@/hooks/useEventAnalytics";
 interface EventDetailContainerProps {
   event: Event;
   analytics?: EventAnalytics['analytics'];
+  eventData?: any; // Raw event data from edge function response
 }
 
-const EventDetailContainer = ({ event, analytics }: EventDetailContainerProps) => {
+const EventDetailContainer = ({ event, analytics, eventData }: EventDetailContainerProps) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [activeView, setActiveView] = useState<'overview' | 'detailed'>('overview');
   
   const pages = [
-    { component: <EventGridView event={event} analytics={analytics} />, label: "Overview" },
+    { component: <EventGridView event={event} analytics={analytics} eventData={eventData} />, label: "Overview" },
     { component: <DetailedAnalysisView event={event} analytics={analytics} />, label: "Detailed Analysis" }
   ];
 

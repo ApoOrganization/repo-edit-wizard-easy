@@ -8,16 +8,17 @@ import ArtistInfoCard from "./ArtistInfoCard";
 interface EventGridViewProps {
   event: Event;
   analytics?: EventAnalytics['analytics'];
+  eventData?: any; // Raw event data from edge function response
 }
 
-const EventGridView = ({ event, analytics }: EventGridViewProps) => {
+const EventGridView = ({ event, analytics, eventData }: EventGridViewProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
       {/* Left Column */}
       <div className="space-y-8">
         {/* Overview Card */}
         <div className="h-[480px]">
-          <OverviewCard event={event} analytics={analytics} />
+          <OverviewCard event={event} analytics={analytics} eventData={eventData} />
         </div>
         
         {/* Venue Analysis Card */}

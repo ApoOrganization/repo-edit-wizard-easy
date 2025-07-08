@@ -113,6 +113,7 @@ const EventDetail = () => {
         <EventDetailContainer 
           event={event} 
           analytics={analyticsData?.analytics}
+          eventData={analyticsData?.event}
         />
       </div>
     </div>
