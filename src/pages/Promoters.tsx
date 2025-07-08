@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, BarChart3, MapPin, DollarSign, Star, Loader2 } from "lucide-react";
+import { Users, BarChart3, MapPin, DollarSign, Star, Loader2, Building2, Activity, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import PageHeader from "@/components/shared/PageHeader";
 import UniversalFilterPanel from "@/components/shared/UniversalFilterPanel";
@@ -101,7 +101,7 @@ const Promoters = () => {
       key: "activityStatuses",
       title: "Activity Status",
       type: "checkbox",
-      icon: "activity",
+      icon: "users",
       options: (filterOptions?.activityStatuses || []).map(status => ({
         value: status,
         label: status,
@@ -114,7 +114,7 @@ const Promoters = () => {
       key: "scaleTiers",
       title: "Scale Tier",
       type: "checkbox",
-      icon: "trending-up",
+      icon: "building",
       options: (filterOptions?.scaleTiers || []).map(tier => ({
         value: tier,
         label: tier,
