@@ -298,7 +298,7 @@ const Promoters = () => {
                         <div className="w-full bg-muted rounded-full h-2">
                           <div 
                             className="bg-primary h-2 rounded-full" 
-                            style={{ width: `${Math.min((promoter.eventsCount / 1500) * 100, 100)}%` }}
+                            style={{ width: `${Math.min((promoter.eventsCount / 150) * 100, 100)}%` }}
                           ></div>
                         </div>
                         <p className="text-xs text-muted-foreground text-center">Activity Level</p>
