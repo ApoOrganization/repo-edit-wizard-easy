@@ -6,7 +6,7 @@ import { EnhancedCalendar } from '@/components/shared/EnhancedCalendar';
 import { usePromoterCalendar } from '@/hooks/usePromoterCalendar';
 import { PromoterCalendarEventData } from '@/types/promoter.types';
 import { Event } from '@/data/types';
-import { Loader2, Calendar, Music, MapPin, Building2 } from 'lucide-react';
+import { Loader2, Calendar } from 'lucide-react';
 
 interface PromoterCalendarViewProps {
   promoterId: string;
@@ -160,32 +160,12 @@ export const PromoterCalendarView: React.FC<PromoterCalendarViewProps> = ({
   const calendarTitle = `${promoterName || 'Promoter'} Event Calendar - ${format(currentMonth, 'MMMM yyyy')}`;
   const events = transformToCalendarFormat(calendarEvents || []);
 
-  // Calculate venue and genre distributions for display
-  const venueDistribution = events.reduce((acc, event) => {
-    const venueKey = `${(event as any).venue_name}, ${(event as any).venue_city}`;
-    acc[venueKey] = (acc[venueKey] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const genreDistribution = events.reduce((acc, event) => {
-    const genre = event.genre || 'No Genre';
-    acc[genre] = (acc[genre] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  const uniqueVenues = Object.keys(venueDistribution).length;
-  const uniqueGenres = Object.keys(genreDistribution).filter(g => g !== 'No Genre').length;
-
   console.log('🗓️ [PROMOTER CALENDAR VIEW] Rendering calendar:', {
     promoterId,
     promoterName,
     eventsCount: events.length,
     currentMonth: format(currentMonth, 'yyyy-MM'),
-    hasEvents: events.length > 0,
-    uniqueVenues,
-    uniqueGenres,
-    venueDistribution,
-    genreDistribution
+    hasEvents: events.length > 0
   });
 
   return (
@@ -202,69 +182,7 @@ export const PromoterCalendarView: React.FC<PromoterCalendarViewProps> = ({
               : `No events scheduled for ${format(currentMonth, 'MMMM yyyy')}`
             }
           </span>
-          {events.length > 0 && (
-            <>
-              {uniqueVenues > 0 && (
-                <div className="flex items-center gap-1">
-                  <Building2 className="h-3 w-3" />
-                  <span>{uniqueVenues} {uniqueVenues === 1 ? 'venue' : 'venues'}</span>
-                </div>
-              )}
-              {uniqueGenres > 0 && (
-                <div className="flex items-center gap-1">
-                  <Music className="h-3 w-3" />
-                  <span>{uniqueGenres} {uniqueGenres === 1 ? 'genre' : 'genres'}</span>
-                </div>
-              )}
-            </>
-          )}
         </div>
-        
-        {/* Show top venues and genres if available */}
-        {events.length > 0 && (uniqueVenues > 1 || uniqueGenres > 1) && (
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
-            {uniqueVenues > 1 && (
-              <div>
-                <div className="flex items-center gap-1 mb-2">
-                  <MapPin className="h-3 w-3" />
-                  <span className="font-medium">Top Venues:</span>
-                </div>
-                <div className="space-y-1">
-                  {Object.entries(venueDistribution)
-                    .sort(([,a], [,b]) => b - a)
-                    .slice(0, 3)
-                    .map(([venue, count]) => (
-                      <div key={venue} className="flex justify-between">
-                        <span className="truncate">{venue}</span>
-                        <span>{count}</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-            
-            {uniqueGenres > 1 && (
-              <div>
-                <div className="flex items-center gap-1 mb-2">
-                  <Music className="h-3 w-3" />
-                  <span className="font-medium">Top Genres:</span>
-                </div>
-                <div className="space-y-1">
-                  {Object.entries(genreDistribution)
-                    .filter(([genre]) => genre !== 'No Genre')
-                    .sort(([,a], [,b]) => b - a)
-                    .slice(0, 3)
-                    .map(([genre, count]) => (
-                      <div key={genre} className="flex justify-between">
-                        <span className="truncate">{genre}</span>
-                        <span>{count}</span>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </CardHeader>
       <CardContent>
         <EnhancedCalendar

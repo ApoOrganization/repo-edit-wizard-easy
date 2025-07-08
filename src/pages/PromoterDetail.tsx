@@ -9,6 +9,8 @@ import { usePromoterAnalytics, useIsPromoterAnalyticsFallback, useIsPromoterAnal
 import { formatRevenue, getPromoterSpecialtyBadgeVariant } from "@/hooks/usePromoters";
 import { formatNumber, formatScore, formatDecimalPercentage } from "@/utils/formatters";
 import { PromoterCalendarView } from "@/components/promoter/PromoterCalendarView";
+import { TopVenuesCard } from "@/components/promoter/TopVenuesCard";
+import { TopGenresCard } from "@/components/promoter/TopGenresCard";
 
 const PromoterDetail = () => {
   const { id } = useParams();
@@ -361,61 +363,23 @@ const PromoterDetail = () => {
           </TabsContent>
 
           <TabsContent value="venues" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-              {/* Top Venues */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm font-semibold">Top Venues</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {venueAnalytics.length > 0 ? (
-                      venueAnalytics.slice(0, 10).map((venue, index) => (
-                        <div key={venue.venue_id} className="flex justify-between items-center py-2 border-b border-border last:border-0">
-                          <Link 
-                            to={`/venues/${venue.venue_id}`}
-                            className="text-sm hover:text-primary transition-colors"
-                          >
-                            {venue.venue_name} - {venue.city}
-                          </Link>
-                          <div className="text-sm font-medium">{venue.event_count} events</div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No venue data available</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-1 gap-6">
+              {/* Top Venues Component */}
+              <TopVenuesCard 
+                venueAnalytics={venueAnalytics}
+                isLoading={isLoading}
+              />
             </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
             {hasFullAnalytics ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Genre Analytics */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-semibold">Genre Distribution</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {genreAnalytics.slice(0, 5).map((genre, index) => (
-                        <div key={index} className="flex justify-between items-center py-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm">{genre.genre}</span>
-                            {genre.growth_trend > 0 && <TrendingUp className="h-3 w-3 text-green-600" />}
-                            {genre.growth_trend < 0 && <TrendingUp className="h-3 w-3 text-red-600 rotate-180" />}
-                          </div>
-                          <div className="text-right">
-                            <div className="text-sm font-medium">{genre.event_count} events</div>
-                            <div className="text-xs text-muted-foreground">{formatDecimalPercentage(genre.percentage)}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Genre Analytics Component */}
+                <TopGenresCard 
+                  genreAnalytics={genreAnalytics}
+                  isLoading={isLoading}
+                />
 
                 {/* City Performance Distribution */}
                 <Card>
