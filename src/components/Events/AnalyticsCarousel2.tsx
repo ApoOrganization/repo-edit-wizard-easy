@@ -3,6 +3,7 @@ import { Event } from "@/data/types";
 import { EventAnalyticsEnhancedResponse } from "@/hooks/useEventAnalyticsEnhanced";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CategoryPriceTable from "./CategoryPriceTable";
+import TicketSalesChart from "./TicketSalesChart";
 
 interface AnalyticsCarousel2Props {
   event: Event;
@@ -75,18 +76,22 @@ const AnalyticsCarousel2 = ({ event, enhancedData, onComponentOverflow }: Analyt
           {/* Right Column - Chart */}
           <div className="space-y-8">
             <div className="h-[400px]">
-              <Card className="media-card h-full">
-                <CardHeader>
-                  <CardTitle className="text-lg">Sales Chart</CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <p className="text-muted-foreground">
-                      Sales history chart coming soon...
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              {enhancedData?.bubiletSalesHistory ? (
+                <TicketSalesChart salesHistory={enhancedData.bubiletSalesHistory} />
+              ) : (
+                <Card className="media-card h-full">
+                  <CardHeader>
+                    <CardTitle className="text-lg">Sales Chart</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <p className="text-muted-foreground">
+                        Sales history chart coming soon...
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         </div>

@@ -12,6 +12,31 @@ export interface ProviderData {
   [providerName: string]: CategoryData[];
 }
 
+export interface SalesDataPoint {
+  date: string; // ISO date string
+  category: string;
+  ticketsSold: number;
+  revenue: number; // in TL
+  remainingTickets: number;
+  cumulativeTicketsSold: number;
+  cumulativeRevenue: number;
+}
+
+export interface BubiletSalesHistory {
+  eventId: string;
+  categories: string[]; // Available categories for this event
+  salesData: SalesDataPoint[];
+  summary: {
+    totalTicketsSold: number;
+    totalRevenue: number;
+    averageDailySales: number;
+    salesVelocity: number; // tickets per day
+    daysActive: number;
+    peakSalesDate: string;
+    remainingCapacity: number;
+  };
+}
+
 export interface EventAnalyticsEnhancedResponse {
   event: any; // Event details from view
   analytics: {
@@ -53,7 +78,7 @@ export interface EventAnalyticsEnhancedResponse {
   };
   providers: ProviderData;
   hasBubiletData: boolean;
-  bubiletSalesHistory: any; // Sales history data for charts
+  bubiletSalesHistory: BubiletSalesHistory | null; // Sales history data for charts
 }
 
 export const useEventAnalyticsEnhanced = (eventId: string | undefined) => {

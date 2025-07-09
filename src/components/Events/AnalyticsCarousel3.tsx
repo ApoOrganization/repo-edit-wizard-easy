@@ -1,6 +1,8 @@
 import { Event } from "@/data/types";
 import { EventAnalyticsEnhancedResponse } from "@/hooks/useEventAnalyticsEnhanced";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import TicketSalesChart from "./TicketSalesChart";
+import SalesInsightsCard from "./SalesInsightsCard";
 
 interface AnalyticsCarousel3Props {
   event: Event;
@@ -15,8 +17,17 @@ const AnalyticsCarousel3 = ({ event, enhancedData, hasOverflowFromCarousel2 }: A
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
       {/* Left Column */}
       <div className="space-y-8">
-        {/* Show chart here if it overflowed from carousel 2 */}
-        {hasOverflowFromCarousel2 && hasBubiletData && (
+        {/* Show chart and insights when overflow from carousel 2 */}
+        {hasOverflowFromCarousel2 && hasBubiletData && enhancedData?.bubiletSalesHistory ? (
+          <>
+            <div className="h-[400px]">
+              <TicketSalesChart salesHistory={enhancedData.bubiletSalesHistory} />
+            </div>
+            <div className="h-[400px]">
+              <SalesInsightsCard salesHistory={enhancedData.bubiletSalesHistory} />
+            </div>
+          </>
+        ) : hasOverflowFromCarousel2 && hasBubiletData ? (
           <div className="h-[400px]">
             <Card className="media-card h-full">
               <CardHeader>
@@ -31,10 +42,8 @@ const AnalyticsCarousel3 = ({ event, enhancedData, hasOverflowFromCarousel2 }: A
               </CardContent>
             </Card>
           </div>
-        )}
-        
-        {/* Placeholder for future additional components */}
-        {!hasOverflowFromCarousel2 && (
+        ) : (
+          /* Placeholder for future additional components */
           <div className="h-[400px]">
             <Card className="media-card h-full">
               <CardHeader>
