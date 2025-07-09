@@ -18,7 +18,6 @@ interface FilterState {
   venues: string[];
   artists: string[];
   promoters: string[];
-  providers: string[];
   dateOrder: 'asc' | 'desc';
 }
 
@@ -31,7 +30,6 @@ interface FilterPanelProps {
   availableVenues: string[];
   availableArtists: string[];
   availablePromoters: string[];
-  availableProviders: string[];
 }
 
 const FilterPanel = ({
@@ -43,7 +41,6 @@ const FilterPanel = ({
   availableVenues,
   availableArtists,
   availablePromoters,
-  availableProviders,
 }: FilterPanelProps) => {
   const [openSections, setOpenSections] = useState({
     basic: true,
@@ -53,7 +50,6 @@ const FilterPanel = ({
     venue: false,
     artist: false,
     promoter: false,
-    provider: false,
   });
 
   // Search states for each filter section
@@ -64,7 +60,6 @@ const FilterPanel = ({
     venues: '',
     artists: '',
     promoters: '',
-    providers: '',
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -79,7 +74,7 @@ const FilterPanel = ({
     setSectionSearches(prev => ({ ...prev, [section]: value }));
   };
 
-  const toggleArrayFilter = (key: keyof Pick<FilterState, 'genres' | 'statuses' | 'cities' | 'venues' | 'artists' | 'promoters' | 'providers'>, value: string) => {
+  const toggleArrayFilter = (key: keyof Pick<FilterState, 'genres' | 'statuses' | 'cities' | 'venues' | 'artists' | 'promoters'>, value: string) => {
     const currentArray = filters[key];
     const newArray = currentArray.includes(value)
       ? currentArray.filter(item => item !== value)
@@ -96,7 +91,6 @@ const FilterPanel = ({
       venues: [],
       artists: [],
       promoters: [],
-      providers: [],
       dateOrder: 'desc',
     });
     // Clear section searches too
@@ -107,7 +101,6 @@ const FilterPanel = ({
       venues: '',
       artists: '',
       promoters: '',
-      providers: '',
     });
   };
 
@@ -120,7 +113,6 @@ const FilterPanel = ({
       filters.venues.length +
       filters.artists.length +
       filters.promoters.length +
-      filters.providers.length +
       (filters.dateOrder !== 'desc' ? 1 : 0)
     );
   };
@@ -159,12 +151,6 @@ const FilterPanel = ({
   const getFilteredPromoters = () => {
     return availablePromoters.filter(promoter => 
       promoter.toLowerCase().includes(sectionSearches.promoters.toLowerCase())
-    );
-  };
-
-  const getFilteredProviders = () => {
-    return availableProviders.filter(provider => 
-      provider.toLowerCase().includes(sectionSearches.providers.toLowerCase())
     );
   };
 
@@ -450,56 +436,6 @@ const FilterPanel = ({
               ))}
               {getFilteredPromoters().length === 0 && (
                 <p className="text-xs text-muted-foreground py-2">No promoters found</p>
-              )}
-            </div>
-          </ScrollArea>
-        </CollapsibleContent>
-      </Collapsible>
-
-      {/* Provider Filter */}
-      <Collapsible open={openSections.provider} onOpenChange={() => toggleSection('provider')}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="w-full justify-between p-0 h-auto">
-            <div className="flex items-center space-x-2">
-              <Music className="h-3 w-3" />
-              <span className="font-medium text-sm">Ticketing Provider</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              {filters.providers.length > 0 && (
-                <Badge variant="secondary" className="text-xs h-5 px-2">
-                  {filters.providers.length}
-                </Badge>
-              )}
-              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.provider ? 'rotate-180' : ''}`} />
-            </div>
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-3 mt-3">
-          {availableProviders.length > 5 && (
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-3 w-3" />
-              <Input
-                placeholder="Search providers..."
-                value={sectionSearches.providers}
-                onChange={(e) => updateSectionSearch('providers', e.target.value)}
-                className="pl-9 h-8 text-xs"
-              />
-            </div>
-          )}
-          <ScrollArea className="h-32">
-            <div className="space-y-2 pr-3">
-              {getFilteredProviders().map(provider => (
-                <div key={provider} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`provider-${provider}`}
-                    checked={filters.providers.includes(provider)}
-                    onCheckedChange={() => toggleArrayFilter('providers', provider)}
-                  />
-                  <label htmlFor={`provider-${provider}`} className="text-sm text-left capitalize">{provider}</label>
-                </div>
-              ))}
-              {getFilteredProviders().length === 0 && (
-                <p className="text-xs text-muted-foreground py-2">No providers found</p>
               )}
             </div>
           </ScrollArea>

@@ -9,7 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calendar } from "lucide-react";
 import { BubiletSalesHistory } from "@/hooks/useEventAnalyticsEnhanced";
 import { formatCurrency } from "@/utils/formatters";
 import { cn } from "@/lib/utils";
@@ -103,8 +102,8 @@ const TicketSalesChart = ({ salesHistory, className }: TicketSalesChartProps) =>
   const remainingTicketsData = useMemo(() => {
     if (!salesHistory?.summary) return null;
 
-    const totalSold = salesHistory.summary.totalTicketsSold || 0;
-    const remaining = salesHistory.summary.remainingCapacity || 0;
+    const totalSold = salesHistory.summary.totalTicketsSold;
+    const remaining = salesHistory.summary.remainingCapacity;
     const total = totalSold + remaining;
     const soldPercentage = total > 0 ? (totalSold / total) * 100 : 0;
 
@@ -115,101 +114,6 @@ const TicketSalesChart = ({ salesHistory, className }: TicketSalesChartProps) =>
       soldPercentage
     };
   }, [salesHistory]);
-
-  // Check if this is a pre-sale event or has no sales yet
-  const isPreSale = salesHistory?.eventStatus === 'pre-sale' || 
-                   salesHistory?.summary?.totalTicketsSold === 0 ||
-                   !salesHistory?.salesData?.length;
-
-  if (isPreSale && salesHistory) {
-    // Pre-sale view with informative content
-    const availableTickets = salesHistory.totalCapacity || salesHistory.summary?.remainingCapacity || 0;
-    const totalCapacity = salesHistory.totalCapacity || salesHistory.summary?.remainingCapacity || 0;
-    const daysListed = salesHistory.summary?.daysActive || 0;
-    
-    return (
-      <Card className={cn("media-card h-[400px]", className)}>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Ticket Sales</CardTitle>
-            <div className="flex items-center gap-2">
-              <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                {salesHistory.eventStatus === 'pre-sale' ? 'Pre-Sale' : 'No Sales Yet'}
-              </span>
-            </div>
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {/* Main message */}
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-blue-600" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">No sales recorded yet for this event</h3>
-            <p className="text-muted-foreground text-sm">
-              {salesHistory.saleStartDate 
-                ? `Sales will begin on ${new Date(salesHistory.saleStartDate).toLocaleDateString('tr-TR', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}`
-                : 'Sales will appear here once they begin'
-              }
-            </p>
-          </div>
-
-          {/* Available tickets info */}
-          <div className="bg-blue-50 rounded-lg p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-blue-900">Available Tickets</span>
-              <span className="text-lg font-bold text-blue-900">
-                {availableTickets.toLocaleString()} / {totalCapacity.toLocaleString()}
-              </span>
-            </div>
-            
-            <div className="w-full bg-blue-200 rounded-full h-3">
-              <div 
-                className="bg-blue-500 h-3 rounded-full transition-all duration-300"
-                style={{ width: '100%' }}
-              />
-            </div>
-            
-            <div className="flex justify-between text-xs text-blue-700">
-              <span>100% available</span>
-              <span>Ready for sale</span>
-            </div>
-          </div>
-
-          {/* Category breakdown */}
-          {salesHistory.categoryCapacities && Object.keys(salesHistory.categoryCapacities).length > 0 && (
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-foreground">Category Breakdown</h4>
-              <div className="grid grid-cols-1 gap-2">
-                {Object.entries(salesHistory.categoryCapacities).map(([category, capacity]) => (
-                  <div key={category} className="flex justify-between items-center py-1 px-2 bg-muted/50 rounded">
-                    <span className="text-sm text-muted-foreground">{category}</span>
-                    <span className="text-sm font-medium">{capacity} tickets</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Event info */}
-          <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t">
-            <span>Listed {daysListed} days ago</span>
-            {salesHistory.listingDate && (
-              <span>
-                Since {new Date(salesHistory.listingDate).toLocaleDateString('tr-TR')}
-              </span>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (!salesHistory?.salesData?.length) {
     return (

@@ -35,12 +35,6 @@ export interface BubiletSalesHistory {
     peakSalesDate: string;
     remainingCapacity: number;
   };
-  // Pre-sale and event metadata
-  eventStatus: 'pre-sale' | 'on-sale' | 'sold-out' | 'ended';
-  listingDate: string; // When event was first listed
-  saleStartDate?: string; // When sales are expected to begin
-  categoryCapacities: { [category: string]: number }; // Individual category limits
-  totalCapacity: number; // Total event capacity
 }
 
 export interface EventAnalyticsEnhancedResponse {
@@ -113,34 +107,8 @@ export const useEventAnalyticsEnhanced = (eventId: string | undefined) => {
           throw fallbackError;
         }
 
-        // Mock data - alternating between pre-sale and active sales based on eventId
-        const isPreSale = eventId.endsWith('1') || eventId.endsWith('3') || eventId.endsWith('5');
-        
-        const mockSalesHistory: BubiletSalesHistory = isPreSale ? {
-          // Pre-sale event (no sales yet)
-          eventId: eventId,
-          categories: ['VIP', 'Standard', 'Student'],
-          salesData: [],
-          summary: {
-            totalTicketsSold: 0,
-            totalRevenue: 0,
-            averageDailySales: 0,
-            salesVelocity: 0,
-            daysActive: 7,
-            peakSalesDate: '',
-            remainingCapacity: 500
-          },
-          eventStatus: 'pre-sale' as const,
-          listingDate: '2024-01-10T09:00:00Z',
-          saleStartDate: '2024-01-20T10:00:00Z',
-          categoryCapacities: {
-            'VIP': 100,
-            'Standard': 300,
-            'Student': 100
-          },
-          totalCapacity: 500
-        } : {
-          // Active sales event
+        // Mock some data for now since edge function doesn't exist yet
+        const mockSalesHistory: BubiletSalesHistory = {
           eventId: eventId,
           categories: ['VIP', 'Standard', 'Student'],
           salesData: [
@@ -162,16 +130,7 @@ export const useEventAnalyticsEnhanced = (eventId: string | undefined) => {
             daysActive: 3,
             peakSalesDate: '2024-01-16',
             remainingCapacity: 140
-          },
-          eventStatus: 'on-sale' as const,
-          listingDate: '2024-01-10T09:00:00Z',
-          saleStartDate: '2024-01-15T10:00:00Z',
-          categoryCapacities: {
-            'VIP': 100,
-            'Standard': 300,
-            'Student': 100
-          },
-          totalCapacity: 500
+          }
         };
 
         // Return fallback data with mock sales history

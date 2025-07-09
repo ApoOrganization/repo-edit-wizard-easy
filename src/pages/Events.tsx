@@ -19,7 +19,6 @@ interface FilterState {
   venues: string[];
   artists: string[];
   promoters: string[];
-  providers: string[];
   dateOrder: 'asc' | 'desc';
 }
 
@@ -40,7 +39,6 @@ const Events = () => {
     venues: [],
     artists: [],
     promoters: [],
-    providers: [],
     dateOrder: 'desc',
   });
 
@@ -69,7 +67,6 @@ const Events = () => {
       cities: filters.cities.length > 0 ? filters.cities : undefined,
       venues: filters.venues.length > 0 ? filters.venues : undefined,
       artists: filters.artists.length > 0 ? filters.artists : undefined,
-      providers: filters.providers.length > 0 ? filters.providers : undefined,
       sortOrder: filters.dateOrder,
       page: searchParams.page, // Preserve current page
     };
@@ -81,7 +78,7 @@ const Events = () => {
     }
 
     setSearchParams(newParams);
-  }, [filters.genres, filters.statuses, filters.cities, filters.venues, filters.artists, filters.providers, filters.dateOrder]);
+  }, [filters.genres, filters.statuses, filters.cities, filters.venues, filters.artists, filters.dateOrder]);
 
   // Handle search separately with debouncing
   useEffect(() => {
@@ -107,7 +104,6 @@ const Events = () => {
   const availableVenues = filterOptions?.venues || [];
   const availableArtists = filterOptions?.artists || [];
   const availablePromoters = []; // TODO: Will be populated when promoter integration is complete
-  const availableProviders = filterOptions?.providers || [];
 
   if (error) {
     return (
@@ -170,7 +166,6 @@ const Events = () => {
           availableVenues={availableVenues}
           availableArtists={availableArtists}
           availablePromoters={availablePromoters}
-          availableProviders={availableProviders}
         />
 
         {/* Events Display Area */}

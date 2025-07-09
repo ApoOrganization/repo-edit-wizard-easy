@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { ArtistSearchParams, ArtistFilterOptions, ArtistListItem, SearchArtistsResponse } from '@/types/artist.types';
 
 // Simple artists list using Edge Function
-export const useArtistsList = (params: { searchQuery?: string; page?: number; pageSize?: number; sortBy?: string; sortOrder?: 'asc' | 'desc' }) => {
+export const useArtistsList = (params: { searchQuery?: string; page?: number; pageSize?: number }) => {
   return useQuery<{ artists: ArtistListItem[]; totalCount: number }>({
     queryKey: ['artists-list', params],
     queryFn: async () => {
@@ -13,9 +13,7 @@ export const useArtistsList = (params: { searchQuery?: string; page?: number; pa
         body: {
           searchQuery: params.searchQuery || '',
           page: params.page || 1,
-          pageSize: params.pageSize || 50,
-          sortBy: params.sortBy || 'name',
-          sortOrder: params.sortOrder || 'asc'
+          pageSize: params.pageSize || 50
         }
       });
 
