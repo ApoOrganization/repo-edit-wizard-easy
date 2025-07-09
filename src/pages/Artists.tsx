@@ -16,13 +16,18 @@ const Artists = () => {
   const [searchParams, setSearchParams] = useState({
     searchQuery: '',
     page: 1,
-    pageSize: 20
+    pageSize: 20,
+    sortBy: 'name',
+    sortOrder: 'asc' as 'asc' | 'desc'
   });
   
   const [filters, setFilters] = useState<UniversalFilterState>({
     search: '',
+    sortBy: 'name',
     agencies: [],
     territories: [],
+    activityLevels: [],
+    hasPromoter: []
   });
 
   // Fetch data from backend
@@ -39,18 +44,81 @@ const Artists = () => {
   };
 
   // Transform raw artists to match component expectations
-  const artists = rawArtists.map(transformArtistFromDB);
+  const transformedArtists = rawArtists.map(transformArtistFromDB);
+  
+  // Debug logging
+  console.log('🎭 Raw artists sample:', rawArtists.slice(0, 3));
+  console.log('🎨 Transformed artists sample:', transformedArtists.slice(0, 3));
+  console.log('🔧 Current filters:', filters);
+  
+  // Apply client-side filters
+  const artists = transformedArtists.filter(artist => {
+    // Activity level filter
+    const activityLevels = filters.activityLevels as string[];
+    if (activityLevels.length > 0) {
+      const eventCount = typeof artist.eventCount === 'string' ? parseInt(artist.eventCount) : artist.eventCount;
+      console.log('🔍 Filtering artist:', { 
+        name: artist.name, 
+        eventCount, 
+        eventCountType: typeof artist.eventCount,
+        filters: activityLevels 
+      });
+      const matchesActivity = activityLevels.some(level => {
+        switch(level) {
+          case 'very_active': return eventCount >= 50;
+          case 'active': return eventCount >= 20 && eventCount < 50;
+          case 'moderate': return eventCount >= 5 && eventCount < 20;
+          case 'emerging': return eventCount >= 1 && eventCount < 5;
+          case 'no_events': return eventCount === 0;
+          default: return true;
+        }
+      });
+      if (!matchesActivity) return false;
+    }
+    
+    // Promoter status filter
+    const hasPromoterFilter = filters.hasPromoter as string[];
+    if (hasPromoterFilter.length > 0) {
+      const hasPromoter = !!artist.favouritePromoter;
+      const matchesPromoter = hasPromoterFilter.some(status => {
+        if (status === 'has_promoter') return hasPromoter;
+        if (status === 'no_promoter') return !hasPromoter;
+        return true;
+      });
+      if (!matchesPromoter) return false;
+    }
+    
+    return true;
+  });
+  
+  console.log('📊 Filtering results:', {
+    totalBefore: transformedArtists.length,
+    totalAfter: artists.length,
+    activeFilters: {
+      activityLevels: filters.activityLevels,
+      hasPromoter: filters.hasPromoter
+    }
+  });
 
   // Debounced search to avoid excessive API calls
   const debouncedUpdateSearch = useDebouncedCallback((search: string) => {
     setSearchParams(prev => ({ ...prev, searchQuery: search, page: 1 }));
   }, 300);
 
-  // Update search params when filters change (simplified for simple list)
+  // Update search params when filters change
   useEffect(() => {
-    // For now, we only support search query in the simple list
-    // Advanced filtering will be handled by the search Edge Function
-  }, [filters.agencies, filters.territories]);
+    const sortBy = filters.sortBy as string || 'name';
+    let sortOrder: 'asc' | 'desc' = 'asc';
+    
+    // Determine sort order based on sortBy value
+    if (sortBy === 'eventCount_desc') {
+      setSearchParams(prev => ({ ...prev, sortBy: 'eventCount', sortOrder: 'desc', page: 1 }));
+    } else if (sortBy === 'eventCount_asc') {
+      setSearchParams(prev => ({ ...prev, sortBy: 'eventCount', sortOrder: 'asc', page: 1 }));
+    } else {
+      setSearchParams(prev => ({ ...prev, sortBy: 'name', sortOrder: 'asc', page: 1 }));
+    }
+  }, [filters.sortBy]);
 
   useEffect(() => {
     debouncedUpdateSearch(filters.search as string);
@@ -71,7 +139,47 @@ const Artists = () => {
       title: "Search",
       type: "search",
       placeholder: "Search artists, agencies, territories...",
+      icon: "search",
       collapsible: false,
+    },
+    {
+      key: "sortBy",
+      title: "Sort By",
+      type: "radio",
+      icon: "music",
+      options: [
+        { value: "name", label: "Alphabetical (A-Z)" },
+        { value: "eventCount_desc", label: "Most Active" },
+        { value: "eventCount_asc", label: "Least Active" },
+      ],
+      collapsible: false,
+    },
+    {
+      key: "activityLevels",
+      title: "Activity Level",
+      type: "checkbox",
+      icon: "users",
+      options: [
+        { value: "very_active", label: "Very Active (50+ events)", count: transformedArtists.filter(a => a.eventCount >= 50).length },
+        { value: "active", label: "Active (20-49 events)", count: transformedArtists.filter(a => a.eventCount >= 20 && a.eventCount < 50).length },
+        { value: "moderate", label: "Moderate (5-19 events)", count: transformedArtists.filter(a => a.eventCount >= 5 && a.eventCount < 20).length },
+        { value: "emerging", label: "Emerging (1-4 events)", count: transformedArtists.filter(a => a.eventCount >= 1 && a.eventCount < 5).length },
+        { value: "no_events", label: "No Events", count: transformedArtists.filter(a => a.eventCount === 0).length },
+      ],
+      collapsible: true,
+      defaultOpen: false,
+    },
+    {
+      key: "hasPromoter",
+      title: "Promoter Status",
+      type: "checkbox",
+      icon: "users",
+      options: [
+        { value: "has_promoter", label: "Has Favourite Promoter", count: transformedArtists.filter(a => a.favouritePromoter).length },
+        { value: "no_promoter", label: "No Favourite Promoter", count: transformedArtists.filter(a => !a.favouritePromoter).length },
+      ],
+      collapsible: true,
+      defaultOpen: false,
     },
     {
       key: "agencies",

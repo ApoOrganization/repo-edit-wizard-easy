@@ -103,8 +103,8 @@ const TicketSalesChart = ({ salesHistory, className }: TicketSalesChartProps) =>
   const remainingTicketsData = useMemo(() => {
     if (!salesHistory?.summary) return null;
 
-    const totalSold = salesHistory.summary.totalTicketsSold;
-    const remaining = salesHistory.summary.remainingCapacity;
+    const totalSold = salesHistory.summary.totalTicketsSold || 0;
+    const remaining = salesHistory.summary.remainingCapacity || 0;
     const total = totalSold + remaining;
     const soldPercentage = total > 0 ? (totalSold / total) * 100 : 0;
 
@@ -123,9 +123,9 @@ const TicketSalesChart = ({ salesHistory, className }: TicketSalesChartProps) =>
 
   if (isPreSale && salesHistory) {
     // Pre-sale view with informative content
-    const availableTickets = salesHistory.totalCapacity || salesHistory.summary.remainingCapacity;
-    const totalCapacity = salesHistory.totalCapacity || salesHistory.summary.remainingCapacity;
-    const daysListed = salesHistory.summary.daysActive || 0;
+    const availableTickets = salesHistory.totalCapacity || salesHistory.summary?.remainingCapacity || 0;
+    const totalCapacity = salesHistory.totalCapacity || salesHistory.summary?.remainingCapacity || 0;
+    const daysListed = salesHistory.summary?.daysActive || 0;
     
     return (
       <Card className={cn("media-card h-[400px]", className)}>
