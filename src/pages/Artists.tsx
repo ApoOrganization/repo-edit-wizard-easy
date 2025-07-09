@@ -46,12 +46,23 @@ const Artists = () => {
   // Transform raw artists to match component expectations
   const transformedArtists = rawArtists.map(transformArtistFromDB);
   
+  // Debug logging
+  console.log('🎭 Raw artists sample:', rawArtists.slice(0, 3));
+  console.log('🎨 Transformed artists sample:', transformedArtists.slice(0, 3));
+  console.log('🔧 Current filters:', filters);
+  
   // Apply client-side filters
   const artists = transformedArtists.filter(artist => {
     // Activity level filter
     const activityLevels = filters.activityLevels as string[];
     if (activityLevels.length > 0) {
-      const eventCount = artist.eventCount;
+      const eventCount = typeof artist.eventCount === 'string' ? parseInt(artist.eventCount) : artist.eventCount;
+      console.log('🔍 Filtering artist:', { 
+        name: artist.name, 
+        eventCount, 
+        eventCountType: typeof artist.eventCount,
+        filters: activityLevels 
+      });
       const matchesActivity = activityLevels.some(level => {
         switch(level) {
           case 'very_active': return eventCount >= 50;
@@ -78,6 +89,15 @@ const Artists = () => {
     }
     
     return true;
+  });
+  
+  console.log('📊 Filtering results:', {
+    totalBefore: transformedArtists.length,
+    totalAfter: artists.length,
+    activeFilters: {
+      activityLevels: filters.activityLevels,
+      hasPromoter: filters.hasPromoter
+    }
   });
 
   // Debounced search to avoid excessive API calls
