@@ -96,7 +96,7 @@ const CategoryPriceTable = ({ providers, categorySlice }: CategoryPriceTableProp
   }
 
   return (
-    <Card className="h-[300px] media-card max-w-full">
+    <Card className="h-[250px] media-card max-w-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Ticket Prices</CardTitle>
