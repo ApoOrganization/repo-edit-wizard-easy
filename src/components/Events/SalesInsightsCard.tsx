@@ -29,9 +29,9 @@ const SalesInsightsCard = ({ salesHistory, className }: SalesInsightsCardProps) 
 
   // Pre-sale view with different metrics
   if (isPreSale) {
-    const totalCapacity = salesHistory.totalCapacity || summary.remainingCapacity;
+    const totalCapacity = salesHistory.totalCapacity || summary?.remainingCapacity || 0;
     const categoryCount = Object.keys(salesHistory.categoryCapacities || {}).length;
-    const daysListed = summary.daysActive || 0;
+    const daysListed = summary?.daysActive || 0;
     
     const preSaleInsights = [
       {
@@ -149,43 +149,43 @@ const SalesInsightsCard = ({ salesHistory, className }: SalesInsightsCardProps) 
   }
   
   // Calculate additional metrics
-  const avgTicketPrice = summary.totalTicketsSold > 0 
-    ? summary.totalRevenue / summary.totalTicketsSold 
+  const avgTicketPrice = (summary?.totalTicketsSold || 0) > 0 
+    ? (summary?.totalRevenue || 0) / (summary?.totalTicketsSold || 1)
     : 0;
 
-  const totalCapacity = summary.totalTicketsSold + summary.remainingCapacity;
+  const totalCapacity = (summary?.totalTicketsSold || 0) + (summary?.remainingCapacity || 0);
   const soldPercentage = totalCapacity > 0 
-    ? (summary.totalTicketsSold / totalCapacity) * 100 
+    ? ((summary?.totalTicketsSold || 0) / totalCapacity) * 100 
     : 0;
 
   // Determine trend direction (simplified - in real app would compare with previous period)
-  const isPositiveTrend = summary.salesVelocity > summary.averageDailySales;
+  const isPositiveTrend = (summary?.salesVelocity || 0) > (summary?.averageDailySales || 0);
 
   const insights = [
     {
       label: "Total Revenue",
-      value: formatCurrency(summary.totalRevenue, '₺'),
+      value: formatCurrency(summary?.totalRevenue || 0, '₺'),
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-100",
     },
     {
       label: "Tickets Sold",
-      value: formatNumber(summary.totalTicketsSold),
+      value: formatNumber(summary?.totalTicketsSold || 0),
       icon: Target,
       color: "text-blue-600",
       bgColor: "bg-blue-100",
     },
     {
       label: "Sales Velocity",
-      value: `${Math.round(summary.salesVelocity)}/day`,
+      value: `${Math.round(summary?.salesVelocity || 0)}/day`,
       icon: isPositiveTrend ? TrendingUp : TrendingDown,
       color: isPositiveTrend ? "text-green-600" : "text-orange-600",
       bgColor: isPositiveTrend ? "bg-green-100" : "bg-orange-100",
     },
     {
       label: "Days Active",
-      value: `${summary.daysActive} days`,
+      value: `${summary?.daysActive || 0} days`,
       icon: Calendar,
       color: "text-purple-600",
       bgColor: "bg-purple-100",
@@ -244,13 +244,13 @@ const SalesInsightsCard = ({ salesHistory, className }: SalesInsightsCardProps) 
             />
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{formatNumber(summary.totalTicketsSold)} sold</span>
-            <span>{formatNumber(summary.remainingCapacity)} remaining</span>
+            <span>{formatNumber(summary?.totalTicketsSold || 0)} sold</span>
+            <span>{formatNumber(summary?.remainingCapacity || 0)} remaining</span>
           </div>
         </div>
 
         {/* Peak Sales Date */}
-        {summary.peakSalesDate && (
+        {summary?.peakSalesDate && (
           <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
             <p className="text-xs text-muted-foreground font-medium mb-1">
               Peak Sales Day
