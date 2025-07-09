@@ -1,19 +1,28 @@
 import { Event } from "@/data/types";
-import { EventAnalytics } from "@/hooks/useEventAnalytics";
+import { useEventAnalyticsEnhanced } from "@/hooks/useEventAnalyticsEnhanced";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import CategoryPriceTable from "./CategoryPriceTable";
 
 interface DetailedAnalysisViewProps {
   event: Event;
-  analytics?: EventAnalytics['analytics'];
 }
 
-const DetailedAnalysisView = ({ event, analytics }: DetailedAnalysisViewProps) => {
+const DetailedAnalysisView = ({ event }: DetailedAnalysisViewProps) => {
+  // Fetch enhanced analytics data with provider information
+  const { data: enhancedData } = useEventAnalyticsEnhanced(event.id);
+  const analytics = enhancedData?.analytics;
+  const providers = enhancedData?.providers || {};
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
       {/* Left Column */}
       <div className="space-y-8">
+        {/* Category Price Table */}
+        <div className="h-[300px]">
+          <CategoryPriceTable providers={providers} />
+        </div>
+        
         {/* Market Analysis Card */}
-        <div className="h-[480px]">
+        <div className="h-[460px]">
           <Card className="media-card h-full">
             <CardHeader>
               <CardTitle className="text-lg">Market Analysis</CardTitle>
@@ -22,22 +31,6 @@ const DetailedAnalysisView = ({ event, analytics }: DetailedAnalysisViewProps) =
               <div className="text-center">
                 <p className="text-muted-foreground">
                   Detailed market analysis coming soon...
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Competition Analysis Card */}
-        <div className="h-[280px]">
-          <Card className="media-card h-full">
-            <CardHeader>
-              <CardTitle className="text-lg">Competition Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  Competition analysis coming soon...
                 </p>
               </div>
             </CardContent>

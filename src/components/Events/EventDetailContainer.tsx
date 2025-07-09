@@ -18,7 +18,7 @@ const EventDetailContainer = ({ event, analytics, eventData }: EventDetailContai
   
   const pages = [
     { component: <EventGridView event={event} analytics={analytics} eventData={eventData} />, label: "Overview" },
-    { component: <DetailedAnalysisView event={event} analytics={analytics} />, label: "Detailed Analysis" }
+    { component: <DetailedAnalysisView event={event} />, label: "Detailed Analysis" }
   ];
 
   const nextPage = () => {
