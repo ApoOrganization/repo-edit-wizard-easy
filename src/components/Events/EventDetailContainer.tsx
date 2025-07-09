@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Event } from "@/data/types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -18,9 +18,41 @@ const EventDetailContainer = ({ event, analytics, eventData, enhancedData }: Eve
   const [currentPage, setCurrentPage] = useState(0);
   const [activeView, setActiveView] = useState<'overview' | 'detailed'>('overview');
   
+  // Calculate how many detailed analysis slides we need based on categories
+  const detailedAnalysisSlides = useMemo(() => {
+    if (!enhancedData?.providers) {
+      return [{ component: <DetailedAnalysisView event={event} enhancedData={enhancedData} />, label: "Detailed Analysis" }];
+    }
+
+    const CATEGORIES_PER_SLIDE = 4;
+    const maxCategoriesAcrossProviders = Math.max(
+      ...Object.values(enhancedData.providers).map(categories => categories.length),
+      0
+    );
+
+    const numberOfSlides = Math.max(1, Math.ceil(maxCategoriesAcrossProviders / CATEGORIES_PER_SLIDE));
+    
+    return Array.from({ length: numberOfSlides }, (_, index) => {
+      const start = index * CATEGORIES_PER_SLIDE;
+      const end = start + CATEGORIES_PER_SLIDE;
+      const categorySlice = { start, end };
+      
+      return {
+        component: (
+          <DetailedAnalysisView 
+            event={event} 
+            enhancedData={enhancedData} 
+            categorySlice={categorySlice}
+          />
+        ),
+        label: numberOfSlides === 1 ? "Detailed Analysis" : `Detailed Analysis ${index + 1}`
+      };
+    });
+  }, [event, enhancedData]);
+  
   const pages = [
     { component: <EventGridView event={event} analytics={analytics} eventData={eventData} />, label: "Overview" },
-    { component: <DetailedAnalysisView event={event} enhancedData={enhancedData} />, label: "Detailed Analysis" }
+    ...detailedAnalysisSlides
   ];
 
   const nextPage = () => {
@@ -38,6 +70,18 @@ const EventDetailContainer = ({ event, analytics, eventData, enhancedData }: Eve
   const goToPage = (index: number) => {
     setCurrentPage(index);
     setActiveView(index === 0 ? 'overview' : 'detailed');
+  };
+
+  // Navigate to overview
+  const goToOverview = () => {
+    setCurrentPage(0);
+    setActiveView('overview');
+  };
+
+  // Navigate to first detailed analysis slide
+  const goToDetailed = () => {
+    setCurrentPage(1);
+    setActiveView('detailed');
   };
 
   return (
@@ -86,7 +130,7 @@ const EventDetailContainer = ({ event, analytics, eventData, enhancedData }: Eve
         <div className="flex justify-center mb-5">
           <div className="flex gap-6">
             <button
-              onClick={() => goToPage(0)}
+              onClick={goToOverview}
               className={`py-1 text-sm font-medium transition-all duration-200 relative ${
                 activeView === 'overview'
                   ? 'text-foreground font-semibold text-base'
@@ -99,7 +143,7 @@ const EventDetailContainer = ({ event, analytics, eventData, enhancedData }: Eve
               )}
             </button>
             <button
-              onClick={() => goToPage(1)}
+              onClick={goToDetailed}
               className={`py-1 text-sm font-medium transition-all duration-200 relative ${
                 activeView === 'detailed'
                   ? 'text-foreground font-semibold text-base'

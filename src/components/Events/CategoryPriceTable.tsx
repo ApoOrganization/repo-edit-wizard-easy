@@ -7,26 +7,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { CircleCheck, CircleX, ChevronRight, ChevronLeft } from "lucide-react";
+import { CircleCheck, CircleX } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
-import { ProviderData } from "@/hooks/useEventAnalyticsEnhanced";
+import { ProviderData, CategoryData } from "@/hooks/useEventAnalyticsEnhanced";
 import { cn } from "@/lib/utils";
 
 interface CategoryPriceTableProps {
   providers: ProviderData;
+  categorySlice?: { start: number; end: number }; // For showing specific category range
 }
 
-const CategoryPriceTable = ({ providers }: CategoryPriceTableProps) => {
+const CategoryPriceTable = ({ providers, categorySlice }: CategoryPriceTableProps) => {
+  const CATEGORIES_PER_SLIDE = 4; // Max 4 categories per slide
+  
   // Initialize with first available provider
   const [selectedProvider, setSelectedProvider] = useState<string>(() => {
     const providerKeys = Object.keys(providers);
     return providerKeys[0] || 'biletix';
   });
-
-  // Pagination state for categories
-  const [currentPage, setCurrentPage] = useState(0);
-  const CATEGORIES_PER_PAGE = 4; // Show max 4 categories at once
 
   // Calculate days ago for sold out items
   const getDaysAgo = (lastUpdate: string | undefined): string => {
@@ -57,13 +55,17 @@ const CategoryPriceTable = ({ providers }: CategoryPriceTableProps) => {
     return "text-amber-600";
   };
 
-  // Get the current provider's categories with pagination
-  const { currentCategories, totalPages, canGoNext, canGoPrev, columnWidthClass } = useMemo(() => {
+  // Get the current provider's categories with optional slicing
+  const { currentCategories, columnWidthClass } = useMemo(() => {
     const allCategories = providers[selectedProvider] || [];
-    const startIndex = currentPage * CATEGORIES_PER_PAGE;
-    const endIndex = startIndex + CATEGORIES_PER_PAGE;
-    const paginatedCategories = allCategories.slice(startIndex, endIndex);
-    const totalPages = Math.ceil(allCategories.length / CATEGORIES_PER_PAGE);
+    
+    // Apply category slice if provided, otherwise show first CATEGORIES_PER_SLIDE
+    let slicedCategories: CategoryData[];
+    if (categorySlice) {
+      slicedCategories = allCategories.slice(categorySlice.start, categorySlice.end);
+    } else {
+      slicedCategories = allCategories.slice(0, CATEGORIES_PER_SLIDE);
+    }
     
     // Dynamic column width based on number of categories
     const getColumnWidth = (numCategories: number) => {
@@ -77,32 +79,10 @@ const CategoryPriceTable = ({ providers }: CategoryPriceTableProps) => {
     };
     
     return {
-      currentCategories: paginatedCategories,
-      totalPages,
-      canGoNext: currentPage < totalPages - 1,
-      canGoPrev: currentPage > 0,
-      columnWidthClass: getColumnWidth(paginatedCategories.length)
+      currentCategories: slicedCategories,
+      columnWidthClass: getColumnWidth(slicedCategories.length)
     };
-  }, [providers, selectedProvider, currentPage]);
-
-  // Reset pagination when provider changes
-  const handleProviderChange = (newProvider: string) => {
-    setSelectedProvider(newProvider);
-    setCurrentPage(0);
-  };
-
-  // Navigation handlers
-  const handlePrevPage = () => {
-    if (canGoPrev) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (canGoNext) {
-      setCurrentPage(prev => prev + 1);
-    }
-  };
+  }, [providers, selectedProvider, categorySlice]);
 
   // Handle empty states
   if (!providers || Object.keys(providers).length === 0) {
@@ -120,49 +100,20 @@ const CategoryPriceTable = ({ providers }: CategoryPriceTableProps) => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Ticket Prices</CardTitle>
-          <div className="flex items-center gap-2">
-            <Select value={selectedProvider} onValueChange={handleProviderChange}>
-              <SelectTrigger className="w-[180px] h-9 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.keys(providers).map((provider) => (
-                  <SelectItem key={provider} value={provider}>
-                    <div className="flex items-center gap-2">
-                      <span className="capitalize">{provider}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            {/* Category navigation - only show if there are multiple pages */}
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1 ml-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevPage}
-                  disabled={!canGoPrev}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-xs text-muted-foreground px-2">
-                  {currentPage + 1}/{totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextPage}
-                  disabled={!canGoNext}
-                  className="h-8 w-8 p-0"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
+          <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+            <SelectTrigger className="w-[180px] h-9 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(providers).map((provider) => (
+                <SelectItem key={provider} value={provider}>
+                  <div className="flex items-center gap-2">
+                    <span className="capitalize">{provider}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       
@@ -173,8 +124,8 @@ const CategoryPriceTable = ({ providers }: CategoryPriceTableProps) => {
               <p className="text-muted-foreground">No categories available for this provider</p>
             </div>
           ) : (
-            <div className="min-w-0 max-w-full">
-              <table className="w-full table-fixed min-w-[400px]">
+            <div className="min-w-0">
+              <table className="w-full table-fixed">
                 <thead>
                   <tr>
                     {currentCategories.map((category, index) => (

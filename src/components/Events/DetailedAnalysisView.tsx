@@ -6,9 +6,10 @@ import CategoryPriceTable from "./CategoryPriceTable";
 interface DetailedAnalysisViewProps {
   event: Event;
   enhancedData?: EventAnalyticsEnhancedResponse;
+  categorySlice?: { start: number; end: number };
 }
 
-const DetailedAnalysisView = ({ event, enhancedData }: DetailedAnalysisViewProps) => {
+const DetailedAnalysisView = ({ event, enhancedData, categorySlice }: DetailedAnalysisViewProps) => {
   const hasBubiletData = enhancedData?.hasBubiletData;
   const providers = enhancedData?.providers || {};
   const analytics = enhancedData?.analytics;
@@ -18,7 +19,7 @@ const DetailedAnalysisView = ({ event, enhancedData }: DetailedAnalysisViewProps
       <div className="space-y-8">
         {/* Table ALWAYS shows (all providers) */}
         <div className="h-[300px]">
-          <CategoryPriceTable providers={providers} />
+          <CategoryPriceTable providers={providers} categorySlice={categorySlice} />
         </div>
         
         {/* Chart ONLY shows if Bubilet exists */}
