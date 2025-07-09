@@ -1,76 +1,114 @@
 import { Event } from "@/data/types";
-import { useEventAnalyticsEnhanced } from "@/hooks/useEventAnalyticsEnhanced";
+import { EventAnalyticsEnhancedResponse } from "@/hooks/useEventAnalyticsEnhanced";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import CategoryPriceTable from "./CategoryPriceTable";
 
 interface DetailedAnalysisViewProps {
   event: Event;
+  enhancedData?: EventAnalyticsEnhancedResponse;
 }
 
-const DetailedAnalysisView = ({ event }: DetailedAnalysisViewProps) => {
-  // Fetch enhanced analytics data with provider information
-  const { data: enhancedData } = useEventAnalyticsEnhanced(event.id);
-  const analytics = enhancedData?.analytics;
+const DetailedAnalysisView = ({ event, enhancedData }: DetailedAnalysisViewProps) => {
+  const hasBubiletData = enhancedData?.hasBubiletData;
   const providers = enhancedData?.providers || {};
+  const analytics = enhancedData?.analytics;
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
       {/* Left Column */}
       <div className="space-y-8">
-        {/* Category Price Table */}
+        {/* Table ALWAYS shows (all providers) */}
         <div className="h-[300px]">
           <CategoryPriceTable providers={providers} />
         </div>
         
-        {/* Market Analysis Card */}
-        <div className="h-[460px]">
-          <Card className="media-card h-full">
-            <CardHeader>
-              <CardTitle className="text-lg">Market Analysis</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  Detailed market analysis coming soon...
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Chart ONLY shows if Bubilet exists */}
+        {hasBubiletData && (
+          <div className="h-[400px]">
+            <Card className="media-card h-full">
+              <CardHeader>
+                <CardTitle className="text-lg">Sales Chart</CardTitle>
+              </CardHeader>
+              <CardContent className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <p className="text-muted-foreground">
+                    Sales history chart coming soon...
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
-      {/* Right Column */}
+      {/* Right Column changes based on Bubilet */}
       <div className="space-y-8">
-        {/* Performance Metrics Card */}
-        <div className="h-[350px]">
-          <Card className="media-card h-full">
-            <CardHeader>
-              <CardTitle className="text-lg">Performance Metrics</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  Performance metrics coming soon...
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Insights Card */}
-        <div className="h-[410px]">
-          <Card className="media-card h-full">
-            <CardHeader>
-              <CardTitle className="text-lg">AI Insights</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  AI-powered insights coming soon...
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {hasBubiletData ? (
+          <>
+            {/* Bubilet-specific components */}
+            <div className="h-[350px]">
+              <Card className="media-card h-full">
+                <CardHeader>
+                  <CardTitle className="text-lg">Remaining Tickets</CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-muted-foreground">
+                      Remaining tickets analysis coming soon...
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="h-[410px]">
+              <Card className="media-card h-full">
+                <CardHeader>
+                  <CardTitle className="text-lg">Revenue Analytics</CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-muted-foreground">
+                      Revenue analytics coming soon...
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Default components when no Bubilet data */}
+            <div className="h-[350px]">
+              <Card className="media-card h-full">
+                <CardHeader>
+                  <CardTitle className="text-lg">Market Analysis</CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-muted-foreground">
+                      Market analysis coming soon...
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <div className="h-[410px]">
+              <Card className="media-card h-full">
+                <CardHeader>
+                  <CardTitle className="text-lg">Competition Analysis</CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-muted-foreground">
+                      Competition analysis coming soon...
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import EventHeader from "@/components/Events/EventHeader";
 import EventMeta from "@/components/Events/EventMeta";
 import EventDetailContainer from "@/components/Events/EventDetailContainer";
 import { useEventAnalytics } from "@/hooks/useEventAnalytics";
+import { useEventAnalyticsEnhanced } from "@/hooks/useEventAnalyticsEnhanced";
 import { transformEventFromDB } from "@/utils/eventTransformers";
 
 const EventDetail = () => {
@@ -37,8 +38,11 @@ const EventDetail = () => {
 
   // Fetch analytics data
   const { data: analyticsData, isLoading: analyticsLoading, error: analyticsError } = useEventAnalytics(id);
+  
+  // Fetch enhanced analytics data
+  const { data: enhancedData, isLoading: enhancedLoading, error: enhancedError } = useEventAnalyticsEnhanced(id);
 
-  const isLoading = eventLoading || analyticsLoading;
+  const isLoading = eventLoading || analyticsLoading || enhancedLoading;
   const event = eventData ? transformEventFromDB(eventData) : null;
 
   if (isLoading) {
@@ -114,6 +118,7 @@ const EventDetail = () => {
           event={event} 
           analytics={analyticsData?.analytics}
           eventData={analyticsData?.event}
+          enhancedData={enhancedData}
         />
       </div>
     </div>
