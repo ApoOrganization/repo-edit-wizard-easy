@@ -1,12 +1,11 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { VenueTimeSeriesPoint } from '@/hooks/useVenueTickets';
 import { formatCurrency } from '@/utils/formatters';
 import { parseEventName } from '@/utils/eventFormatters';
-import { Calendar, TrendingUp, Star, Activity, MapPin, Building2 } from 'lucide-react';
+import { Calendar, Star, MapPin, Building2 } from 'lucide-react';
 
 interface VenueEventPortfolioAnalyticsProps {
   timeseries: VenueTimeSeriesPoint[];
@@ -16,13 +15,7 @@ interface VenueEventPortfolioAnalyticsProps {
 
 interface EventMetrics {
   eventId: string;
-  totalRevenue: number;
-  totalTickets: number;
   activeDays: number;
-  avgDailyRevenue: number;
-  avgDailyTickets: number;
-  peakRevenue: number;
-  revenueShare: number;
 }
 
 export const VenueEventPortfolioAnalytics: React.FC<VenueEventPortfolioAnalyticsProps> = ({
@@ -33,49 +26,25 @@ export const VenueEventPortfolioAnalytics: React.FC<VenueEventPortfolioAnalytics
   const eventMetrics = useMemo(() => {
     if (!timeseries || timeseries.length === 0) return [];
 
-    // Calculate metrics for each event hosted at this venue
+    // Calculate basic metrics for each event hosted at this venue
     const eventStats: { [eventId: string]: EventMetrics } = {};
-    const totalVenueRevenue = timeseries.reduce((sum, day) => sum + day.daily_revenue, 0);
 
-    // Process each day's data
+    // Process each day's data to count active days per event
     timeseries.forEach(day => {
       day.events.forEach(eventId => {
         if (!eventStats[eventId]) {
           eventStats[eventId] = {
             eventId,
-            totalRevenue: 0,
-            totalTickets: 0,
-            activeDays: 0,
-            avgDailyRevenue: 0,
-            avgDailyTickets: 0,
-            peakRevenue: 0,
-            revenueShare: 0
+            activeDays: 0
           };
         }
-
-        // For simplicity, we'll distribute the day's revenue/tickets equally among events at the venue
-        // In a real scenario, you'd want event-specific data
-        const eventsCount = day.events.length;
-        const eventDayRevenue = eventsCount > 0 ? day.daily_revenue / eventsCount : 0;
-        const eventDayTickets = eventsCount > 0 ? day.tickets_sold / eventsCount : 0;
-
-        eventStats[eventId].totalRevenue += eventDayRevenue;
-        eventStats[eventId].totalTickets += eventDayTickets;
         eventStats[eventId].activeDays += 1;
-        eventStats[eventId].peakRevenue = Math.max(eventStats[eventId].peakRevenue, eventDayRevenue);
       });
     });
 
-    // Calculate derived metrics
-    Object.values(eventStats).forEach(event => {
-      event.avgDailyRevenue = event.activeDays > 0 ? event.totalRevenue / event.activeDays : 0;
-      event.avgDailyTickets = event.activeDays > 0 ? event.totalTickets / event.activeDays : 0;
-      event.revenueShare = totalVenueRevenue > 0 ? (event.totalRevenue / totalVenueRevenue) * 100 : 0;
-    });
-
-    // Convert to array and sort by total revenue
+    // Convert to array and sort by active days
     return Object.values(eventStats)
-      .sort((a, b) => b.totalRevenue - a.totalRevenue)
+      .sort((a, b) => b.activeDays - a.activeDays)
       .slice(0, 8); // Show top 8 events
   }, [timeseries]);
 
@@ -107,7 +76,7 @@ export const VenueEventPortfolioAnalytics: React.FC<VenueEventPortfolioAnalytics
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Venue Event Portfolio</CardTitle>
+          <CardTitle className="text-sm font-semibold">Associated Events</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-6">
@@ -119,29 +88,21 @@ export const VenueEventPortfolioAnalytics: React.FC<VenueEventPortfolioAnalytics
     );
   }
 
-  const getPerformanceBadge = (revenueShare: number) => {
-    if (revenueShare >= 25) return { variant: 'default' as const, label: 'Top Event' };
-    if (revenueShare >= 15) return { variant: 'secondary' as const, label: 'High Performer' };
-    if (revenueShare >= 8) return { variant: 'outline' as const, label: 'Good Performer' };
-    return { variant: 'outline' as const, label: 'Contributing' };
-  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm font-semibold">
           <Star className="h-4 w-4" />
-          Venue Event Portfolio Performance
+          Associated Events
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Revenue contribution from {eventMetrics.length} events hosted at this venue
+          {eventMetrics.length} events hosted at this venue
         </p>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {eventMetrics.map((event, index) => {
-            const badge = getPerformanceBadge(event.revenueShare);
-            
             return (
               <div key={event.eventId} className="space-y-2 p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
                 {/* Event Header */}
@@ -159,9 +120,6 @@ export const VenueEventPortfolioAnalytics: React.FC<VenueEventPortfolioAnalytics
                             `Event ${event.eventId.slice(0, 8)}...`
                           }
                         </Link>
-                        <Badge variant={badge.variant} className="text-xs flex-shrink-0">
-                          {badge.label}
-                        </Badge>
                       </div>
                       {eventsPresent[event.eventId] && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -179,72 +137,39 @@ export const VenueEventPortfolioAnalytics: React.FC<VenueEventPortfolioAnalytics
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-bold">
-                      {formatCurrency(event.totalRevenue, '₺')}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {event.revenueShare.toFixed(1)}% of venue total
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Click for details
                     </div>
                   </div>
                 </div>
 
-                {/* Revenue Progress Bar */}
-                <Progress 
-                  value={event.revenueShare} 
-                  className="h-2"
-                  style={{
-                    background: event.revenueShare >= 20 ? 'rgb(220 252 231)' : 'rgb(243 244 246)',
-                  }}
-                />
-
-                {/* Event Metrics */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                  <div className="text-center">
-                    <div className="font-medium">{event.totalTickets.toFixed(0)}</div>
-                    <div className="text-muted-foreground">Total Tickets</div>
-                  </div>
+                {/* Basic Event Info */}
+                <div className="grid grid-cols-2 gap-4 text-xs">
                   <div className="text-center">
                     <div className="font-medium">{event.activeDays}</div>
                     <div className="text-muted-foreground">Days at Venue</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-medium">{formatCurrency(event.avgDailyRevenue, '₺')}</div>
-                    <div className="text-muted-foreground">Avg Daily Rev</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="font-medium">{formatCurrency(event.peakRevenue, '₺')}</div>
-                    <div className="text-muted-foreground">Peak Day Rev</div>
+                    <div className="font-medium">View Analytics</div>
+                    <div className="text-muted-foreground">Event Details</div>
                   </div>
                 </div>
 
-                {/* Performance Indicators */}
-                <div className="flex items-center justify-between pt-1">
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Activity className="h-3 w-3" />
-                      <span>{event.avgDailyTickets.toFixed(1)} tickets/day</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span>Hosted {event.activeDays} days</span>
-                    </div>
+                {/* Basic Event Info */}
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>Hosted {event.activeDays} days</span>
                   </div>
-                  
-                  {event.revenueShare >= 15 && (
-                    <div className="flex items-center gap-1 text-green-600">
-                      <TrendingUp className="h-3 w-3" />
-                      <span className="text-xs font-medium">High Impact</span>
-                    </div>
-                  )}
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Venue Portfolio Summary */}
+        {/* Event Summary */}
         <div className="mt-6 pt-4 border-t border-border">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <div className="text-lg font-bold">{eventMetrics.length}</div>
               <div className="text-xs text-muted-foreground">Events Hosted</div>
@@ -254,18 +179,6 @@ export const VenueEventPortfolioAnalytics: React.FC<VenueEventPortfolioAnalytics
                 {Math.max(...eventMetrics.map(e => e.activeDays))}
               </div>
               <div className="text-xs text-muted-foreground">Longest Run</div>
-            </div>
-            <div>
-              <div className="text-lg font-bold">
-                {formatCurrency(Math.max(...eventMetrics.map(e => e.peakRevenue)), '₺')}
-              </div>
-              <div className="text-xs text-muted-foreground">Best Day</div>
-            </div>
-            <div>
-              <div className="text-lg font-bold">
-                {(eventMetrics.reduce((sum, e) => sum + e.totalTickets, 0)).toFixed(0)}
-              </div>
-              <div className="text-xs text-muted-foreground">Total Tickets</div>
             </div>
           </div>
         </div>
