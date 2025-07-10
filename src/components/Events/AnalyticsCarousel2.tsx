@@ -26,6 +26,15 @@ const AnalyticsCarousel2 = ({ event, onComponentOverflow }: AnalyticsCarousel2Pr
   // Transform ticket data to provider format for CategoryPriceTable
   const providerData = ticketData?.tickets ? transformTicketsToProviderData(ticketData.tickets) : {};
   
+  // Debug logging
+  if (hasTicketData) {
+    console.log('🎫 Ticket data available:', {
+      rawTickets: ticketData?.tickets,
+      transformedProviders: providerData,
+      providersCount: Object.keys(providerData).length
+    });
+  }
+  
   // Check if sales data exists and has meaningful values
   const hasSalesData = ticketData?.bubilet_sales && (
     ticketData.bubilet_sales.revenue_realized > 0 ||

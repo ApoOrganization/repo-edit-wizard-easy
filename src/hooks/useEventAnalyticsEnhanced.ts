@@ -6,6 +6,7 @@ export interface CategoryData {
   price: number | string;
   sold_out: boolean;
   last_update?: string;
+  sellout_duration_days?: number | null; // How long it took to sell out
 }
 
 export interface ProviderData {

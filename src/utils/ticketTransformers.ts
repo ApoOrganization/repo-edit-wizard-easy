@@ -9,25 +9,35 @@ export const transformTicketsToProviderData = (
 ): ProviderData => {
   const providerData: ProviderData = {};
 
-  // Helper function to calculate last_update from sellout_duration_days
-  const calculateLastUpdate = (selloutDurationDays: number | null): string | undefined => {
-    if (selloutDurationDays === null) return undefined;
-    
-    const now = new Date();
-    const lastUpdateDate = new Date(now.getTime() - (selloutDurationDays * 24 * 60 * 60 * 1000));
-    return lastUpdateDate.toISOString();
-  };
+  // No longer need to calculate last_update from sellout_duration_days
+  // sellout_duration_days represents how long it took to sell out, not when it sold out
 
   // Transform each provider's data
   Object.entries(tickets).forEach(([providerName, categories]) => {
     if (categories && Object.keys(categories).length > 0) {
       const transformedCategories: CategoryData[] = Object.entries(categories).map(
-        ([categoryName, ticketCategory]: [string, TicketCategory]) => ({
-          name: categoryName,
-          price: ticketCategory.price,
-          sold_out: ticketCategory.is_sold_out,
-          last_update: calculateLastUpdate(ticketCategory.sellout_duration_days)
-        })
+        ([categoryName, ticketCategory]: [string, TicketCategory]) => {
+          const transformedCategory = {
+            name: categoryName,
+            price: ticketCategory.price,
+            sold_out: ticketCategory.is_sold_out,
+            sellout_duration_days: ticketCategory.sellout_duration_days,
+            // Keep last_update undefined for now - not needed for sellout duration display
+            last_update: undefined
+          };
+          
+          // Debug logging for sold-out items
+          if (ticketCategory.is_sold_out) {
+            console.log('🔴 Sold-out ticket found:', {
+              provider: providerName,
+              category: categoryName,
+              sellout_duration_days: ticketCategory.sellout_duration_days,
+              transformed: transformedCategory
+            });
+          }
+          
+          return transformedCategory;
+        }
       );
 
       providerData[providerName] = transformedCategories;

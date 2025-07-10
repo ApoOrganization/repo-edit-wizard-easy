@@ -26,33 +26,36 @@ const CategoryPriceTable = ({ providers, categorySlice }: CategoryPriceTableProp
     return providerKeys[0] || 'biletix';
   });
 
-  // Calculate days ago for sold out items
-  const getDaysAgo = (lastUpdate: string | undefined): string => {
-    if (!lastUpdate) return "Sold out";
+  // Get sellout duration text for sold out items
+  const getSelloutText = (selloutDurationDays: number | null | undefined): string => {
+    if (selloutDurationDays === null || selloutDurationDays === undefined) {
+      return "Sold out";
+    }
     
-    const updateDate = new Date(lastUpdate);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - updateDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (selloutDurationDays === 1) {
+      return "Sold out in 1 day";
+    }
     
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "1 day ago";
-    return `${diffDays} days ago`;
+    return `Sold out in ${selloutDurationDays} days`;
   };
 
-  // Get status color based on sold out duration
-  const getStatusColor = (soldOut: boolean, lastUpdate: string | undefined): string => {
+  // Get status color based on sellout velocity (how fast it sold out)
+  const getStatusColor = (soldOut: boolean, selloutDurationDays: number | null | undefined): string => {
     if (!soldOut) return "text-green-600";
     
-    if (!lastUpdate) return "text-red-600";
+    // No duration info - default red
+    if (selloutDurationDays === null || selloutDurationDays === undefined) {
+      return "text-red-600";
+    }
     
-    const updateDate = new Date(lastUpdate);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - updateDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Fast sellouts (high demand) - red
+    if (selloutDurationDays <= 2) return "text-red-600";
     
-    if (diffDays <= 3) return "text-red-600";
-    return "text-amber-600";
+    // Medium sellouts - amber  
+    if (selloutDurationDays <= 7) return "text-amber-600";
+    
+    // Slow sellouts - orange
+    return "text-orange-500";
   };
 
   // Get the current provider's categories with optional slicing
@@ -66,6 +69,14 @@ const CategoryPriceTable = ({ providers, categorySlice }: CategoryPriceTableProp
     } else {
       slicedCategories = allCategories.slice(0, CATEGORIES_PER_SLIDE);
     }
+    
+    // Debug logging for current categories
+    console.log('📊 CategoryPriceTable rendering:', {
+      selectedProvider,
+      allCategories,
+      slicedCategories,
+      soldOutItems: slicedCategories.filter(cat => cat.sold_out)
+    });
     
     // Dynamic column width based on number of categories
     const getColumnWidth = (numCategories: number) => {
@@ -175,16 +186,16 @@ const CategoryPriceTable = ({ providers, categorySlice }: CategoryPriceTableProp
                               <CircleX 
                                 className={cn(
                                   "w-3.5 h-3.5 flex-shrink-0",
-                                  getStatusColor(category.sold_out, category.last_update)
+                                  getStatusColor(category.sold_out, category.sellout_duration_days)
                                 )}
                               />
                               <span 
                                 className={cn(
                                   "text-xs font-medium truncate",
-                                  getStatusColor(category.sold_out, category.last_update)
+                                  getStatusColor(category.sold_out, category.sellout_duration_days)
                                 )}
                               >
-                                {getDaysAgo(category.last_update)}
+                                {getSelloutText(category.sellout_duration_days)}
                               </span>
                             </>
                           ) : (
