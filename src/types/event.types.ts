@@ -69,6 +69,7 @@ export interface TransformedEvent {
   name: string;
   date: string;
   venue: string;
+  venue_id: string;
   city: string;
   promoter?: string;
   genre: string;

@@ -43,6 +43,7 @@ export const transformEventFromDB = (dbEvent: EventListItem): TransformedEvent =
     name: dbEvent.name || 'Unknown Event',
     date: dbEvent.date,
     venue: dbEvent.venue_name || 'Unknown Venue',
+    venue_id: dbEvent.venue_id,
     city: dbEvent.venue_city || 'Unknown City',
     genre: dbEvent.genre || 'Unknown',
     status: mapStatus(dbEvent.status),

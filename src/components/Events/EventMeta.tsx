@@ -1,11 +1,10 @@
-import { Event } from "@/data/types";
+import { TransformedEvent } from "@/types/event.types";
 import { MapPin } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { getPromoterIdFromName } from "@/data/promoters";
-import { getVenueIdFromName } from "@/data/venues";
 
 interface EventMetaProps {
-  event: Event;
+  event: TransformedEvent;
 }
 
 const EventMeta = ({ event }: EventMetaProps) => {
@@ -14,8 +13,9 @@ const EventMeta = ({ event }: EventMetaProps) => {
   const handleVenueNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const venueId = getVenueIdFromName(event.venue);
-    navigate(`/venues/${venueId}`);
+    if (event.venue_id) {
+      navigate(`/venues/${event.venue_id}`);
+    }
   };
 
   const handlePromoterNavigation = (e: React.MouseEvent) => {

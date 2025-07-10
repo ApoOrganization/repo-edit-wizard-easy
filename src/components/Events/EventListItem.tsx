@@ -1,13 +1,12 @@
-import { Event } from "@/data/types";
+import { TransformedEvent } from "@/types/event.types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users, DollarSign, Ticket } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { getVenueIdFromName } from "@/data/venues";
 import { getPromoterIdFromName } from "@/data/promoters";
 
 interface EventListItemProps {
-  event: Event;
+  event: TransformedEvent;
 }
 
 const EventListItem = ({ event }: EventListItemProps) => {
@@ -38,8 +37,9 @@ const EventListItem = ({ event }: EventListItemProps) => {
   const handleVenueNavigation = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const venueId = getVenueIdFromName(event.venue);
-    navigate(`/venues/${venueId}`);
+    if (event.venue_id) {
+      navigate(`/venues/${event.venue_id}`);
+    }
   };
 
   const handlePromoterNavigation = (e: React.MouseEvent) => {
