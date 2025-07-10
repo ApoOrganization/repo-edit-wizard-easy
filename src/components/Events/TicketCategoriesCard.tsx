@@ -94,7 +94,7 @@ export const TicketCategoriesCard: React.FC<TicketCategoriesCardProps> = ({
                 <div className="flex items-center gap-4 mt-2">
                   <div className="flex items-center gap-1">
                     <span className="text-lg font-bold">
-                      {formatCurrency(category.price / 100, '₺')}
+                      {formatCurrency(category.price, '₺')}
                     </span>
                   </div>
                   

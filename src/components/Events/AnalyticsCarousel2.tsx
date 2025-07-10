@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEventTickets } from "@/hooks/useEventTickets";
 import { RevenueMetricsCard } from "./RevenueMetricsCard";
 import { TicketSalesTimeSeriesChart } from "./TicketSalesTimeSeriesChart";
-import { MultiProviderTicketsCard } from "./MultiProviderTicketsCard";
+import CategoryPriceTable from "./CategoryPriceTable";
+import { transformTicketsToProviderData, hasAnyTicketData, getTotalCategoriesCount } from "@/utils/ticketTransformers";
 
 interface AnalyticsCarousel2Props {
   event: Event;
@@ -20,12 +21,10 @@ const AnalyticsCarousel2 = ({ event, onComponentOverflow }: AnalyticsCarousel2Pr
   const { data: ticketData, isLoading: ticketLoading, error: ticketError } = useEventTickets(event.id);
 
   // Check if any provider has ticket data
-  const hasTicketData = ticketData?.tickets && (
-    (ticketData.tickets.bubilet && Object.keys(ticketData.tickets.bubilet).length > 0) ||
-    (ticketData.tickets.passo && Object.keys(ticketData.tickets.passo).length > 0) ||
-    (ticketData.tickets.biletix && Object.keys(ticketData.tickets.biletix).length > 0) ||
-    (ticketData.tickets.biletinial && Object.keys(ticketData.tickets.biletinial).length > 0)
-  );
+  const hasTicketData = ticketData?.tickets ? hasAnyTicketData(ticketData.tickets) : false;
+  
+  // Transform ticket data to provider format for CategoryPriceTable
+  const providerData = ticketData?.tickets ? transformTicketsToProviderData(ticketData.tickets) : {};
   
   // Check if sales data exists and has meaningful values
   const hasSalesData = ticketData?.bubilet_sales && (
@@ -42,16 +41,8 @@ const AnalyticsCarousel2 = ({ event, onComponentOverflow }: AnalyticsCarousel2Pr
         setContainerWidth(width);
         
         // Determine overflow based on total ticket categories count across all providers
-        let categoriesCount = 0;
-        if (hasTicketData && ticketData?.tickets) {
-          const { bubilet, passo, biletix, biletinial } = ticketData.tickets;
-          categoriesCount = [
-            bubilet ? Object.keys(bubilet).length : 0,
-            passo ? Object.keys(passo).length : 0,
-            biletix ? Object.keys(biletix).length : 0,
-            biletinial ? Object.keys(biletinial).length : 0
-          ].reduce((total, count) => total + count, 0);
-        }
+        const categoriesCount = hasTicketData && ticketData?.tickets ? 
+          getTotalCategoriesCount(ticketData.tickets) : 0;
         
         // Notify parent about overflow state (when table is very wide)
         if (onComponentOverflow) {
@@ -77,13 +68,14 @@ const AnalyticsCarousel2 = ({ event, onComponentOverflow }: AnalyticsCarousel2Pr
     <div ref={containerRef} className="w-full">
       <div className="space-y-6">
         {/* Show ticket data if available */}
-        {hasTicketData && ticketData?.tickets ? (
+        {hasTicketData ? (
           <>
-            {/* 1. Multi-Provider Ticket Display */}
-            <MultiProviderTicketsCard 
-              tickets={ticketData.tickets} 
-              isLoading={ticketLoading}
-            />
+            {/* 1. Ticket Prices using existing CategoryPriceTable */}
+            <div className="h-[250px]">
+              <CategoryPriceTable 
+                providers={providerData}
+              />
+            </div>
             
             {/* 2. Revenue Metrics - only if sales data exists */}
             {hasSalesData && ticketData.bubilet_sales && (

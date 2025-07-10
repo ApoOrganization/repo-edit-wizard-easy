@@ -103,7 +103,7 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
               <span className="font-medium">Total Remaining:</span> {data.total_remaining.toLocaleString()} tickets
             </p>
             <p className="text-sm">
-              <span className="font-medium">Avg Price:</span> {formatCurrency(data.avg_price / 100, '₺')}
+              <span className="font-medium">Avg Price:</span> {formatCurrency(data.avg_price, '₺')}
             </p>
             <div className="border-t pt-2 mt-2">
               {allCategories.map(category => {
@@ -113,7 +113,7 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
                   return (
                     <p key={category} className="text-xs">
                       <span className="font-medium">{category}:</span> {remaining.toLocaleString()} 
-                      <span className="text-muted-foreground ml-1">({formatCurrency(price / 100, '₺')})</span>
+                      <span className="text-muted-foreground ml-1">({formatCurrency(price, '₺')})</span>
                     </p>
                   );
                 }

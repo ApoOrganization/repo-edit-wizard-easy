@@ -73,7 +73,7 @@ export const RevenueMetricsCard: React.FC<RevenueMetricsCardProps> = ({
             <Progress value={revenuePercentage} className="h-3" />
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>₺0</span>
-              <span>{formatCurrency(totalPotentialRevenue / 100, '₺')}</span>
+              <span>{formatCurrency(totalPotentialRevenue, '₺')}</span>
             </div>
           </div>
 
@@ -85,7 +85,7 @@ export const RevenueMetricsCard: React.FC<RevenueMetricsCardProps> = ({
                 <TrendingUp className="h-5 w-5 text-green-600" />
               </div>
               <div className="text-lg font-bold text-green-700">
-                {formatCurrency(revenueRealized / 100, '₺')}
+                {formatCurrency(revenueRealized, '₺')}
               </div>
               <div className="text-xs text-green-600 font-medium">Realized Revenue</div>
               <div className="text-xs text-muted-foreground mt-1">
@@ -99,7 +99,7 @@ export const RevenueMetricsCard: React.FC<RevenueMetricsCardProps> = ({
                 <Target className="h-5 w-5 text-orange-600" />
               </div>
               <div className="text-lg font-bold text-orange-700">
-                {formatCurrency(remainingRevenue / 100, '₺')}
+                {formatCurrency(remainingRevenue, '₺')}
               </div>
               <div className="text-xs text-orange-600 font-medium">Remaining Revenue</div>
               <div className="text-xs text-muted-foreground mt-1">
@@ -113,7 +113,7 @@ export const RevenueMetricsCard: React.FC<RevenueMetricsCardProps> = ({
                 <PieChart className="h-5 w-5 text-blue-600" />
               </div>
               <div className="text-lg font-bold text-blue-700">
-                {formatCurrency(totalPotentialRevenue / 100, '₺')}
+                {formatCurrency(totalPotentialRevenue, '₺')}
               </div>
               <div className="text-xs text-blue-600 font-medium">Total Potential</div>
               <div className="text-xs text-muted-foreground mt-1">
@@ -136,7 +136,7 @@ export const RevenueMetricsCard: React.FC<RevenueMetricsCardProps> = ({
             <div>
               <div className="text-sm font-medium">Revenue Per Sale</div>
               <div className="text-xs text-muted-foreground">
-                Avg: {formatCurrency((revenueRealized / 100) / Math.max(1, Math.floor(revenueRealized / 300000)), '₺')}
+                Avg: {formatCurrency(revenueRealized / Math.max(1, Math.floor(revenueRealized / 300000)), '₺')}
               </div>
             </div>
           </div>

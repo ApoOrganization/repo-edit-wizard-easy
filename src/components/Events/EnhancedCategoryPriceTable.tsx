@@ -149,7 +149,7 @@ export const EnhancedCategoryPriceTable: React.FC<EnhancedCategoryPriceTableProp
                       className={cn('px-3 py-3 font-mono text-sm border-b', columnWidthClass)}
                     >
                       <div className="truncate">
-                        {formatCurrency(category.price / 100, '₺')}
+                        {formatCurrency(category.price, '₺')}
                       </div>
                     </td>
                   ))}
