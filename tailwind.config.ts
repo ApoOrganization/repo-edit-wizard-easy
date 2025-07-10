@@ -63,15 +63,31 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom Dashboard Colors
-				'dashboard-navy': '#1A1A18',
-				'dashboard-gray': '#44646F',
-				'dashboard-blue': '#3B82F6',
-				'dashboard-success': '#10B981',
-				'dashboard-warning': '#F59E0B',
-				'dashboard-danger': '#EF4444',
+				// eventür Brand Colors
+				'brand-primary': '#EDF252',     // Bright yellow-green
+				'brand-secondary': '#020126',   // Dark navy
+				'brand-accent': '#C861FF',      // Purple
+				'brand-success': '#BBBF49',     // Olive green
+				'brand-warning': '#737373',     // Gray
+				'brand-error': '#0D0D0D',       // Black
+				'brand-background': '#F5F5F5',  // Light gray
+				'brand-surface': '#737373',     // Gray
+				'brand-text': '#0D0D0D',        // Black
+				'brand-text-secondary': '#737373', // Gray
+				'brand-border': '#BBBF49',      // Olive green
+
+				// Legacy Dashboard Colors (for backward compatibility)
+				'dashboard-navy': '#020126',
+				'dashboard-gray': '#737373',
+				'dashboard-blue': '#C861FF',
+				'dashboard-success': '#BBBF49',
+				'dashboard-warning': '#737373',
+				'dashboard-danger': '#0D0D0D',
 			},
 			fontFamily: {
+				'satoshi': ['Satoshi', 'system-ui', 'sans-serif'],
+				'primary': ['Satoshi', 'system-ui', 'sans-serif'],
+				// Legacy fonts (for backward compatibility)
 				'poppins': ['Poppins', 'sans-serif'],
 				'manrope': ['Manrope', 'sans-serif'],
 			},

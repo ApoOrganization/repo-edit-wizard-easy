@@ -3,15 +3,20 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import custom fonts */
+/* Import Satoshi font */
+@import url('/branding/fonts/satoshi.css');
+
+/* Import legacy fonts for backward compatibility */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
 
 /* Dashboard Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Font Family */
+    --font-family-primary: 'Satoshi', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --background: 0 0% 96%;        /* #F5F5F5 - light gray */
+    --foreground: 0 0% 5%;         /* #0D0D0D - black */
 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -19,35 +24,36 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 214 100% 59%;
-    --primary-foreground: 210 40% 98%;
+    /* eventür Brand Colors */
+    --primary: 68 96% 63%;        /* #EDF252 - bright yellow-green */
+    --primary-foreground: 235 86% 5%;  /* #020126 - dark navy */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 235 86% 5%;      /* #020126 - dark navy */
+    --secondary-foreground: 68 96% 63%; /* #EDF252 - bright yellow-green */
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 281 100% 69%;       /* #C861FF - purple */
+    --accent-foreground: 0 0% 100%;   /* white */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 0% 5%;       /* #0D0D0D - black */
+    --destructive-foreground: 0 0% 100%;  /* white */
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 65 39% 53%;         /* #BBBF49 - olive green */
+    --input: 65 39% 53%;          /* #BBBF49 - olive green */
+    --ring: 281 100% 69%;         /* #C861FF - purple */
 
     --radius: 0.5rem;
 
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 214 100% 59%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 214 100% 59%;
+    --sidebar-background: 0 0% 100%;      /* white */
+    --sidebar-foreground: 0 0% 5%;        /* #0D0D0D - black */
+    --sidebar-primary: 68 96% 63%;        /* #EDF252 - bright yellow-green */
+    --sidebar-primary-foreground: 235 86% 5%; /* #020126 - dark navy */
+    --sidebar-accent: 281 100% 69%;       /* #C861FF - purple */
+    --sidebar-accent-foreground: 0 0% 100%; /* white */
+    --sidebar-border: 65 39% 53%;         /* #BBBF49 - olive green */
+    --sidebar-ring: 281 100% 69%;         /* #C861FF - purple */
 
     /* Ultra-compact typography scale - 25% smaller */
     --font-size-xs: 0.625rem;     /* 10px */
@@ -105,7 +111,8 @@
   }
 
   body {
-    @apply bg-background text-foreground font-poppins;
+    @apply bg-background text-foreground font-satoshi;
+    font-family: var(--font-family-primary);
     font-size: var(--font-size-base);
     line-height: 1.35; /* Tighter line height for density */
   }

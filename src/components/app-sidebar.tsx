@@ -12,6 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Logo } from "@/components/brand";
 
 const items = [
   { title: "Dashboard", url: "/", icon: Grid },
@@ -35,14 +36,23 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="border-r border-gray-200 bg-white">
+    <Sidebar className="border-r border-sidebar-border bg-sidebar-background">
       <SidebarContent className="p-0">
-        {/* Minimal Header */}
+        {/* Brand Header */}
         <div className="flex items-center px-6 py-4">
-          {!collapsed && (
-            <div>
-              <h1 className="font-semibold text-gray-900 text-sm">Entertainment Intelligence</h1>
-            </div>
+          {!collapsed ? (
+            <Logo 
+              variant="main" 
+              size="md" 
+              showName={true}
+              className="text-sidebar-foreground"
+            />
+          ) : (
+            <Logo 
+              variant="icon" 
+              size="sm"
+              className="text-sidebar-foreground"
+            />
           )}
         </div>
 

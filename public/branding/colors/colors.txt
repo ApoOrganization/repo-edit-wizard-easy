@@ -1,0 +1,11 @@
+Primary	: #EDF252
+Secondary: #020126
+Accent:	#C861FF
+Success	: #BBBF49
+Warning: #737373
+Error: #0D0D0D
+Background: #F5F5F5
+Surface: #737373
+Text Primary: #0D0D0D
+Text Secondary: #737373
+Border: #BBBF492
