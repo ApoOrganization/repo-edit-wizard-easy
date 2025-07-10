@@ -24,21 +24,18 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* eventturer Brand Colors - Balanced Contrast System */
-    --primary: 281 100% 69%;      /* #C861FF - purple for selections/interactivity */
-    --primary-foreground: 0 0% 100%;   /* white */
+    /* eventturer Brand Colors */
+    --primary: 281 100% 69%;      /* #C861FF - purple (better for selections) */
+    --primary-foreground: 0 0% 100%;   /* white (better contrast) */
 
-    --secondary: 235 86% 5%;      /* #020126 - dark navy for containers */
-    --secondary-foreground: 215 20% 65%;  /* #737373 - gray for readability */
+    --secondary: 235 86% 5%;      /* #020126 - dark navy */
+    --secondary-foreground: 68 96% 63%; /* #EDF252 - bright yellow-green */
 
-    --muted: 0 0% 96%;           /* #F5F5F5 - light gray background */
-    --muted-foreground: 215 20% 45%;  /* #737373 - medium gray text */
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 65 39% 53%;         /* #BBBF49 - olive for highlights/success */
+    --accent: 68 96% 63%;         /* #EDF252 - bright yellow-green (moved from primary) */
     --accent-foreground: 235 86% 5%;  /* #020126 - dark navy */
-
-    --success: 68 96% 63%;        /* #EDF252 - bright yellow-green only for success states */
-    --success-foreground: 235 86% 5%;  /* #020126 - dark navy */
 
     --destructive: 0 0% 5%;       /* #0D0D0D - black */
     --destructive-foreground: 0 0% 100%;  /* white */

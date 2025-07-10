@@ -138,7 +138,7 @@ const UniversalFilterPanel = ({
                 >
                   {option.label}
                   {option.count !== undefined && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="secondary" className="text-xs">
                       {option.count}
                     </Badge>
                   )}

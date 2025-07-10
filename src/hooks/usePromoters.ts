@@ -251,9 +251,9 @@ export const getPromoterSpecialtyBadgeVariant = (specialty: string | null) => {
   
   const specialtyLower = specialty.toLowerCase();
   
-  // Map scale_tier and activity_status to badge variants with better contrast
-  if (specialtyLower.includes('large') || specialtyLower.includes('major')) return 'accent';
-  if (specialtyLower.includes('medium') || specialtyLower.includes('active')) return 'default';
+  // Map scale_tier and activity_status to badge variants
+  if (specialtyLower.includes('large') || specialtyLower.includes('major')) return 'default';
+  if (specialtyLower.includes('medium') || specialtyLower.includes('active')) return 'secondary';
   if (specialtyLower.includes('small') || specialtyLower.includes('emerging')) return 'outline';
   if (specialtyLower.includes('inactive') || specialtyLower.includes('dormant')) return 'destructive';
   
