@@ -38,7 +38,7 @@ export interface BrandConfig {
 
 // Brand configuration with uploaded assets
 export const brandConfig: BrandConfig = {
-  name: "eventür",
+  name: "eventturer",
   tagline: "Entertainment Intelligence Platform",
   logo: {
     main: "/branding/logos/logo.svg",

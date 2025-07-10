@@ -87,86 +87,86 @@ const Index = () => {
 
       {/* Market Overview KPIs - Modern grid spacing */}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5">
-        <Card className="kpi-card-blue animate-scale-in hover-lift min-h-[120px]">
+        <Card className="kpi-card-brand-primary animate-scale-in hover-lift min-h-[120px]">
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-blue-100 text-xs font-medium mb-3">Total Market Size</p>
-                <p className="text-xl font-semibold text-white font-manrope leading-tight">
+                <p className="text-brand-secondary/70 text-xs font-medium mb-3">Total Market Size</p>
+                <p className="text-xl font-semibold text-brand-secondary font-manrope leading-tight">
                   {dashboardMetrics ? formatCurrency(dashboardMetrics.totalMarketSize) : "Loading..."}
                 </p>
               </div>
-              <DollarSign className="h-6 w-6 text-blue-200 flex-shrink-0 ml-4" />
+              <DollarSign className="h-6 w-6 text-brand-secondary/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="kpi-card-green animate-scale-in hover-lift min-h-[120px]">
+        <Card className="kpi-card-brand-secondary animate-scale-in hover-lift min-h-[120px]">
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-emerald-100 text-xs font-medium mb-3">Revenue Generated</p>
+                <p className="text-white/70 text-xs font-medium mb-3">Revenue Generated</p>
                 <p className="text-xl font-semibold text-white font-manrope leading-tight">
                   {dashboardMetrics ? formatCurrency(dashboardMetrics.revenueGenerated) : "Loading..."}
                 </p>
               </div>
-              <TrendingUp className="h-6 w-6 text-emerald-200 flex-shrink-0 ml-4" />
+              <TrendingUp className="h-6 w-6 text-white/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="kpi-card-purple animate-scale-in hover-lift min-h-[120px]">
+        <Card className="kpi-card-brand-accent animate-scale-in hover-lift min-h-[120px]">
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-purple-100 text-xs font-medium mb-3">Market Opportunity</p>
+                <p className="text-white/70 text-xs font-medium mb-3">Market Opportunity</p>
                 <p className="text-xl font-semibold text-white font-manrope leading-tight">
                   {dashboardMetrics ? formatCurrency(dashboardMetrics.marketOpportunity) : "Loading..."}
                 </p>
               </div>
-              <Activity className="h-6 w-6 text-purple-200 flex-shrink-0 ml-4" />
+              <Activity className="h-6 w-6 text-white/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="kpi-card-orange animate-scale-in hover-lift min-h-[120px]">
+        <Card className="kpi-card-brand-success animate-scale-in hover-lift min-h-[120px]">
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-orange-100 text-xs font-medium mb-3">Active Events</p>
-                <p className="text-xl font-semibold text-white font-manrope leading-tight">
+                <p className="text-brand-secondary/70 text-xs font-medium mb-3">Active Events</p>
+                <p className="text-xl font-semibold text-brand-secondary font-manrope leading-tight">
                   {dashboardMetrics ? formatNumber(dashboardMetrics.activeEvents) : "Loading..."}
                 </p>
               </div>
-              <Calendar className="h-6 w-6 text-orange-200 flex-shrink-0 ml-4" />
+              <Calendar className="h-6 w-6 text-brand-secondary/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="kpi-card-blue animate-scale-in hover-lift min-h-[120px]">
+        <Card className="kpi-card-brand-primary animate-scale-in hover-lift min-h-[120px]">
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-blue-100 text-xs font-medium mb-3">Growth Rate</p>
-                <p className="text-xl font-semibold text-white font-manrope leading-tight">
+                <p className="text-brand-secondary/70 text-xs font-medium mb-3">Growth Rate</p>
+                <p className="text-xl font-semibold text-brand-secondary font-manrope leading-tight">
                   {dashboardMetrics ? `${dashboardMetrics.growthRate > 0 ? '+' : ''}${dashboardMetrics.growthRate.toFixed(1)}%` : "Loading..."}
                 </p>
               </div>
-              <TrendingUp className="h-6 w-6 text-blue-200 flex-shrink-0 ml-4" />
+              <TrendingUp className="h-6 w-6 text-brand-secondary/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="kpi-card-green animate-scale-in hover-lift min-h-[120px]">
+        <Card className="kpi-card-brand-accent animate-scale-in hover-lift min-h-[120px]">
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-emerald-100 text-xs font-medium mb-3">Total Tickets Sold</p>
+                <p className="text-white/70 text-xs font-medium mb-3">Total Tickets Sold</p>
                 <p className="text-xl font-semibold text-white font-manrope leading-tight">
                   {dashboardMetrics ? formatNumber(dashboardMetrics.totalTicketsSold) : "Loading..."}
                 </p>
               </div>
-              <Users className="h-6 w-6 text-emerald-200 flex-shrink-0 ml-4" />
+              <Users className="h-6 w-6 text-white/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
@@ -180,7 +180,7 @@ const Index = () => {
           <Card className="media-card animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-3 text-base font-medium">
-                <TrendingUp className="h-4 w-4 text-primary" />
+                <TrendingUp className="h-4 w-4 text-brand-accent" />
                 <span>Revenue Trends</span>
               </CardTitle>
             </CardHeader>
@@ -199,9 +199,9 @@ const Index = () => {
                       <Line 
                         type="monotone" 
                         dataKey="revenue" 
-                        stroke="#3B82F6" 
+                        stroke="#C861FF" 
                         strokeWidth={2}
-                        dot={{ fill: '#3B82F6', r: 3 }}
+                        dot={{ fill: '#C861FF', r: 3 }}
                       />
                     </LineChart>
                   </ResponsiveContainer>
@@ -218,7 +218,7 @@ const Index = () => {
           <Card className="media-card animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-3 text-base font-medium">
-                <Users className="h-4 w-4 text-primary" />
+                <Users className="h-4 w-4 text-brand-accent" />
                 <span>Genre Distribution</span>
               </CardTitle>
             </CardHeader>

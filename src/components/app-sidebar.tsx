@@ -68,8 +68,8 @@ export function AppSidebar() {
                         const active = isActive(item.url);
                         return `flex items-center px-4 py-3 rounded-md transition-colors text-sm font-medium ${
                           active
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            ? "bg-brand-primary text-brand-secondary"
+                            : "text-sidebar-foreground hover:bg-brand-primary/10 hover:text-brand-secondary"
                         }`;
                       }}
                     >

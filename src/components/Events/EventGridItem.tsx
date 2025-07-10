@@ -14,11 +14,11 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'On Sale': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-      case 'Sold Out': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'Postponed': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'Past': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      case 'On Sale': return 'bg-brand-primary/20 text-brand-secondary border-brand-primary';
+      case 'Sold Out': return 'bg-brand-success/20 text-brand-secondary border-brand-success';
+      case 'Postponed': return 'bg-brand-accent/20 text-brand-accent border-brand-accent';
+      case 'Past': return 'bg-brand-text-secondary/20 text-brand-text-secondary border-brand-text-secondary';
+      default: return 'bg-brand-text-secondary/20 text-brand-text-secondary border-brand-text-secondary';
     }
   };
 
@@ -48,10 +48,10 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
 
   return (
     <Link to={`/events/${event.id}`}>
-      <Card className="media-card hover-lift h-full cursor-pointer">
+      <Card className="media-card hover-lift h-full cursor-pointer border-brand-border/20 hover:border-brand-primary/50">
         <CardHeader className="space-y-3">
           <div className="flex justify-between items-start">
-            <Badge className={`${getStatusColor(event.status)} text-xs px-2 py-1`}>
+            <Badge className={`${getStatusColor(event.status)} text-xs px-2 py-1 border`}>
               {event.status}
             </Badge>
             <span className="text-xs text-muted-foreground font-medium">{event.genre}</span>

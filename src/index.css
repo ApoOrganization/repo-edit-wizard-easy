@@ -24,7 +24,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    /* eventür Brand Colors */
+    /* eventturer Brand Colors */
     --primary: 68 96% 63%;        /* #EDF252 - bright yellow-green */
     --primary-foreground: 235 86% 5%;  /* #020126 - dark navy */
 
@@ -138,15 +138,15 @@
 @layer components {
   /* Dashboard Specific Styles */
   .hero {
-    @apply relative pl-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-dashboard-blue before:rounded-full;
+    @apply relative pl-4 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-brand-accent before:rounded-full;
   }
 
   .accent-bar {
-    @apply w-1 bg-dashboard-blue rounded-full;
+    @apply w-1 bg-brand-accent rounded-full;
   }
 
   .media-card {
-    @apply bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5;
+    @apply bg-card border border-brand-border/20 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-primary/30;
   }
 
   .kpi-card-blue {
@@ -165,12 +165,33 @@
     @apply bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-sm;
   }
 
+  /* Brand-specific KPI card styles */
+  .kpi-card-brand-primary {
+    @apply bg-gradient-to-br from-brand-primary to-brand-success text-brand-secondary shadow-sm;
+  }
+
+  .kpi-card-brand-secondary {
+    @apply bg-gradient-to-br from-brand-secondary to-brand-accent text-white shadow-sm;
+  }
+
+  .kpi-card-brand-accent {
+    @apply bg-gradient-to-br from-brand-accent to-brand-secondary text-white shadow-sm;
+  }
+
+  .kpi-card-brand-success {
+    @apply bg-gradient-to-br from-brand-success to-brand-primary text-brand-secondary shadow-sm;
+  }
+
   .btn-primary {
-    @apply bg-dashboard-blue hover:bg-blue-600 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-xs;
+    @apply bg-brand-primary hover:bg-brand-success text-brand-secondary px-3 py-1.5 rounded-md font-medium transition-colors text-xs;
   }
 
   .btn-secondary {
-    @apply bg-muted hover:bg-muted/80 text-muted-foreground px-3 py-1.5 rounded-md font-medium transition-colors text-xs;
+    @apply bg-brand-secondary hover:bg-brand-secondary/90 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-xs;
+  }
+
+  .btn-accent {
+    @apply bg-brand-accent hover:bg-brand-accent/90 text-white px-3 py-1.5 rounded-md font-medium transition-colors text-xs;
   }
 
   /* Ultra-compact table styling */

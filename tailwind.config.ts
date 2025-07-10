@@ -63,7 +63,7 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// eventür Brand Colors
+				// eventturer Brand Colors
 				'brand-primary': '#EDF252',     // Bright yellow-green
 				'brand-secondary': '#020126',   // Dark navy
 				'brand-accent': '#C861FF',      // Purple
