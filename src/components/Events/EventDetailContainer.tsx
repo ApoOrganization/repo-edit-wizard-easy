@@ -6,16 +6,14 @@ import EventGridView from "./EventGridView";
 import AnalyticsCarousel2 from "./AnalyticsCarousel2";
 import AnalyticsCarousel3 from "./AnalyticsCarousel3";
 import { EventAnalytics } from "@/hooks/useEventAnalytics";
-import { EventAnalyticsEnhancedResponse } from "@/hooks/useEventAnalyticsEnhanced";
 
 interface EventDetailContainerProps {
   event: Event;
   analytics?: EventAnalytics['analytics'];
   eventData?: any; // Raw event data from edge function response
-  enhancedData?: EventAnalyticsEnhancedResponse;
 }
 
-const EventDetailContainer = ({ event, analytics, eventData, enhancedData }: EventDetailContainerProps) => {
+const EventDetailContainer = ({ event, analytics, eventData }: EventDetailContainerProps) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [activeView, setActiveView] = useState<'overview' | 'analytics' | 'details'>('overview');
   const [hasOverflowFromCarousel2, setHasOverflowFromCarousel2] = useState(false);
@@ -31,7 +29,6 @@ const EventDetailContainer = ({ event, analytics, eventData, enhancedData }: Eve
       component: (
         <AnalyticsCarousel2 
           event={event} 
-          enhancedData={enhancedData}
           onComponentOverflow={setHasOverflowFromCarousel2}
         />
       ), 
@@ -42,7 +39,6 @@ const EventDetailContainer = ({ event, analytics, eventData, enhancedData }: Eve
       component: (
         <AnalyticsCarousel3 
           event={event} 
-          enhancedData={enhancedData}
           hasOverflowFromCarousel2={hasOverflowFromCarousel2}
         />
       ), 
