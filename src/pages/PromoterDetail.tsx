@@ -12,8 +12,7 @@ import { PromoterCalendarView } from "@/components/promoter/PromoterCalendarView
 import { TopVenuesCard } from "@/components/promoter/TopVenuesCard";
 import { TopGenresCard } from "@/components/promoter/TopGenresCard";
 import { usePromoterTickets, hasPromoterTicketData, isPromoterTicketError } from "@/hooks/usePromoterTickets";
-import { PromoterRevenueOverview } from "@/components/promoter/PromoterRevenueOverview";
-import { PromoterSalesTimeSeriesChart } from "@/components/promoter/PromoterSalesTimeSeriesChart";
+import { RevenueOverview, SalesTimeSeriesChart } from "@/components/shared";
 import { EventPortfolioAnalytics } from "@/components/promoter/EventPortfolioAnalytics";
 import { PromoterInsights } from "@/components/promoter/PromoterInsights";
 
@@ -494,15 +493,17 @@ const PromoterDetail = () => {
             {hasTicketSalesData ? (
               <>
                 {/* Revenue Overview */}
-                <PromoterRevenueOverview 
+                <RevenueOverview 
                   totals={ticketData.totals}
+                  entityType="promoter"
                   isLoading={ticketLoading}
                 />
                 
                 {/* Sales Chart */}
-                <PromoterSalesTimeSeriesChart 
+                <SalesTimeSeriesChart 
                   timeseries={ticketData.timeseries}
                   eventsPresent={ticketData.events_present}
+                  entityType="promoter"
                   isLoading={ticketLoading}
                 />
                 

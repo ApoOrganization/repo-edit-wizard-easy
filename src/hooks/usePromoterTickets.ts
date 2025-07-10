@@ -1,32 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { 
+  PromoterTicketsResponse,
+  PromoterTicketsError,
+  PromoterTicketsResult,
+  TimeSeriesPoint,
+  TicketTotals
+} from '@/types/ticketAnalytics';
 
-export interface PromoterTimeSeriesPoint {
-  date: string;
-  events: string[]; // Event IDs active on this date
-  tickets_sold: number;
-  daily_revenue: number;
-}
-
-export interface PromoterTicketTotals {
-  revenue_realized: number;
-  remaining_revenue: number;
-  total_potential_revenue: number;
-}
-
-export interface PromoterTicketsResponse {
-  totals: PromoterTicketTotals;
-  timeseries: PromoterTimeSeriesPoint[];
-  promoter_id: string;
-  events_present: { [eventId: string]: string }; // Event ID to event name mapping
-}
-
-export interface PromoterTicketsError {
-  error: 'no_bubilet_data';
-  promoter_id: string;
-}
-
-export type PromoterTicketsResult = PromoterTicketsResponse | PromoterTicketsError;
+// Re-export for backward compatibility
+export type PromoterTimeSeriesPoint = TimeSeriesPoint;
+export type PromoterTicketTotals = TicketTotals;
+export type { PromoterTicketsResponse, PromoterTicketsError, PromoterTicketsResult };
 
 export const usePromoterTickets = (promoterId: string | undefined) => {
   return useQuery<PromoterTicketsResult>({

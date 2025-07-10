@@ -1,32 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { 
+  VenueTicketsResponse,
+  VenueTicketsError,
+  VenueTicketsResult,
+  TimeSeriesPoint,
+  TicketTotals
+} from '@/types/ticketAnalytics';
 
-export interface VenueTimeSeriesPoint {
-  date: string;
-  events: string[]; // Event IDs active on this date
-  tickets_sold: number;
-  daily_revenue: number;
-}
-
-export interface VenueTicketTotals {
-  revenue_realized: number;
-  remaining_revenue: number;
-  total_potential_revenue: number;
-}
-
-export interface VenueTicketsResponse {
-  totals: VenueTicketTotals;
-  timeseries: VenueTimeSeriesPoint[];
-  venue_id: string;
-  events_present: { [eventId: string]: string }; // Event ID to event name mapping
-}
-
-export interface VenueTicketsError {
-  error: 'no_bubilet_data';
-  venue_id: string;
-}
-
-export type VenueTicketsResult = VenueTicketsResponse | VenueTicketsError;
+// Re-export for backward compatibility
+export type VenueTimeSeriesPoint = TimeSeriesPoint;
+export type VenueTicketTotals = TicketTotals;
+export type { VenueTicketsResponse, VenueTicketsError, VenueTicketsResult };
 
 export const useVenueTickets = (venueId: string | undefined) => {
   return useQuery<VenueTicketsResult>({
@@ -59,7 +44,7 @@ export const useVenueTickets = (venueId: string | undefined) => {
   });
 };
 
-// Helper function to check if response has ticket data
+// Helper function to check if response has ticket data (using shared helper)
 export const hasVenueTicketData = (result: VenueTicketsResult | undefined): result is VenueTicketsResponse => {
   return result !== undefined && !('error' in result);
 };

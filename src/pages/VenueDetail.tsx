@@ -10,8 +10,7 @@ import { useVenueAnalytics, useVenueUpcomingEvents, useVenuePastEvents, useIsVen
 import { useVenueTickets, hasVenueTicketData } from "@/hooks/useVenueTickets";
 import { formatNumber, formatCurrency, formatScore, formatDecimalPercentage } from "@/utils/formatters";
 import { VenueCalendarView } from "@/components/venue/VenueCalendarView";
-import { VenueRevenueOverview } from "@/components/venue/VenueRevenueOverview";
-import { VenueSalesTimeSeriesChart } from "@/components/venue/VenueSalesTimeSeriesChart";
+import { RevenueOverview, SalesTimeSeriesChart } from "@/components/shared";
 import { VenueEventPortfolioAnalytics } from "@/components/venue/VenueEventPortfolioAnalytics";
 import { VenueInsights } from "@/components/venue/VenueInsights";
 
@@ -750,15 +749,17 @@ const VenueDetail = () => {
               ) : hasTicketData && venueTicketsData ? (
                 <>
                   {/* Revenue Overview Cards */}
-                  <VenueRevenueOverview 
+                  <RevenueOverview 
                     totals={venueTicketsData.totals}
+                    entityType="venue"
                     isLoading={isVenueTicketsLoading}
                   />
                   
                   {/* Sales Time Series Chart */}
-                  <VenueSalesTimeSeriesChart 
+                  <SalesTimeSeriesChart 
                     timeseries={venueTicketsData.timeseries}
                     eventsPresent={venueTicketsData.events_present}
+                    entityType="venue"
                     isLoading={isVenueTicketsLoading}
                   />
                   

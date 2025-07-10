@@ -2,34 +2,70 @@ import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { PromoterTimeSeriesPoint } from '@/hooks/usePromoterTickets';
+import { TimeSeriesPoint, ChartMode, EntityType } from '@/types/ticketAnalytics';
 import { formatCurrency } from '@/utils/formatters';
 import { getEventDisplayName } from '@/utils/eventFormatters';
-import { TrendingUp, Activity, Calendar } from 'lucide-react';
+import { TrendingUp, Activity, Calendar, Building2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
-interface PromoterSalesTimeSeriesChartProps {
-  timeseries: PromoterTimeSeriesPoint[];
+interface SalesTimeSeriesChartProps {
+  timeseries: TimeSeriesPoint[];
   eventsPresent?: { [eventId: string]: string };
+  entityType: EntityType;
   isLoading?: boolean;
 }
 
-type ChartMode = 'revenue' | 'sales' | 'events';
-
-export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChartProps> = ({
+export const SalesTimeSeriesChart: React.FC<SalesTimeSeriesChartProps> = ({
   timeseries,
   eventsPresent = {},
+  entityType,
   isLoading = false
 }) => {
   const [chartMode, setChartMode] = useState<ChartMode>('revenue');
+
+  // Entity-specific configuration
+  const entityConfig = useMemo(() => {
+    switch (entityType) {
+      case 'promoter':
+        return {
+          icon: <TrendingUp className="h-5 w-5" />,
+          displayName: 'Promoter',
+          titles: {
+            revenue: 'Daily Promoter Revenue Performance',
+            sales: 'Daily Ticket Sales by Promoter',
+            events: 'Promoter Event Activity Timeline'
+          },
+          descriptions: {
+            revenue: 'Track daily revenue from all promoted events',
+            sales: 'Monitor ticket sales velocity and patterns across promoted events',
+            events: 'Visualize event promotion activity and portfolio management'
+          }
+        };
+      case 'venue':
+        return {
+          icon: <Building2 className="h-5 w-5" />,
+          displayName: 'Venue',
+          titles: {
+            revenue: 'Daily Venue Revenue Performance',
+            sales: 'Daily Ticket Sales at Venue',
+            events: 'Venue Event Activity Timeline'
+          },
+          descriptions: {
+            revenue: 'Track daily revenue from all events hosted at this venue',
+            sales: 'Monitor ticket sales velocity and patterns at this venue',
+            events: 'Visualize event hosting activity and venue utilization'
+          }
+        };
+    }
+  }, [entityType]);
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Promoter Sales Analytics
+            {entityConfig.icon}
+            {entityConfig.displayName} Sales Analytics
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -49,8 +85,8 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Promoter Sales Analytics
+            {entityConfig.icon}
+            {entityConfig.displayName} Sales Analytics
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -112,7 +148,7 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
             {chartMode === 'revenue' && (
               <>
                 <p className="text-sm">
-                  <span className="font-medium">Daily Revenue:</span> {formatCurrency(data.daily_revenue, '₺')}
+                  <span className="font-medium">{entityConfig.displayName} Revenue:</span> {formatCurrency(data.daily_revenue, '₺')}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Tickets Sold:</span> {data.tickets_sold.toLocaleString()}
@@ -146,7 +182,7 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
             {chartMode === 'events' && (
               <>
                 <p className="text-sm">
-                  <span className="font-medium">Active Events:</span> {data.events_count}
+                  <span className="font-medium">Events {entityType === 'promoter' ? 'Promoted' : 'Hosted'}:</span> {data.events_count}
                 </p>
                 <p className="text-sm">
                   <span className="font-medium">Total Revenue:</span> {formatCurrency(data.daily_revenue, '₺')}
@@ -162,7 +198,7 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
             {/* Event List */}
             {data.events_count > 0 && (
               <div className="border-t pt-2 mt-2">
-                <p className="text-xs font-medium mb-1">Active Events ({data.events_count}):</p>
+                <p className="text-xs font-medium mb-1">Events ({data.events_count}):</p>
                 <div className="space-y-1">
                   {data.events_list.slice(0, 3).map((eventId: string, idx: number) => (
                     <p key={eventId} className="text-xs text-muted-foreground">
@@ -212,29 +248,11 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
   };
 
   const getChartTitle = () => {
-    switch (chartMode) {
-      case 'revenue':
-        return 'Daily Revenue Performance';
-      case 'sales':
-        return 'Daily Ticket Sales';
-      case 'events':
-        return 'Event Activity Timeline';
-      default:
-        return 'Promoter Sales Analytics';
-    }
+    return entityConfig.titles[chartMode];
   };
 
   const getChartDescription = () => {
-    switch (chartMode) {
-      case 'revenue':
-        return 'Track daily revenue across all promoter events';
-      case 'sales':
-        return 'Monitor ticket sales velocity and patterns';
-      case 'events':
-        return 'Visualize event portfolio activity over time';
-      default:
-        return 'Comprehensive promoter performance analytics';
-    }
+    return entityConfig.descriptions[chartMode];
   };
 
   return (
@@ -320,7 +338,7 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
                 name={
                   chartMode === 'revenue' ? 'Daily Revenue' :
                   chartMode === 'sales' ? 'Tickets Sold' :
-                  'Active Events'
+                  `Events ${entityType === 'promoter' ? 'Promoted' : 'Hosted'}`
                 }
               />
             </LineChart>
@@ -403,7 +421,7 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
                 <div className="text-lg font-bold">
                   {(timeseries.reduce((sum, p) => sum + p.events.length, 0) / timeseries.length).toFixed(1)}
                 </div>
-                <div className="text-xs text-muted-foreground">Avg Active Events</div>
+                <div className="text-xs text-muted-foreground">Avg Events {entityType === 'promoter' ? 'Promoted' : 'Hosted'}</div>
               </div>
             </>
           )}

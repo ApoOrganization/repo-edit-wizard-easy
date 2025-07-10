@@ -1,17 +1,19 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { PromoterTicketTotals } from '@/hooks/usePromoterTickets';
+import { TicketTotals, EntityType } from '@/types/ticketAnalytics';
 import { formatCurrency } from '@/utils/formatters';
 import { DollarSign, TrendingUp, Target, PieChart } from 'lucide-react';
 
-interface PromoterRevenueOverviewProps {
-  totals: PromoterTicketTotals;
+interface RevenueOverviewProps {
+  totals: TicketTotals;
+  entityType: EntityType;
   isLoading?: boolean;
 }
 
-export const PromoterRevenueOverview: React.FC<PromoterRevenueOverviewProps> = ({
+export const RevenueOverview: React.FC<RevenueOverviewProps> = ({
   totals,
+  entityType,
   isLoading = false
 }) => {
   if (isLoading) {
@@ -41,6 +43,11 @@ export const PromoterRevenueOverview: React.FC<PromoterRevenueOverviewProps> = (
   const remainingRate = totals.total_potential_revenue > 0
     ? (totals.remaining_revenue / totals.total_potential_revenue) * 100
     : 0;
+
+  // Entity-specific text
+  const totalPotentialText = entityType === 'promoter' 
+    ? 'Maximum possible revenue' 
+    : 'Maximum venue revenue';
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -114,7 +121,7 @@ export const PromoterRevenueOverview: React.FC<PromoterRevenueOverviewProps> = (
           </div>
           <div className="flex items-center justify-between mt-3">
             <p className="text-xs text-muted-foreground">
-              Maximum possible revenue
+              {totalPotentialText}
             </p>
             <div className="flex items-center gap-1">
               <PieChart className="h-3 w-3 text-blue-600" />
