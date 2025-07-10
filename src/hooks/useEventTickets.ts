@@ -39,11 +39,20 @@ export interface BubiletSales {
 export interface EventTicketsResponse {
   event_id: string;
   tickets: {
-    bubilet: {
+    bubilet?: {
       [categoryName: string]: TicketCategory;
-    };
+    } | null;
+    passo?: {
+      [categoryName: string]: TicketCategory;
+    } | null;
+    biletix?: {
+      [categoryName: string]: TicketCategory;
+    } | null;
+    biletinial?: {
+      [categoryName: string]: TicketCategory;
+    } | null;
   };
-  bubilet_sales: BubiletSales;
+  bubilet_sales: BubiletSales | null;
 }
 
 export const useEventTickets = (eventId: string | undefined) => {
