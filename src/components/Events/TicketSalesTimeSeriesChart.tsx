@@ -76,6 +76,7 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
 
   // Toggle state management
   const [showTotal, setShowTotal] = useState(true);
+  const [chartMode, setChartMode] = useState<'remaining' | 'revenue'>('remaining');
   const [visibleCategories, setVisibleCategories] = useState<{ [key: string]: boolean }>(() => {
     // Initialize all categories as visible
     const initial: { [key: string]: boolean } = {};
@@ -102,32 +103,51 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
     setVisibleCategories(newState);
   };
 
-  // Dynamic Y-axis scaling based on visible lines
+  // Dynamic Y-axis scaling based on visible lines and chart mode
   const getYAxisDomain = useMemo(() => {
     if (timeseries.length === 0) return [0, 100];
 
     const visibleValues: number[] = [];
     
     timeseries.forEach(point => {
-      // Include total if visible
-      if (showTotal) {
-        visibleValues.push(point.total_remaining);
-      }
-      
-      // Include visible categories
-      allCategories.forEach(category => {
-        if (visibleCategories[category]) {
-          const value = point.by_category?.[category]?.remaining || 0;
-          visibleValues.push(value);
+      if (chartMode === 'remaining') {
+        // Include total if visible
+        if (showTotal) {
+          visibleValues.push(point.total_remaining);
         }
-      });
+        
+        // Include visible categories
+        allCategories.forEach(category => {
+          if (visibleCategories[category]) {
+            const value = point.by_category?.[category]?.remaining || 0;
+            visibleValues.push(value);
+          }
+        });
+      } else {
+        // Revenue mode
+        if (showTotal) {
+          visibleValues.push(point.daily_revenue);
+        }
+        
+        // Estimate category revenue (price * tickets sold)
+        allCategories.forEach(category => {
+          if (visibleCategories[category] && point.by_category) {
+            const categoryData = point.by_category[category];
+            if (categoryData) {
+              // Estimate revenue for this category (simplified)
+              const estimatedRevenue = categoryData.price * Math.max(0, 100 - categoryData.remaining);
+              visibleValues.push(estimatedRevenue);
+            }
+          }
+        });
+      }
     });
 
     if (visibleValues.length === 0) return [0, 100];
 
     const maxValue = Math.max(...visibleValues);
     return [0, Math.ceil(maxValue * 1.1)]; // 10% padding at top
-  }, [timeseries, showTotal, visibleCategories, allCategories]);
+  }, [timeseries, showTotal, visibleCategories, allCategories, chartMode]);
 
   // Transform data for recharts
   const chartData = timeseries.map(point => {
@@ -135,13 +155,23 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
       date: format(parseISO(point.date), 'MMM dd'),
       fullDate: point.date,
       total_remaining: point.total_remaining,
+      daily_revenue: point.daily_revenue,
       avg_price: point.avg_price
     };
 
-    // Add each category's remaining tickets
+    // Add each category's data for both modes
     allCategories.forEach(category => {
-      transformedPoint[`${category}_remaining`] = point.by_category?.[category]?.remaining || 0;
-      transformedPoint[`${category}_price`] = point.by_category?.[category]?.price || 0;
+      const categoryData = point.by_category?.[category];
+      transformedPoint[`${category}_remaining`] = categoryData?.remaining || 0;
+      transformedPoint[`${category}_price`] = categoryData?.price || 0;
+      
+      // Estimate category revenue (simplified calculation)
+      if (categoryData) {
+        const estimatedCategoryRevenue = categoryData.price * Math.max(0, 100 - categoryData.remaining);
+        transformedPoint[`${category}_revenue`] = estimatedCategoryRevenue;
+      } else {
+        transformedPoint[`${category}_revenue`] = 0;
+      }
     });
 
     return transformedPoint;
@@ -156,27 +186,55 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
         <div className="bg-background border border-border rounded-lg shadow-lg p-3">
           <p className="font-medium text-sm mb-2">{format(parseISO(data.fullDate), 'MMM dd, yyyy')}</p>
           <div className="space-y-1">
-            <p className="text-sm">
-              <span className="font-medium">Total Remaining:</span> {data.total_remaining.toLocaleString()} tickets
-            </p>
-            <p className="text-sm">
-              <span className="font-medium">Avg Price:</span> {formatCurrency(data.avg_price, '₺')}
-            </p>
-            <div className="border-t pt-2 mt-2">
-              {allCategories.map(category => {
-                const remaining = data[`${category}_remaining`];
-                const price = data[`${category}_price`];
-                if (remaining > 0) {
-                  return (
-                    <p key={category} className="text-xs">
-                      <span className="font-medium">{category}:</span> {remaining.toLocaleString()} 
-                      <span className="text-muted-foreground ml-1">({formatCurrency(price, '₺')})</span>
-                    </p>
-                  );
-                }
-                return null;
-              })}
-            </div>
+            {chartMode === 'remaining' ? (
+              <>
+                <p className="text-sm">
+                  <span className="font-medium">Total Remaining:</span> {data.total_remaining.toLocaleString()} tickets
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg Price:</span> {formatCurrency(data.avg_price, '₺')}
+                </p>
+                <div className="border-t pt-2 mt-2">
+                  {allCategories.map(category => {
+                    const remaining = data[`${category}_remaining`] as number;
+                    const price = data[`${category}_price`] as number;
+                    if (remaining > 0) {
+                      return (
+                        <p key={category} className="text-xs">
+                          <span className="font-medium">{category}:</span> {remaining.toLocaleString()} 
+                          <span className="text-muted-foreground ml-1">({formatCurrency(price, '₺')})</span>
+                        </p>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">
+                  <span className="font-medium">Daily Revenue:</span> {formatCurrency(data.daily_revenue, '₺')}
+                </p>
+                <p className="text-sm">
+                  <span className="font-medium">Avg Price:</span> {formatCurrency(data.avg_price, '₺')}
+                </p>
+                <div className="border-t pt-2 mt-2">
+                  {allCategories.map(category => {
+                    const revenue = data[`${category}_revenue`] as number;
+                    const price = data[`${category}_price`] as number;
+                    if (revenue > 0) {
+                      return (
+                        <p key={category} className="text-xs">
+                          <span className="font-medium">{category}:</span> {formatCurrency(revenue, '₺')} 
+                          <span className="text-muted-foreground ml-1">({formatCurrency(price, '₺')})</span>
+                        </p>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </div>
       );
@@ -189,13 +247,36 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingDown className="h-5 w-5" />
-          Remaining Tickets Over Time
+          {chartMode === 'remaining' ? 'Remaining Tickets Over Time' : 'Daily Revenue Over Time'}
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Track remaining ticket inventory by category
+          {chartMode === 'remaining' 
+            ? 'Track remaining ticket inventory by category'
+            : 'Track daily revenue performance by category'
+          }
         </p>
       </CardHeader>
       <CardContent>
+        {/* Chart Mode Toggle */}
+        <div className="flex items-center gap-4 mb-6 p-3 bg-muted/50 rounded-lg">
+          <span className="text-sm font-medium">Chart View:</span>
+          <div className="flex gap-1">
+            <Button 
+              variant={chartMode === 'remaining' ? 'default' : 'ghost'} 
+              size="sm"
+              onClick={() => setChartMode('remaining')}
+            >
+              📊 Remaining Tickets
+            </Button>
+            <Button 
+              variant={chartMode === 'revenue' ? 'default' : 'ghost'} 
+              size="sm" 
+              onClick={() => setChartMode('revenue')}
+            >
+              💰 Daily Revenue
+            </Button>
+          </div>
+        </div>
         {/* Toggle Controls */}
         <div className="mb-6 space-y-4">
           {/* Total Toggle */}
@@ -214,7 +295,7 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
                 className="w-3 h-0.5 rounded"
                 style={{ backgroundColor: '#2563eb' }}
               />
-              Total Remaining
+              {chartMode === 'remaining' ? 'Total Remaining' : 'Daily Revenue'}
             </label>
           </div>
 
@@ -289,7 +370,7 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => value.toLocaleString()}
+                tickFormatter={(value: number) => chartMode === 'revenue' ? formatCurrency(value, '₺') : value.toLocaleString()}
                 domain={getYAxisDomain}
               />
               <Tooltip content={<CustomTooltip />} />
@@ -298,15 +379,15 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
                 iconType="line"
               />
               
-              {/* Total remaining line - only show if toggled on */}
+              {/* Total line - only show if toggled on */}
               {showTotal && (
                 <Line
                   type="monotone"
-                  dataKey="total_remaining"
+                  dataKey={chartMode === 'remaining' ? 'total_remaining' : 'daily_revenue'}
                   stroke="#2563eb"
                   strokeWidth={3}
                   dot={{ r: 4 }}
-                  name="Total Remaining"
+                  name={chartMode === 'remaining' ? 'Total Remaining' : 'Daily Revenue'}
                 />
               )}
               
@@ -314,11 +395,13 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
               {allCategories.map((category, index) => {
                 if (!visibleCategories[category]) return null;
                 
+                const dataKey = chartMode === 'remaining' ? `${category}_remaining` : `${category}_revenue`;
+                
                 return (
                   <Line
                     key={category}
                     type="monotone"
-                    dataKey={`${category}_remaining`}
+                    dataKey={dataKey}
                     stroke={categoryColors[index % categoryColors.length]}
                     strokeWidth={2}
                     dot={{ r: 3 }}
@@ -345,18 +428,37 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
             </div>
             <div className="text-xs text-muted-foreground">Categories</div>
           </div>
-          <div className="text-center">
-            <div className="text-lg font-bold">
-              {Math.max(...timeseries.map(p => p.total_remaining)).toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground">Peak Remaining</div>
-          </div>
-          <div className="text-center">
-            <div className="text-lg font-bold">
-              {Math.min(...timeseries.map(p => p.total_remaining)).toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground">Min Remaining</div>
-          </div>
+          {chartMode === 'remaining' ? (
+            <>
+              <div className="text-center">
+                <div className="text-lg font-bold">
+                  {Math.max(...timeseries.map((p: TimeSeriesDataPoint) => p.total_remaining)).toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground">Peak Remaining</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold">
+                  {Math.min(...timeseries.map((p: TimeSeriesDataPoint) => p.total_remaining)).toLocaleString()}
+                </div>
+                <div className="text-xs text-muted-foreground">Min Remaining</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center">
+                <div className="text-lg font-bold">
+                  {formatCurrency(Math.max(...timeseries.map((p: TimeSeriesDataPoint) => p.daily_revenue)), '₺')}
+                </div>
+                <div className="text-xs text-muted-foreground">Peak Revenue</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold">
+                  {formatCurrency(timeseries.reduce((sum: number, p: TimeSeriesDataPoint) => sum + p.daily_revenue, 0), '₺')}
+                </div>
+                <div className="text-xs text-muted-foreground">Total Revenue</div>
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

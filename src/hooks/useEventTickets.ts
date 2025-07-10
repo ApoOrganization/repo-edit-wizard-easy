@@ -17,6 +17,7 @@ export interface TimeSeriesDataPoint {
     };
   };
   total_remaining: number;
+  daily_revenue: number;
 }
 
 export interface BubiletSales {
