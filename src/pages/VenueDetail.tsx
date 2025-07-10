@@ -764,7 +764,7 @@ const VenueDetail = () => {
                       </h3>
                       <p className="text-sm text-orange-700 mb-4">
                         {venueTicketsData && 'error' in venueTicketsData && venueTicketsData.error === 'no_bubilet_data' 
-                          ? 'This venue does not have integrated ticket sales data through our bubilet partnership.' 
+                          ? 'This venue has no events in bubilet.' 
                           : 'Unable to load ticket sales data at this time.'}
                       </p>
                       {venueTicketsError && (
