@@ -56,7 +56,7 @@ export const useEventTickets = (eventId: string | undefined) => {
 
       // Call the new get-event-tickets edge function
       const { data, error } = await supabase.functions.invoke('get-event-tickets', {
-        body: { event_id: eventId }
+        body: { uuid: eventId }
       });
 
       if (error) {
