@@ -35,6 +35,25 @@ export const TicketCategoriesCard: React.FC<TicketCategoriesCardProps> = ({
     );
   }
 
+  // Add null safety check
+  if (!categories || typeof categories !== 'object') {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Ticket className="h-5 w-5" />
+            Ticket Categories
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">No ticket categories available</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const categoryEntries = Object.entries(categories);
 
   if (categoryEntries.length === 0) {

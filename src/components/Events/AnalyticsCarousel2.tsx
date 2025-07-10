@@ -69,7 +69,7 @@ const AnalyticsCarousel2 = ({ event, enhancedData, onComponentOverflow }: Analyt
     <div ref={containerRef} className="w-full">
       <div className="space-y-6">
         {/* Show new ticket components if we have ticket data */}
-        {ticketData ? (
+        {ticketData && ticketData.tickets?.bubilet && ticketData.bubilet_sales ? (
           <>
             {/* 1. Ticket Categories */}
             <TicketCategoriesCard 
