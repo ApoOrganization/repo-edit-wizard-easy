@@ -9,7 +9,7 @@ export interface Event {
   city: string;
   promoter?: string;
   genre: string;
-  status: 'On Sale' | 'Sold Out' | 'Cancelled' | 'Postponed';
+  status: 'On Sale' | 'Sold Out' | 'Postponed';
   providers: string[];
   image?: string;
   revenue?: number;

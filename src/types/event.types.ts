@@ -73,7 +73,7 @@ export interface TransformedEvent {
   city: string;
   promoter?: string;
   genre: string;
-  status: 'On Sale' | 'Sold Out' | 'Cancelled' | 'Postponed' | 'Past';
+  status: 'On Sale' | 'Sold Out' | 'Postponed' | 'Past';
   providers: string[];
   image?: string;
   revenue?: number;

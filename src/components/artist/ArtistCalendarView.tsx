@@ -39,20 +39,16 @@ export const ArtistCalendarView: React.FC<ArtistCalendarViewProps> = ({
       } : null
     });
 
-    return events.map(event => {
+    return events.filter(event => event.status !== 'cancelled').map(event => {
       // Map status from database to valid Event status values
-      let eventStatus: 'On Sale' | 'Sold Out' | 'Cancelled' | 'Postponed' = 'On Sale';
+      let eventStatus: 'On Sale' | 'Sold Out' | 'Postponed' = 'On Sale';
       
-      if (event.status === 'cancelled') {
-        eventStatus = 'Cancelled';
-      } else if (event.status === 'sold_out') {
+      if (event.status === 'sold_out') {
         eventStatus = 'Sold Out';
       } else if (event.status === 'postponed') {
         eventStatus = 'Postponed';
-      } else if (event.has_tickets) {
-        eventStatus = 'On Sale';
       } else {
-        eventStatus = 'Cancelled'; // Default for events without tickets
+        eventStatus = 'On Sale';
       }
 
       const transformedEvent = {

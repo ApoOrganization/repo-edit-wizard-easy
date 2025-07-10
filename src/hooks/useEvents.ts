@@ -2,6 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { EventSearchParams, EventSearchResponse, EventListItem } from '@/types/event.types';
+import { isEventInPast } from '@/utils/eventTransformers';
 
 export const useEventSearch = (params: EventSearchParams) => {
   return useQuery({
@@ -21,9 +22,16 @@ export const useEventSearch = (params: EventSearchParams) => {
         query = query.in('genre', params.genres);
       }
 
-      // Apply status filter
+      // Apply status filter - exclude cancelled events by default
       if (params.status && params.status.length > 0) {
-        query = query.in('status', params.status);
+        // Filter out 'cancelled' from the status array if present
+        const validStatuses = params.status.filter(status => status.toLowerCase() !== 'cancelled');
+        if (validStatuses.length > 0) {
+          query = query.in('status', validStatuses);
+        }
+      } else {
+        // By default, exclude cancelled events
+        query = query.not('status', 'eq', 'cancelled');
       }
 
       // Apply city filter
@@ -102,6 +110,34 @@ export const useEventSearch = (params: EventSearchParams) => {
 };
 
 // Get unique filter options from the database
+// Extended params interface for time-based filtering
+export interface ExtendedEventSearchParams extends EventSearchParams {
+  showPastEvents?: boolean; // New parameter to control past/upcoming filtering
+}
+
+// Hook for filtering events with time-based options
+export const useEventSearchExtended = (params: ExtendedEventSearchParams) => {
+  const today = new Date().toISOString().split('T')[0];
+  
+  let dateRange = params.dateRange;
+  
+  // If showPastEvents is explicitly set to false or undefined, only show future events
+  if (params.showPastEvents === false || params.showPastEvents === undefined) {
+    if (!params.dateRange) {
+      dateRange = { start: today, end: '2099-12-31' }; // Show future events
+    }
+  } else if (params.showPastEvents === true) {
+    if (!params.dateRange) {
+      dateRange = { start: '2020-01-01', end: today }; // Show past events
+    }
+  }
+  
+  return useEventSearch({
+    ...params,
+    dateRange
+  });
+};
+
 export const useEventFilterOptions = () => {
   return useQuery({
     queryKey: ['event-filter-options'],
@@ -128,11 +164,12 @@ export const useEventFilterOptions = () => {
       
       const cities = [...new Set(cityData?.map(e => e.venue_city).filter(Boolean) || [])].sort();
 
-      // Get statuses
+      // Get statuses (exclude cancelled)
       const { data: statusData, error: statusError } = await supabase
         .from('event_list_summary')
         .select('status')
         .not('status', 'is', null)
+        .not('status', 'eq', 'cancelled')
         .limit(1000);
       
       if (statusError) throw statusError;
