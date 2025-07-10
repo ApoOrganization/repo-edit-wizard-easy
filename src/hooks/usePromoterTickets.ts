@@ -19,7 +19,9 @@ export const usePromoterTickets = (promoterId: string | undefined) => {
     queryFn: async () => {
       if (!promoterId) throw new Error('Promoter ID is required');
 
-      console.log('Fetching promoter ticket data for:', promoterId);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching promoter ticket data for:', promoterId);
+      }
 
       // Call the new get-promoter-tickets edge function
       const { data, error } = await supabase.functions.invoke('get-promoter-tickets', {
@@ -27,7 +29,9 @@ export const usePromoterTickets = (promoterId: string | undefined) => {
       });
 
       if (error) {
-        console.error('Error fetching promoter ticket data:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching promoter ticket data:', error);
+        }
         throw error;
       }
 
@@ -35,7 +39,9 @@ export const usePromoterTickets = (promoterId: string | undefined) => {
         throw new Error('No promoter ticket data received');
       }
 
-      console.log('Promoter ticket data received:', data);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Promoter ticket data received:', data);
+      }
       return data;
     },
     enabled: !!promoterId,

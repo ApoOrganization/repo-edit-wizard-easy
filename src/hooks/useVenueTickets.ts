@@ -19,7 +19,9 @@ export const useVenueTickets = (venueId: string | undefined) => {
     queryFn: async () => {
       if (!venueId) throw new Error('Venue ID is required');
 
-      console.log('Fetching venue ticket data for:', venueId);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Fetching venue ticket data for:', venueId);
+      }
 
       // Call the new get-venue-tickets edge function
       const { data, error } = await supabase.functions.invoke('get-venue-tickets', {
@@ -27,7 +29,9 @@ export const useVenueTickets = (venueId: string | undefined) => {
       });
 
       if (error) {
-        console.error('Error fetching venue ticket data:', error);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching venue ticket data:', error);
+        }
         throw error;
       }
 
@@ -35,7 +39,9 @@ export const useVenueTickets = (venueId: string | undefined) => {
         throw new Error('No venue ticket data received');
       }
 
-      console.log('Venue ticket data received:', data);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Venue ticket data received:', data);
+      }
       return data;
     },
     enabled: !!venueId,

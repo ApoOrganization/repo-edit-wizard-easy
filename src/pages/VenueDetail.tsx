@@ -30,12 +30,12 @@ const VenueDetail = () => {
   const { data: upcomingEventsData } = useVenueUpcomingEvents(id, activeTab === 'events');
   const { data: pastEventsData } = useVenuePastEvents(id, activeTab === 'events');
   
-  // Venue ticket data (lazy loaded based on tab)
+  // Venue ticket data (always attempt to fetch)
   const { 
     data: venueTicketsData, 
     isLoading: isVenueTicketsLoading, 
     error: venueTicketsError 
-  } = useVenueTickets(activeTab === 'ticket-sales' ? id : undefined);
+  } = useVenueTickets(id);
 
   // Destructure analytics data
   const venue = analyticsData?.venue;
@@ -51,32 +51,40 @@ const VenueDetail = () => {
   
   // Check venue ticket data availability
   const hasTicketData = hasVenueTicketData(venueTicketsData);
+  const hasTicketError = venueTicketsError || (venueTicketsData && 'error' in venueTicketsData);
   
-  // Calculate number of tabs dynamically
-  const tabCount = hasTicketData ? 5 : 4;
+  // Always show 5 tabs - we'll handle the ticket sales tab content based on data state
+  const showTicketSalesTab = true; // Always show the tab
+  const tabCount = showTicketSalesTab ? 5 : 4;
   
-  console.log('🏟️ [VENUE DETAIL] Component Status:', {
-    venueId: id,
-    venueName: venue?.name,
-    timeRange,
-    dataStatus: {
-      isLoading,
-      hasError: !!error,
-      hasAnalyticsData: !!analyticsData,
-      hasVenue: !!venue,
-      isFallbackData,
-      isErrorState,
-      hasFullAnalytics
-    },
-    dataOverview: analyticsData ? {
-      venueEventStats: venue?.event_stats,
-      analyticsTimeRange: analytics?.timeRange,
-      analyticsUniqueArtists: analytics?.uniqueArtists,
-      timeSeriesLength: timeSeries?.length,
-      topArtistsCount: venue?.top_artists?.length || 0,
-      dayDistributionCount: venue?.day_of_week_distribution?.length || 0
-    } : null
-  });
+  // Development debugging
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🏟️ [VENUE DETAIL] Component Status:', {
+      venueId: id,
+      venueName: venue?.name,
+      timeRange,
+      dataStatus: {
+        isLoading,
+        hasError: !!error,
+        hasAnalyticsData: !!analyticsData,
+        hasVenue: !!venue,
+        isFallbackData,
+        isErrorState,
+        hasFullAnalytics,
+        hasTicketData,
+        isVenueTicketsLoading,
+        hasTicketError
+      },
+      dataOverview: analyticsData ? {
+        venueEventStats: venue?.event_stats,
+        analyticsTimeRange: analytics?.timeRange,
+        analyticsUniqueArtists: analytics?.uniqueArtists,
+        timeSeriesLength: timeSeries?.length,
+        topArtistsCount: venue?.top_artists?.length || 0,
+        dayDistributionCount: venue?.day_of_week_distribution?.length || 0
+      } : null
+    });
+  }
 
   // Helper functions
   const renderGrowthIcon = (value: number) => {
@@ -304,15 +312,22 @@ const VenueDetail = () => {
 
         {/* Tabbed Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full grid-cols-${tabCount}`}>
+          <TabsList className={showTicketSalesTab ? "grid w-full grid-cols-5" : "grid w-full grid-cols-4"}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="analytics" disabled={!hasFullAnalytics}>
               Analytics {!hasFullAnalytics && '(Unavailable)'}
             </TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
-            {hasTicketData && (
-              <TabsTrigger value="ticket-sales">Ticket Sales</TabsTrigger>
+            {showTicketSalesTab && (
+              <TabsTrigger value="ticket-sales">
+                <div className="flex items-center gap-2">
+                  Ticket Sales
+                  {isVenueTicketsLoading && (
+                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+              </TabsTrigger>
             )}
           </TabsList>
           
@@ -700,11 +715,22 @@ const VenueDetail = () => {
             </div>
           </TabsContent>
           
-          {hasTicketData && (
+          {showTicketSalesTab && (
             <TabsContent value="ticket-sales" className="space-y-6">
               {isVenueTicketsLoading ? (
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center py-8">
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <h3 className="text-sm font-medium text-gray-700 mb-2">
+                      Loading Ticket Sales Data
+                    </h3>
+                    <p className="text-sm text-gray-600">
+                      Checking ticket sales integration for this venue...
+                    </p>
+                  </div>
+                  
+                  {/* Skeleton placeholders */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 opacity-50">
                     {Array.from({ length: 3 }).map((_, i) => (
                       <Card key={i}>
                         <CardContent className="pt-6">
@@ -717,7 +743,7 @@ const VenueDetail = () => {
                       </Card>
                     ))}
                   </div>
-                  <Card>
+                  <Card className="opacity-50">
                     <CardContent className="pt-6">
                       <div className="h-64 flex items-center justify-center">
                         <div className="text-center">
@@ -728,21 +754,29 @@ const VenueDetail = () => {
                     </CardContent>
                   </Card>
                 </div>
-              ) : venueTicketsError ? (
-                <Card className="border-red-200 bg-red-50">
+              ) : hasTicketError || venueTicketsError ? (
+                <Card className="border-orange-200 bg-orange-50">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm text-red-700">
-                        Error loading ticket sales data. Please try again later.
+                      <Building2 className="h-8 w-8 text-orange-600 mx-auto mb-3" />
+                      <h3 className="text-sm font-medium text-orange-800 mb-2">
+                        Ticket Sales Data Unavailable
+                      </h3>
+                      <p className="text-sm text-orange-700 mb-4">
+                        {venueTicketsData && 'error' in venueTicketsData && venueTicketsData.error === 'no_bubilet_data' 
+                          ? 'This venue does not have integrated ticket sales data through our bubilet partnership.' 
+                          : 'Unable to load ticket sales data at this time.'}
                       </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="mt-4"
-                        onClick={() => window.location.reload()}
-                      >
-                        Retry
-                      </Button>
+                      {venueTicketsError && (
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="mt-2"
+                          onClick={() => window.location.reload()}
+                        >
+                          Retry
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -780,12 +814,15 @@ const VenueDetail = () => {
                   </div>
                 </>
               ) : (
-                <Card>
+                <Card className="border-gray-200 bg-gray-50">
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        No ticket sales data available for this venue.
+                      <Building2 className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">
+                        Checking Ticket Sales Integration
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        We're checking if this venue has integrated ticket sales data.
                       </p>
                     </div>
                   </CardContent>
