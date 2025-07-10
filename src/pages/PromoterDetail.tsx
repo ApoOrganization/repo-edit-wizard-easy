@@ -502,12 +502,14 @@ const PromoterDetail = () => {
                 {/* Sales Chart */}
                 <PromoterSalesTimeSeriesChart 
                   timeseries={ticketData.timeseries}
+                  eventsPresent={ticketData.events_present}
                   isLoading={ticketLoading}
                 />
                 
                 {/* Event Portfolio Analytics */}
                 <EventPortfolioAnalytics 
                   timeseries={ticketData.timeseries}
+                  eventsPresent={ticketData.events_present}
                   isLoading={ticketLoading}
                 />
                 
@@ -546,7 +548,7 @@ const PromoterDetail = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-sm">Unique Events</span>
                           <span className="text-sm font-medium">
-                            {Array.from(new Set(ticketData.timeseries.flatMap(d => d.events))).length}
+                            {ticketData.events_present ? Object.keys(ticketData.events_present).length : 0}
                           </span>
                         </div>
                       </div>

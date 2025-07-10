@@ -18,6 +18,7 @@ export interface PromoterTicketsResponse {
   totals: PromoterTicketTotals;
   timeseries: PromoterTimeSeriesPoint[];
   promoter_id: string;
+  events_present: { [eventId: string]: string }; // Event ID to event name mapping
 }
 
 export interface PromoterTicketsError {

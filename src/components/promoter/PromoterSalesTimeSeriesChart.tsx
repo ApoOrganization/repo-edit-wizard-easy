@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { PromoterTimeSeriesPoint } from '@/hooks/usePromoterTickets';
 import { formatCurrency } from '@/utils/formatters';
+import { getEventDisplayName } from '@/utils/eventFormatters';
 import { TrendingUp, Activity, Calendar } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 
 interface PromoterSalesTimeSeriesChartProps {
   timeseries: PromoterTimeSeriesPoint[];
+  eventsPresent?: { [eventId: string]: string };
   isLoading?: boolean;
 }
 
@@ -16,6 +18,7 @@ type ChartMode = 'revenue' | 'sales' | 'events';
 
 export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChartProps> = ({
   timeseries,
+  eventsPresent = {},
   isLoading = false
 }) => {
   const [chartMode, setChartMode] = useState<ChartMode>('revenue');
@@ -160,9 +163,19 @@ export const PromoterSalesTimeSeriesChart: React.FC<PromoterSalesTimeSeriesChart
             {data.events_count > 0 && (
               <div className="border-t pt-2 mt-2">
                 <p className="text-xs font-medium mb-1">Active Events ({data.events_count}):</p>
-                <p className="text-xs text-muted-foreground">
-                  {data.events_count} event{data.events_count !== 1 ? 's' : ''} running
-                </p>
+                <div className="space-y-1">
+                  {data.events_list.slice(0, 3).map((eventId: string, idx: number) => (
+                    <p key={eventId} className="text-xs text-muted-foreground">
+                      • {eventsPresent[eventId] ? 
+                          getEventDisplayName(eventsPresent[eventId], 35) : 
+                          `Event ${eventId.slice(0, 8)}...`
+                        }
+                    </p>
+                  ))}
+                  {data.events_list.length > 3 && (
+                    <p className="text-xs text-muted-foreground italic">...and {data.events_list.length - 3} more</p>
+                  )}
+                </div>
               </div>
             )}
           </div>

@@ -1,13 +1,16 @@
 import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { PromoterTimeSeriesPoint } from '@/hooks/usePromoterTickets';
 import { formatCurrency } from '@/utils/formatters';
-import { Calendar, TrendingUp, Star, Activity } from 'lucide-react';
+import { parseEventName, getEventDisplayName } from '@/utils/eventFormatters';
+import { Calendar, TrendingUp, Star, Activity, MapPin } from 'lucide-react';
 
 interface EventPortfolioAnalyticsProps {
   timeseries: PromoterTimeSeriesPoint[];
+  eventsPresent?: { [eventId: string]: string };
   isLoading?: boolean;
 }
 
@@ -24,6 +27,7 @@ interface EventMetrics {
 
 export const EventPortfolioAnalytics: React.FC<EventPortfolioAnalyticsProps> = ({
   timeseries,
+  eventsPresent = {},
   isLoading = false
 }) => {
   const eventMetrics = useMemo(() => {
@@ -142,15 +146,39 @@ export const EventPortfolioAnalytics: React.FC<EventPortfolioAnalyticsProps> = (
               <div key={event.eventId} className="space-y-2 p-3 rounded-lg border border-border/50 hover:bg-muted/30 transition-colors">
                 {/* Event Header */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">Event #{index + 1}</span>
-                      <Badge variant={badge.variant} className="text-xs">
-                        {badge.label}
-                      </Badge>
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex flex-col gap-1 flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link 
+                          to={`/events/${event.eventId}`}
+                          className="text-sm font-medium text-primary hover:underline truncate"
+                          title={eventsPresent[event.eventId] || event.eventId}
+                        >
+                          {eventsPresent[event.eventId] ? 
+                            parseEventName(eventsPresent[event.eventId]).title : 
+                            `Event ${event.eventId.slice(0, 8)}...`
+                          }
+                        </Link>
+                        <Badge variant={badge.variant} className="text-xs flex-shrink-0">
+                          {badge.label}
+                        </Badge>
+                      </div>
+                      {eventsPresent[event.eventId] && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          {parseEventName(eventsPresent[event.eventId]).presenter && (
+                            <span>{parseEventName(eventsPresent[event.eventId]).presenter}</span>
+                          )}
+                          {parseEventName(eventsPresent[event.eventId]).location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {parseEventName(eventsPresent[event.eventId]).location}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0">
                     <div className="text-sm font-bold">
                       {formatCurrency(event.totalRevenue, '₺')}
                     </div>
