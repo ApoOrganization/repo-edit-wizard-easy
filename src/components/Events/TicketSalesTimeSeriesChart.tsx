@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TimeSeriesDataPoint } from '@/hooks/useEventTickets';
 import { formatCurrency } from '@/utils/formatters';
@@ -72,6 +74,61 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
     '#d084d0', '#87ceeb', '#ffb347', '#98fb98', '#f0e68c'
   ];
 
+  // Toggle state management
+  const [showTotal, setShowTotal] = useState(true);
+  const [visibleCategories, setVisibleCategories] = useState<{ [key: string]: boolean }>(() => {
+    // Initialize all categories as visible
+    const initial: { [key: string]: boolean } = {};
+    allCategories.forEach(category => {
+      initial[category] = true;
+    });
+    return initial;
+  });
+
+  // Toggle individual category
+  const toggleCategory = (category: string) => {
+    setVisibleCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  // Toggle all categories
+  const toggleAllCategories = (visible: boolean) => {
+    const newState: { [key: string]: boolean } = {};
+    allCategories.forEach(category => {
+      newState[category] = visible;
+    });
+    setVisibleCategories(newState);
+  };
+
+  // Dynamic Y-axis scaling based on visible lines
+  const getYAxisDomain = useMemo(() => {
+    if (timeseries.length === 0) return [0, 100];
+
+    const visibleValues: number[] = [];
+    
+    timeseries.forEach(point => {
+      // Include total if visible
+      if (showTotal) {
+        visibleValues.push(point.total_remaining);
+      }
+      
+      // Include visible categories
+      allCategories.forEach(category => {
+        if (visibleCategories[category]) {
+          const value = point.by_category?.[category]?.remaining || 0;
+          visibleValues.push(value);
+        }
+      });
+    });
+
+    if (visibleValues.length === 0) return [0, 100];
+
+    const maxValue = Math.max(...visibleValues);
+    return [0, Math.ceil(maxValue * 1.1)]; // 10% padding at top
+  }, [timeseries, showTotal, visibleCategories, allCategories]);
+
   // Transform data for recharts
   const chartData = timeseries.map(point => {
     const transformedPoint: any = {
@@ -139,6 +196,85 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
         </p>
       </CardHeader>
       <CardContent>
+        {/* Toggle Controls */}
+        <div className="mb-6 space-y-4">
+          {/* Total Toggle */}
+          <div className="flex items-center gap-3">
+            <Switch 
+              checked={showTotal} 
+              onCheckedChange={setShowTotal}
+              id="total-toggle"
+            />
+            <label 
+              htmlFor="total-toggle"
+              className="text-sm font-medium cursor-pointer flex items-center gap-2"
+              style={{ color: showTotal ? '#2563eb' : '#6b7280' }}
+            >
+              <div 
+                className="w-3 h-0.5 rounded"
+                style={{ backgroundColor: '#2563eb' }}
+              />
+              Total Remaining
+            </label>
+          </div>
+
+          {/* Category Toggles */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-muted-foreground">Categories</span>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => toggleAllCategories(true)}
+                  className="h-6 px-2 text-xs"
+                >
+                  Show All
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => toggleAllCategories(false)}
+                  className="h-6 px-2 text-xs"
+                >
+                  Hide All
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {allCategories.map((category, index) => {
+                const isVisible = visibleCategories[category];
+                const color = categoryColors[index % categoryColors.length];
+                return (
+                  <div key={category} className="flex items-center gap-2">
+                    <Switch 
+                      checked={isVisible} 
+                      onCheckedChange={() => toggleCategory(category)}
+                      id={`category-${category}`}
+                    />
+                    <label 
+                      htmlFor={`category-${category}`}
+                      className="text-xs cursor-pointer flex items-center gap-2 truncate"
+                      style={{ color: isVisible ? color : '#6b7280' }}
+                      title={category}
+                    >
+                      <div 
+                        className="w-3 h-0.5 rounded"
+                        style={{ 
+                          backgroundColor: color,
+                          opacity: isVisible ? 1 : 0.3
+                        }}
+                      />
+                      {category}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Chart */}
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -154,6 +290,7 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(value) => value.toLocaleString()}
+                domain={getYAxisDomain}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend 
@@ -161,29 +298,35 @@ export const TicketSalesTimeSeriesChart: React.FC<TicketSalesTimeSeriesChartProp
                 iconType="line"
               />
               
-              {/* Total remaining line */}
-              <Line
-                type="monotone"
-                dataKey="total_remaining"
-                stroke="#2563eb"
-                strokeWidth={3}
-                dot={{ r: 4 }}
-                name="Total Remaining"
-              />
-              
-              {/* Individual category lines */}
-              {allCategories.map((category, index) => (
+              {/* Total remaining line - only show if toggled on */}
+              {showTotal && (
                 <Line
-                  key={category}
                   type="monotone"
-                  dataKey={`${category}_remaining`}
-                  stroke={categoryColors[index % categoryColors.length]}
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
-                  name={category}
-                  strokeDasharray={index === 0 ? "0" : "5 5"}
+                  dataKey="total_remaining"
+                  stroke="#2563eb"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                  name="Total Remaining"
                 />
-              ))}
+              )}
+              
+              {/* Individual category lines - only show if toggled on */}
+              {allCategories.map((category, index) => {
+                if (!visibleCategories[category]) return null;
+                
+                return (
+                  <Line
+                    key={category}
+                    type="monotone"
+                    dataKey={`${category}_remaining`}
+                    stroke={categoryColors[index % categoryColors.length]}
+                    strokeWidth={2}
+                    dot={{ r: 3 }}
+                    name={category}
+                    strokeDasharray="5 5"
+                  />
+                );
+              })}
             </LineChart>
           </ResponsiveContainer>
         </div>
