@@ -1,4 +1,9 @@
 
+/**
+ * @deprecated This file contains mock data and is no longer used by the dashboard.
+ * The dashboard now uses real data from the get-market-analytics edge function.
+ * This file is kept for backward compatibility with other components.
+ */
 import { MarketData, ProviderData, RevenueChartData, GenreDistribution } from './types';
 
 export const marketData: MarketData = {
