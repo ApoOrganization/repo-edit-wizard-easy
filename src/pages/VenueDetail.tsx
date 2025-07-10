@@ -7,8 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useVenueAnalytics, useVenueUpcomingEvents, useVenuePastEvents, useIsVenueAnalyticsFallback, useIsVenueAnalyticsError } from "@/hooks/useVenueAnalytics";
+import { useVenueTickets, hasVenueTicketData } from "@/hooks/useVenueTickets";
 import { formatNumber, formatCurrency, formatScore, formatDecimalPercentage } from "@/utils/formatters";
 import { VenueCalendarView } from "@/components/venue/VenueCalendarView";
+import { VenueRevenueOverview } from "@/components/venue/VenueRevenueOverview";
+import { VenueSalesTimeSeriesChart } from "@/components/venue/VenueSalesTimeSeriesChart";
+import { VenueEventPortfolioAnalytics } from "@/components/venue/VenueEventPortfolioAnalytics";
+import { VenueInsights } from "@/components/venue/VenueInsights";
 
 const VenueDetail = () => {
   const { id } = useParams();
@@ -25,6 +30,13 @@ const VenueDetail = () => {
   // Events data (lazy loaded based on tab)
   const { data: upcomingEventsData } = useVenueUpcomingEvents(id, activeTab === 'events');
   const { data: pastEventsData } = useVenuePastEvents(id, activeTab === 'events');
+  
+  // Venue ticket data (lazy loaded based on tab)
+  const { 
+    data: venueTicketsData, 
+    isLoading: isVenueTicketsLoading, 
+    error: venueTicketsError 
+  } = useVenueTickets(activeTab === 'ticket-sales' ? id : undefined);
 
   // Destructure analytics data
   const venue = analyticsData?.venue;
@@ -37,6 +49,12 @@ const VenueDetail = () => {
   const isFallbackData = useIsVenueAnalyticsFallback(analyticsData);
   const isErrorState = useIsVenueAnalyticsError(analyticsData);
   const hasFullAnalytics = !isFallbackData && !isErrorState && analytics;
+  
+  // Check venue ticket data availability
+  const hasTicketData = hasVenueTicketData(venueTicketsData);
+  
+  // Calculate number of tabs dynamically
+  const tabCount = hasTicketData ? 5 : 4;
   
   console.log('🏟️ [VENUE DETAIL] Component Status:', {
     venueId: id,
@@ -287,13 +305,16 @@ const VenueDetail = () => {
 
         {/* Tabbed Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full grid-cols-${tabCount}`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="analytics" disabled={!hasFullAnalytics}>
               Analytics {!hasFullAnalytics && '(Unavailable)'}
             </TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
+            {hasTicketData && (
+              <TabsTrigger value="ticket-sales">Ticket Sales</TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -679,6 +700,98 @@ const VenueDetail = () => {
               </Card>
             </div>
           </TabsContent>
+          
+          {hasTicketData && (
+            <TabsContent value="ticket-sales" className="space-y-6">
+              {isVenueTicketsLoading ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Card key={i}>
+                        <CardContent className="pt-6">
+                          <div className="space-y-2">
+                            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                            <div className="h-8 w-24 bg-muted rounded animate-pulse" />
+                            <div className="h-2 w-full bg-muted rounded animate-pulse" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="h-64 flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="h-4 w-32 bg-muted rounded animate-pulse mx-auto mb-2" />
+                          <div className="h-4 w-24 bg-muted rounded animate-pulse mx-auto" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : venueTicketsError ? (
+                <Card className="border-red-200 bg-red-50">
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm text-red-700">
+                        Error loading ticket sales data. Please try again later.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-4"
+                        onClick={() => window.location.reload()}
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : hasTicketData && venueTicketsData ? (
+                <>
+                  {/* Revenue Overview Cards */}
+                  <VenueRevenueOverview 
+                    totals={venueTicketsData.totals}
+                    isLoading={isVenueTicketsLoading}
+                  />
+                  
+                  {/* Sales Time Series Chart */}
+                  <VenueSalesTimeSeriesChart 
+                    timeseries={venueTicketsData.timeseries}
+                    eventsPresent={venueTicketsData.events_present}
+                    isLoading={isVenueTicketsLoading}
+                  />
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Event Portfolio Analytics */}
+                    <VenueEventPortfolioAnalytics 
+                      timeseries={venueTicketsData.timeseries}
+                      eventsPresent={venueTicketsData.events_present}
+                      isLoading={isVenueTicketsLoading}
+                    />
+                    
+                    {/* Business Insights */}
+                    <VenueInsights 
+                      timeseries={venueTicketsData.timeseries}
+                      totals={venueTicketsData.totals}
+                      isLoading={isVenueTicketsLoading}
+                    />
+                  </div>
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">
+                        No ticket sales data available for this venue.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Event Calendar Section */}
