@@ -15,10 +15,10 @@ const EventListItem = ({ event }: EventListItemProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'On Sale': return 'bg-accent/20 text-accent-foreground border-accent';
-      case 'Sold Out': return 'bg-brand-success/20 text-brand-secondary border-brand-success';
-      case 'Postponed': return 'bg-primary text-accent border-accent';
-      case 'Past': return 'bg-brand-text-secondary/20 text-brand-text-secondary border-brand-text-secondary';
-      default: return 'bg-brand-text-secondary/20 text-brand-text-secondary border-brand-text-secondary';
+      case 'Sold Out': return 'bg-success/20 text-success-foreground border-success';
+      case 'Postponed': return 'bg-primary text-primary-foreground border-primary';
+      case 'Past': return 'bg-muted text-muted-foreground border-muted-foreground';
+      default: return 'bg-muted text-muted-foreground border-muted-foreground';
     }
   };
 
