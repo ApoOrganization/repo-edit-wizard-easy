@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Event } from "@/data/types";
 import { EventAnalyticsEnhancedResponse } from "@/hooks/useEventAnalyticsEnhanced";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEventTickets } from "@/hooks/useEventTickets";
+import { TicketCategoriesCard } from "./TicketCategoriesCard";
+import { RevenueMetricsCard } from "./RevenueMetricsCard";
+import { TicketSalesTimeSeriesChart } from "./TicketSalesTimeSeriesChart";
 import CategoryPriceTable from "./CategoryPriceTable";
 import TicketSalesChart from "./TicketSalesChart";
 
@@ -16,7 +20,10 @@ const AnalyticsCarousel2 = ({ event, enhancedData, onComponentOverflow }: Analyt
   const [showChart, setShowChart] = useState(true);
   const [containerWidth, setContainerWidth] = useState(0);
 
-  const hasBubiletData = enhancedData?.hasBubiletData;
+  // Use new ticket data hook
+  const { data: ticketData, isLoading: ticketLoading, error: ticketError } = useEventTickets(event.id);
+
+  const hasBubiletData = enhancedData?.hasBubiletData || !!ticketData?.bubilet_sales;
   const providers = enhancedData?.providers || {};
 
   // Monitor container width and determine if we need to shift components
@@ -60,33 +67,86 @@ const AnalyticsCarousel2 = ({ event, enhancedData, onComponentOverflow }: Analyt
 
   return (
     <div ref={containerRef} className="w-full">
-      {/* Single column layout: Table on top, Chart below */}
       <div className="space-y-6">
-        {/* Always show table */}
-        <div className="h-[250px]">
-          <CategoryPriceTable providers={providers} />
-        </div>
-        
-        {/* Show chart if we have Bubilet data */}
-        {hasBubiletData && (
-          <div className="h-[400px]">
-            {enhancedData?.bubiletSalesHistory ? (
-              <TicketSalesChart salesHistory={enhancedData.bubiletSalesHistory} />
-            ) : (
-              <Card className="media-card h-full">
-                <CardHeader>
-                  <CardTitle className="text-lg">Sales Chart</CardTitle>
-                </CardHeader>
-                <CardContent className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <p className="text-muted-foreground">
-                      Sales history chart coming soon...
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+        {/* Show new ticket components if we have ticket data */}
+        {ticketData ? (
+          <>
+            {/* 1. Ticket Categories */}
+            <TicketCategoriesCard 
+              categories={ticketData.tickets.bubilet} 
+              isLoading={ticketLoading}
+            />
+            
+            {/* 2. Revenue Metrics */}
+            <RevenueMetricsCard
+              revenueRealized={ticketData.bubilet_sales.revenue_realized}
+              remainingRevenue={ticketData.bubilet_sales.remaining_revenue}
+              totalPotentialRevenue={ticketData.bubilet_sales.total_potential_revenue}
+              isLoading={ticketLoading}
+            />
+            
+            {/* 3. Time Series Chart */}
+            {ticketData.bubilet_sales.timeseries && ticketData.bubilet_sales.timeseries.length > 0 && (
+              <TicketSalesTimeSeriesChart
+                timeseries={ticketData.bubilet_sales.timeseries}
+                isLoading={ticketLoading}
+              />
             )}
-          </div>
+          </>
+        ) : (
+          <>
+            {/* Fallback to original components when no ticket data */}
+            <div className="h-[250px]">
+              <CategoryPriceTable providers={providers} />
+            </div>
+            
+            {/* Show chart if we have Bubilet data */}
+            {hasBubiletData && (
+              <div className="h-[400px]">
+                {enhancedData?.bubiletSalesHistory ? (
+                  <TicketSalesChart salesHistory={enhancedData.bubiletSalesHistory} />
+                ) : (
+                  <Card className="media-card h-full">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Sales Chart</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <p className="text-muted-foreground">
+                          Sales history chart coming soon...
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Show loading state */}
+        {ticketLoading && !ticketData && (
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="h-4 w-32 bg-muted rounded animate-pulse mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Loading ticket data...</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        
+        {/* Show error state */}
+        {ticketError && !ticketData && (
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Failed to load ticket data. Showing fallback data.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
