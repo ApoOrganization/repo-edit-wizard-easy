@@ -11,6 +11,11 @@ import { formatNumber, formatScore, formatDecimalPercentage } from "@/utils/form
 import { PromoterCalendarView } from "@/components/promoter/PromoterCalendarView";
 import { TopVenuesCard } from "@/components/promoter/TopVenuesCard";
 import { TopGenresCard } from "@/components/promoter/TopGenresCard";
+import { usePromoterTickets, hasPromoterTicketData, isPromoterTicketError } from "@/hooks/usePromoterTickets";
+import { PromoterRevenueOverview } from "@/components/promoter/PromoterRevenueOverview";
+import { PromoterSalesTimeSeriesChart } from "@/components/promoter/PromoterSalesTimeSeriesChart";
+import { EventPortfolioAnalytics } from "@/components/promoter/EventPortfolioAnalytics";
+import { PromoterInsights } from "@/components/promoter/PromoterInsights";
 
 const PromoterDetail = () => {
   const { id } = useParams();
@@ -22,6 +27,13 @@ const PromoterDetail = () => {
     isLoading,
     error
   } = usePromoterAnalytics(id, 'year', true);
+  
+  // Promoter ticket sales data
+  const {
+    data: ticketData,
+    isLoading: ticketLoading,
+    error: ticketError
+  } = usePromoterTickets(id);
   
   // Destructure analytics data
   const promoter = analyticsData?.promoter;
@@ -35,6 +47,11 @@ const PromoterDetail = () => {
   const isFallbackData = useIsPromoterAnalyticsFallback(analyticsData);
   const isErrorState = useIsPromoterAnalyticsError(analyticsData);
   const hasFullAnalytics = !isFallbackData && !isErrorState && analytics;
+  
+  // Check ticket data status
+  const hasTicketSalesData = hasPromoterTicketData(ticketData);
+  const isTicketError = isPromoterTicketError(ticketData);
+  const shouldShowTicketTab = hasTicketSalesData || ticketLoading;
   
   console.log('🎭 Promoter Detail Status:', {
     promoterId: id,
@@ -236,13 +253,18 @@ const PromoterDetail = () => {
 
         {/* Tabbed Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full ${shouldShowTicketTab ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="venues">Venues</TabsTrigger>
             <TabsTrigger value="analytics" disabled={!hasFullAnalytics}>
               Analytics {!hasFullAnalytics && '(Unavailable)'}
             </TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
+            {shouldShowTicketTab && (
+              <TabsTrigger value="tickets">
+                Ticket Sales
+              </TabsTrigger>
+            )}
           </TabsList>
           
           <TabsContent value="overview" className="space-y-6">
@@ -462,6 +484,140 @@ const PromoterDetail = () => {
                     >
                       Try Again
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="tickets" className="space-y-6">
+            {hasTicketSalesData ? (
+              <>
+                {/* Revenue Overview */}
+                <PromoterRevenueOverview 
+                  totals={ticketData.totals}
+                  isLoading={ticketLoading}
+                />
+                
+                {/* Sales Chart */}
+                <PromoterSalesTimeSeriesChart 
+                  timeseries={ticketData.timeseries}
+                  isLoading={ticketLoading}
+                />
+                
+                {/* Event Portfolio Analytics */}
+                <EventPortfolioAnalytics 
+                  timeseries={ticketData.timeseries}
+                  isLoading={ticketLoading}
+                />
+                
+                {/* Business Insights */}
+                <PromoterInsights 
+                  timeseries={ticketData.timeseries}
+                  totals={ticketData.totals}
+                  isLoading={ticketLoading}
+                />
+                
+                {/* Additional Analytics */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Sales Summary */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-semibold">Sales Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Total Days Tracked</span>
+                          <span className="text-sm font-medium">{ticketData.timeseries.length}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Active Sales Days</span>
+                          <span className="text-sm font-medium">
+                            {ticketData.timeseries.filter(d => d.tickets_sold > 0).length}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Total Tickets Sold</span>
+                          <span className="text-sm font-medium">
+                            {ticketData.timeseries.reduce((sum, d) => sum + d.tickets_sold, 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Unique Events</span>
+                          <span className="text-sm font-medium">
+                            {Array.from(new Set(ticketData.timeseries.flatMap(d => d.events))).length}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Performance Metrics */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-sm font-semibold">Performance Metrics</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Revenue Completion</span>
+                          <span className="text-sm font-medium">
+                            {((ticketData.totals.revenue_realized / ticketData.totals.total_potential_revenue) * 100).toFixed(1)}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Avg Daily Revenue</span>
+                          <span className="text-sm font-medium">
+                            {(ticketData.timeseries.reduce((sum, d) => sum + d.daily_revenue, 0) / ticketData.timeseries.length).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Avg Daily Sales</span>
+                          <span className="text-sm font-medium">
+                            {Math.round(ticketData.timeseries.reduce((sum, d) => sum + d.tickets_sold, 0) / ticketData.timeseries.length).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm">Peak Concurrent Events</span>
+                          <span className="text-sm font-medium">
+                            {Math.max(...ticketData.timeseries.map(d => d.events.length))}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </>
+            ) : ticketLoading ? (
+              <div className="text-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground">Loading ticket sales data...</p>
+              </div>
+            ) : isTicketError ? (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <Target className="h-8 w-8 text-orange-600 mx-auto mb-4" />
+                    <h3 className="font-medium text-orange-800 mb-2">Ticket Sales Data Not Available</h3>
+                    <p className="text-sm text-orange-700 mb-4">
+                      This promoter doesn't have Bubilet integration or no ticket sales data is available.
+                    </p>
+                    <p className="text-xs text-orange-600">
+                      Contact the promoter about integrating with Bubilet for comprehensive sales analytics.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <Target className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="font-medium text-foreground mb-2">No Ticket Sales Data</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Unable to load ticket sales data for this promoter.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
