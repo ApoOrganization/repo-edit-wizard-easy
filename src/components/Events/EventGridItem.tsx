@@ -14,9 +14,9 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'On Sale': return 'bg-brand-primary/20 text-brand-secondary border-brand-primary';
+      case 'On Sale': return 'bg-accent/20 text-accent-foreground border-accent';
       case 'Sold Out': return 'bg-brand-success/20 text-brand-secondary border-brand-success';
-      case 'Postponed': return 'bg-brand-accent/20 text-brand-accent border-brand-accent';
+      case 'Postponed': return 'bg-primary/20 text-primary-foreground border-primary';
       case 'Past': return 'bg-brand-text-secondary/20 text-brand-text-secondary border-brand-text-secondary';
       default: return 'bg-brand-text-secondary/20 text-brand-text-secondary border-brand-text-secondary';
     }
@@ -48,7 +48,7 @@ const EventGridItem = ({ event }: EventGridItemProps) => {
 
   return (
     <Link to={`/events/${event.id}`}>
-      <Card className="media-card hover-lift h-full cursor-pointer border-brand-border/20 hover:border-brand-primary/50">
+      <Card className="media-card hover-lift h-full cursor-pointer border-brand-border/20 hover:border-accent/50">
         <CardHeader className="space-y-3">
           <div className="flex justify-between items-start">
             <Badge className={`${getStatusColor(event.status)} text-xs px-2 py-1 border`}>

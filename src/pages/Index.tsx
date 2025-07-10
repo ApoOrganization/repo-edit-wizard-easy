@@ -91,12 +91,12 @@ const Index = () => {
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-brand-secondary/70 text-xs font-medium mb-3">Total Market Size</p>
-                <p className="text-xl font-semibold text-brand-secondary font-manrope leading-tight">
+                <p className="text-accent-foreground/70 text-xs font-medium mb-3">Total Market Size</p>
+                <p className="text-xl font-semibold text-accent-foreground font-manrope leading-tight">
                   {dashboardMetrics ? formatCurrency(dashboardMetrics.totalMarketSize) : "Loading..."}
                 </p>
               </div>
-              <DollarSign className="h-6 w-6 text-brand-secondary/70 flex-shrink-0 ml-4" />
+              <DollarSign className="h-6 w-6 text-accent-foreground/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
@@ -133,12 +133,12 @@ const Index = () => {
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-brand-secondary/70 text-xs font-medium mb-3">Active Events</p>
-                <p className="text-xl font-semibold text-brand-secondary font-manrope leading-tight">
+                <p className="text-accent-foreground/70 text-xs font-medium mb-3">Active Events</p>
+                <p className="text-xl font-semibold text-accent-foreground font-manrope leading-tight">
                   {dashboardMetrics ? formatNumber(dashboardMetrics.activeEvents) : "Loading..."}
                 </p>
               </div>
-              <Calendar className="h-6 w-6 text-brand-secondary/70 flex-shrink-0 ml-4" />
+              <Calendar className="h-6 w-6 text-accent-foreground/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
@@ -147,12 +147,12 @@ const Index = () => {
           <CardContent className="p-8">
             <div className="flex items-center justify-between h-full">
               <div className="flex-1">
-                <p className="text-brand-secondary/70 text-xs font-medium mb-3">Growth Rate</p>
-                <p className="text-xl font-semibold text-brand-secondary font-manrope leading-tight">
+                <p className="text-accent-foreground/70 text-xs font-medium mb-3">Growth Rate</p>
+                <p className="text-xl font-semibold text-accent-foreground font-manrope leading-tight">
                   {dashboardMetrics ? `${dashboardMetrics.growthRate > 0 ? '+' : ''}${dashboardMetrics.growthRate.toFixed(1)}%` : "Loading..."}
                 </p>
               </div>
-              <TrendingUp className="h-6 w-6 text-brand-secondary/70 flex-shrink-0 ml-4" />
+              <TrendingUp className="h-6 w-6 text-accent-foreground/70 flex-shrink-0 ml-4" />
             </div>
           </CardContent>
         </Card>
@@ -180,7 +180,7 @@ const Index = () => {
           <Card className="media-card animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-3 text-base font-medium">
-                <TrendingUp className="h-4 w-4 text-brand-accent" />
+                <TrendingUp className="h-4 w-4 text-primary" />
                 <span>Revenue Trends</span>
               </CardTitle>
             </CardHeader>
@@ -218,7 +218,7 @@ const Index = () => {
           <Card className="media-card animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-3 text-base font-medium">
-                <Users className="h-4 w-4 text-brand-accent" />
+                <Users className="h-4 w-4 text-primary" />
                 <span>Genre Distribution</span>
               </CardTitle>
             </CardHeader>

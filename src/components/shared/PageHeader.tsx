@@ -11,7 +11,7 @@ interface PageHeaderProps {
 
 const PageHeader = ({ title, subtitle, showBackButton, onBackClick }: PageHeaderProps) => {
   return (
-    <div className="bg-gradient-to-br from-brand-primary/5 to-brand-success/10 border-b border-brand-border/30">
+    <div className="bg-gradient-to-br from-accent/5 to-brand-success/10 border-b border-brand-border/30">
       <div className="px-8 py-8">
         {showBackButton && (
           <Button variant="ghost" size="sm" onClick={onBackClick} className="mb-4">
