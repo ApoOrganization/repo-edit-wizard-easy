@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfToday } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EnhancedCalendar } from '@/components/shared/EnhancedCalendar';
+import { EventCalendar } from '@/components/shared/EventCalendar';
 import { usePromoterCalendar } from '@/hooks/usePromoterCalendar';
 import { PromoterCalendarEventData } from '@/types/promoter.types';
 import { Event } from '@/data/types';
@@ -26,7 +26,7 @@ export const PromoterCalendarView: React.FC<PromoterCalendarViewProps> = ({
     error
   } = usePromoterCalendar(promoterId, promoterName, currentMonth);
 
-  // Transform promoter calendar events to EnhancedCalendar format
+  // Transform promoter calendar events to EventCalendar format
   const transformToCalendarFormat = (events: PromoterCalendarEventData[]): Event[] => {
     console.log('🔄 [PROMOTER CALENDAR VIEW] Transforming events for calendar:', {
       eventsCount: events.length,
@@ -185,7 +185,7 @@ export const PromoterCalendarView: React.FC<PromoterCalendarViewProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <EnhancedCalendar
+        <EventCalendar
           events={events}
           title={calendarTitle}
           entityType="promoter"

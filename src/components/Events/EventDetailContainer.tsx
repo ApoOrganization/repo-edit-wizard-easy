@@ -3,8 +3,8 @@ import { Event } from "@/data/types";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import EventGridView from "./EventGridView";
-import AnalyticsCarousel2 from "./AnalyticsCarousel2";
-import AnalyticsCarousel3 from "./AnalyticsCarousel3";
+import TicketAnalyticsView from "./TicketAnalyticsView";
+import ExtendedAnalyticsView from "./ExtendedAnalyticsView";
 import { EventAnalytics } from "@/hooks/useEventAnalytics";
 
 interface EventDetailContainerProps {
@@ -16,7 +16,7 @@ interface EventDetailContainerProps {
 const EventDetailContainer = ({ event, analytics, eventData }: EventDetailContainerProps) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [activeView, setActiveView] = useState<'overview' | 'analytics' | 'details'>('overview');
-  const [hasOverflowFromCarousel2, setHasOverflowFromCarousel2] = useState(false);
+  const [hasOverflowFromTicketAnalytics, setHasOverflowFromTicketAnalytics] = useState(false);
 
   // Fixed 3-carousel system
   const pages = [
@@ -27,9 +27,9 @@ const EventDetailContainer = ({ event, analytics, eventData }: EventDetailContai
     },
     { 
       component: (
-        <AnalyticsCarousel2 
+        <TicketAnalyticsView 
           event={event} 
-          onComponentOverflow={setHasOverflowFromCarousel2}
+          onComponentOverflow={setHasOverflowFromTicketAnalytics}
         />
       ), 
       label: "Analytics",
@@ -37,9 +37,9 @@ const EventDetailContainer = ({ event, analytics, eventData }: EventDetailContai
     },
     { 
       component: (
-        <AnalyticsCarousel3 
+        <ExtendedAnalyticsView 
           event={event} 
-          hasOverflowFromCarousel2={hasOverflowFromCarousel2}
+          hasOverflowFromTicketAnalytics={hasOverflowFromTicketAnalytics}
         />
       ), 
       label: "Details",

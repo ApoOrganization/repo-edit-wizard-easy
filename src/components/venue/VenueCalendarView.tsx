@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfToday } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EnhancedCalendar } from '@/components/shared/EnhancedCalendar';
+import { EventCalendar } from '@/components/shared/EventCalendar';
 import { useVenueCalendar } from '@/hooks/useVenueCalendar';
 import { VenueCalendarEventData } from '@/types/venue.types';
 import { Event } from '@/data/types';
@@ -28,7 +28,7 @@ export const VenueCalendarView: React.FC<VenueCalendarViewProps> = ({
     error
   } = useVenueCalendar(venueId, venueName, venueCity, currentMonth);
 
-  // Transform venue calendar events to EnhancedCalendar format
+  // Transform venue calendar events to EventCalendar format
   const transformToCalendarFormat = (events: VenueCalendarEventData[]): Event[] => {
     console.log('🔄 [VENUE CALENDAR VIEW] Transforming events for calendar:', {
       eventsCount: events.length,
@@ -196,7 +196,7 @@ export const VenueCalendarView: React.FC<VenueCalendarViewProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <EnhancedCalendar
+        <EventCalendar
           events={events}
           title={calendarTitle}
           entityType="venue"

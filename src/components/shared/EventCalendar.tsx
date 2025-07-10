@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Event } from "@/data/types";
 
-interface EnhancedCalendarProps {
+interface EventCalendarProps {
   events: Event[];
   title?: string;
   entityType?: 'artist' | 'promoter' | 'venue';
@@ -40,7 +40,7 @@ const colStartClasses = [
   "col-start-7",
 ];
 
-export function EnhancedCalendar({ events, title, entityType, currentMonth, onEventClick, onMonthChange }: EnhancedCalendarProps) {
+export function EventCalendar({ events, title, entityType, currentMonth, onEventClick, onMonthChange }: EventCalendarProps) {
   const today = startOfToday();
   const [selectedDay, setSelectedDay] = React.useState(today);
   

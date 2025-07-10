@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfToday } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EnhancedCalendar } from '@/components/shared/EnhancedCalendar';
+import { EventCalendar } from '@/components/shared/EventCalendar';
 import { useArtistCalendar } from '@/hooks/useArtistCalendar';
 import { CalendarEventData } from '@/types/artist.types';
 import { Event } from '@/data/types';
@@ -26,7 +26,7 @@ export const ArtistCalendarView: React.FC<ArtistCalendarViewProps> = ({
     error
   } = useArtistCalendar(artistId, currentMonth);
 
-  // Transform calendar events to EnhancedCalendar format
+  // Transform calendar events to EventCalendar format
   const transformToCalendarFormat = (events: CalendarEventData[]): Event[] => {
     console.log('🔄 [ARTIST CALENDAR VIEW] Transforming events for calendar:', {
       eventsCount: events.length,
@@ -176,7 +176,7 @@ export const ArtistCalendarView: React.FC<ArtistCalendarViewProps> = ({
         </p>
       </CardHeader>
       <CardContent>
-        <EnhancedCalendar
+        <EventCalendar
           events={events}
           title={calendarTitle}
           entityType="artist"

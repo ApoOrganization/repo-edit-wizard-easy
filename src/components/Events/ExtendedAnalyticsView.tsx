@@ -1,18 +1,18 @@
 import { Event } from "@/data/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-interface AnalyticsCarousel3Props {
+interface ExtendedAnalyticsViewProps {
   event: Event;
-  hasOverflowFromCarousel2?: boolean;
+  hasOverflowFromTicketAnalytics?: boolean;
 }
 
-const AnalyticsCarousel3 = ({ event, hasOverflowFromCarousel2 }: AnalyticsCarousel3Props) => {
+const ExtendedAnalyticsView = ({ event, hasOverflowFromTicketAnalytics }: ExtendedAnalyticsViewProps) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8">
       {/* Left Column */}
       <div className="space-y-8">
-        {/* Show message when overflow from carousel 2 */}
-        {hasOverflowFromCarousel2 ? (
+        {/* Show message when overflow from ticket analytics */}
+        {hasOverflowFromTicketAnalytics ? (
           <div className="h-[400px]">
             <Card className="media-card h-full">
               <CardHeader>
@@ -82,4 +82,4 @@ const AnalyticsCarousel3 = ({ event, hasOverflowFromCarousel2 }: AnalyticsCarous
   );
 };
 
-export default AnalyticsCarousel3;
+export default ExtendedAnalyticsView;

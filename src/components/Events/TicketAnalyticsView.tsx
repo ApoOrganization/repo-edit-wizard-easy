@@ -7,12 +7,12 @@ import { TicketSalesTimeSeriesChart } from "./TicketSalesTimeSeriesChart";
 import CategoryPriceTable from "./CategoryPriceTable";
 import { transformTicketsToProviderData, hasAnyTicketData, getTotalCategoriesCount } from "@/utils/ticketTransformers";
 
-interface AnalyticsCarousel2Props {
+interface TicketAnalyticsViewProps {
   event: Event;
   onComponentOverflow?: (hasOverflow: boolean) => void;
 }
 
-const AnalyticsCarousel2 = ({ event, onComponentOverflow }: AnalyticsCarousel2Props) => {
+const TicketAnalyticsView = ({ event, onComponentOverflow }: TicketAnalyticsViewProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showChart, setShowChart] = useState(true);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -146,4 +146,4 @@ const AnalyticsCarousel2 = ({ event, onComponentOverflow }: AnalyticsCarousel2Pr
   );
 };
 
-export default AnalyticsCarousel2;
+export default TicketAnalyticsView;
