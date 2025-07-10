@@ -180,7 +180,7 @@ const Index = () => {
           <Card className="media-card animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-3 text-base font-medium">
-                <TrendingUp className="h-4 w-4 text-primary" />
+                <TrendingUp className="h-4 w-4 text-accent" />
                 <span>Revenue Trends</span>
               </CardTitle>
             </CardHeader>
@@ -218,7 +218,7 @@ const Index = () => {
           <Card className="media-card animate-fade-in">
             <CardHeader>
               <CardTitle className="flex items-center space-x-3 text-base font-medium">
-                <Users className="h-4 w-4 text-primary" />
+                <Users className="h-4 w-4 text-accent" />
                 <span>Genre Distribution</span>
               </CardTitle>
             </CardHeader>
