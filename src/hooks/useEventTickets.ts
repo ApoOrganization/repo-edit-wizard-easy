@@ -14,10 +14,13 @@ export interface TimeSeriesDataPoint {
     [categoryName: string]: {
       price: number;
       remaining: number;
+      revenue: number;
+      tickets_sold: number;
     };
   };
   total_remaining: number;
   daily_revenue: number;
+  tickets_sold: number;
 }
 
 export interface BubiletSales {
