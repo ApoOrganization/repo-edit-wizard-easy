@@ -48,12 +48,12 @@ const Login = () => {
       <Card className="w-full max-w-2xl bg-[#EDF252] border-none shadow-xl">
         <CardHeader className="text-center p-8">
           <div className="flex justify-center mb-6">
-            <Logo variant="icon" width={150} height={150} />
+            <Logo variant="icon" width={100} height={100} showName={false} />
           </div>
           <CardTitle className="text-3xl font-bold text-[#0D0D0D] mb-4" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-[#0D0D0D] text-4xl font-black mb-6" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <CardDescription className="text-[#C861FF] text-4xl font-black mb-6" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Venture forth as an Eventturer!
           </CardDescription>
         </CardHeader>
@@ -66,7 +66,7 @@ const Login = () => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-[#0D0D0D] font-medium" style={{ fontFamily: 'Satoshi, sans-serif' }}>Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -75,11 +75,12 @@ const Login = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
                 required
+                className="rounded-xl border-2 border-[#737373] focus:border-[#C861FF] bg-white px-4 py-3 text-[#0D0D0D] placeholder:text-[#737373] transition-colors"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-[#0D0D0D] font-medium" style={{ fontFamily: 'Satoshi, sans-serif' }}>Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -88,6 +89,7 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
                 required
+                className="rounded-xl border-2 border-[#737373] focus:border-[#C861FF] bg-white px-4 py-3 text-[#0D0D0D] placeholder:text-[#737373] transition-colors"
               />
             </div>
             
