@@ -118,37 +118,42 @@ export const useArtistFilterOptions = () => {
   return useQuery<ArtistFilterOptions>({
     queryKey: ['artist-filter-options'],
     queryFn: async () => {
-      console.log('Fetching artist filter options...');
+      console.log('Using static artist filter options...');
 
-      // Use correct column names based on actual schema with aggressive limiting
+      // Static agency list as provided by user
+      const agencies = [
+        'Marshall Arts',
+        'ITB',
+        '13 Artists', 
+        'Red Light Management',
+        'Primary Talent',
+        'Cobra Agency',
+        'Wasserman',
+        'WME',
+        'No Agency / Local Artists', // Special case for null agencies
+        'High Road Touring',
+        'United Talent Agency',
+        'Onefiinix'
+      ];
+
+      // Still fetch territories dynamically if needed
       const { data: artists, error } = await supabase
         .from('artist_list_summary')
-        .select('agency, territory, top_genres')
-        .not('agency', 'is', null)
+        .select('territory')
         .not('territory', 'is', null)
-        .limit(500); // Reduced limit to prevent timeout
+        .limit(500);
 
-      if (error) {
-        console.error('Error fetching artist filter options:', error);
-        throw error;
+      let territories: string[] = [];
+      if (!error && artists) {
+        territories = [...new Set(
+          artists
+            .map(a => a.territory)
+            .filter(Boolean)
+            .sort()
+        )] as string[];
       }
 
-      // Extract unique values
-      const agencies = [...new Set(
-        artists
-          ?.map(a => a.agency)
-          .filter(Boolean)
-          .sort()
-      )] as string[];
-
-      const territories = [...new Set(
-        artists
-          ?.map(a => a.territory)
-          .filter(Boolean)
-          .sort()
-      )] as string[];
-
-      console.log('Filter options extracted:', { 
+      console.log('Filter options:', { 
         agencies: agencies.length, 
         territories: territories.length
       });

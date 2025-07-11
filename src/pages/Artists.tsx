@@ -61,10 +61,25 @@ const Artists = () => {
 
   // Convert filter state to API parameters
   const convertFiltersToParams = (currentFilters: UniversalFilterState) => {
-    // Agency filter - join selected agencies with OR logic
-    const agencyFilter = (currentFilters.agencies as string[])?.length > 0 
-      ? (currentFilters.agencies as string[]).join('|') 
-      : '';
+    // Agency filter - handle special "No Agency / Local Artists" case
+    const selectedAgencies = currentFilters.agencies as string[];
+    let agencyFilter = '';
+    
+    if (selectedAgencies?.length > 0) {
+      const hasNoAgency = selectedAgencies.includes('No Agency / Local Artists');
+      const regularAgencies = selectedAgencies.filter(agency => agency !== 'No Agency / Local Artists');
+      
+      if (hasNoAgency && regularAgencies.length > 0) {
+        // Both null agencies and regular agencies selected
+        agencyFilter = `NULL|${regularAgencies.join('|')}`;
+      } else if (hasNoAgency) {
+        // Only null agencies selected
+        agencyFilter = 'NULL';
+      } else {
+        // Only regular agencies selected
+        agencyFilter = regularAgencies.join('|');
+      }
+    }
     
     // Activity level filter - convert to minEvents
     const activityLevels = currentFilters.activityLevels as string[];
