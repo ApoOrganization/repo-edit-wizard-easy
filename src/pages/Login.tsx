@@ -50,10 +50,10 @@ const Login = () => {
           <div className="flex justify-center mb-6">
             <Logo variant="icon" width={100} height={100} showName={false} />
           </div>
-          <CardTitle className="text-3xl font-bold text-[#0D0D0D] mb-4" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <CardTitle className="text-2xl font-bold text-[#0D0D0D] mb-4" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Welcome Back
           </CardTitle>
-          <CardDescription className="text-[#C861FF] text-4xl font-black mb-6" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+          <CardDescription className="text-[#C861FF] text-3xl font-black mb-6" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Venture forth as an Eventturer!
           </CardDescription>
         </CardHeader>

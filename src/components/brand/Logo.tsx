@@ -70,7 +70,7 @@ export const Logo: React.FC<LogoProps> = ({
         height={logoHeight}
         className="object-contain"
       />
-      {(showName || variant === 'icon') && variant !== 'brandName' && (
+      {showName && variant !== 'icon' && variant !== 'brandName' && (
         <span className="font-semibold text-current">
           {brandConfig.name}
         </span>
