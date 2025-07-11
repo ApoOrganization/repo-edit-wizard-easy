@@ -17,7 +17,7 @@ const Artists = () => {
     searchQuery: '',
     page: 1,
     pageSize: 20,
-    agencyFilter: '',
+    agencyFilter: null as string | null,
     minEvents: null as number | null,
     promoterFilter: ''
   });
@@ -63,18 +63,18 @@ const Artists = () => {
   const convertFiltersToParams = (currentFilters: UniversalFilterState) => {
     // Agency filter - handle special "No Agency / Local Artists" case
     const selectedAgencies = currentFilters.agencies as string[];
-    let agencyFilter = '';
+    let agencyFilter: string | null = null;
     
     if (selectedAgencies?.length > 0) {
       const hasNoAgency = selectedAgencies.includes('No Agency / Local Artists');
       const regularAgencies = selectedAgencies.filter(agency => agency !== 'No Agency / Local Artists');
       
       if (hasNoAgency && regularAgencies.length > 0) {
-        // Both null agencies and regular agencies selected
-        agencyFilter = `NULL|${regularAgencies.join('|')}`;
+        // Both null agencies and regular agencies selected - use special format
+        agencyFilter = `${regularAgencies.join('|')}|NULL`;
       } else if (hasNoAgency) {
-        // Only null agencies selected
-        agencyFilter = 'NULL';
+        // Only null agencies selected - send actual null
+        agencyFilter = null;
       } else {
         // Only regular agencies selected
         agencyFilter = regularAgencies.join('|');

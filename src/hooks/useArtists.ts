@@ -7,8 +7,8 @@ export const useArtistsList = (params: {
   searchQuery?: string; 
   page?: number; 
   pageSize?: number; 
-  agencyFilter?: string;
-  minEvents?: number;
+  agencyFilter?: string | null;
+  minEvents?: number | null;
   promoterFilter?: string;
 }) => {
   return useQuery<{ artists: ArtistListItem[]; totalCount: number; pagination: any }>({
