@@ -29,23 +29,13 @@ const inferVenueType = (capacity: number | null): string => {
 };
 
 const calculateUtilization = (venue: VenueListItem): number => {
-  // Calculate utilization based on recent events
-  const recentEvents = Number(venue.recent_events) || 0;
-  const capacity = venue.capacity || 0;
+  // Simple activity calculation based on total events
+  const totalEvents = Number(venue.total_events) || 0;
   
-  if (capacity === 0) return 0;
+  // Since max events are around 100, use that as baseline for 100% activity
+  const maxExpectedEvents = 100;
   
-  // Assume recent events are from last 3 months, so monthly events
-  const monthlyEvents = recentEvents / 3;
-  
-  // Expected monthly events based on venue size (smaller venues = more frequent shows)
-  let expectedMonthly = 0;
-  if (capacity < 500) expectedMonthly = 15; // Clubs can have shows almost daily
-  else if (capacity < 2000) expectedMonthly = 10; // Theaters multiple times per week
-  else if (capacity < 10000) expectedMonthly = 6; // Arenas weekly shows
-  else expectedMonthly = 3; // Stadiums monthly shows
-  
-  const utilization = (monthlyEvents / expectedMonthly) * 100;
+  const utilization = (totalEvents / maxExpectedEvents) * 100;
   return Math.min(utilization, 100); // Cap at 100%
 };
 

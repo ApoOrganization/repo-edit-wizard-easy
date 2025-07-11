@@ -27,6 +27,7 @@ const Venues = () => {
     cities: [],
     priceTiers: [],
     genres: [],
+    activityLevel: [],
   });
 
   // Fetch data from backend
@@ -37,7 +38,24 @@ const Venues = () => {
   const pagination = searchResults?.pagination;
 
   // Transform raw venues to match component expectations
-  const venues = rawVenues.map(transformVenueFromDB);
+  const transformedVenues = rawVenues.map(transformVenueFromDB);
+  
+  // Apply client-side activity level filtering
+  const venues = transformedVenues.filter(venue => {
+    const activityLevels = filters.activityLevel as string[];
+    if (activityLevels.length === 0) return true;
+    
+    return activityLevels.some(level => {
+      switch(level) {
+        case 'high': return venue.totalEvents >= 50;
+        case 'medium': return venue.totalEvents >= 20 && venue.totalEvents < 50;
+        case 'low': return venue.totalEvents >= 5 && venue.totalEvents < 20;
+        case 'minimal': return venue.totalEvents >= 1 && venue.totalEvents < 5;
+        case 'none': return venue.totalEvents === 0;
+        default: return true;
+      }
+    });
+  });
 
   // Debounced search to avoid excessive API calls
   const debouncedUpdateSearch = useDebouncedCallback((search: string) => {
@@ -107,6 +125,41 @@ const Venues = () => {
         step: 1000,
         formatLabel: (value) => formatCapacity(value)
       },
+      collapsible: true,
+      defaultOpen: false,
+    },
+    {
+      key: "activityLevel",
+      title: "Activity Level",
+      type: "checkbox",
+      icon: "activity",
+      options: [
+        { 
+          value: "high", 
+          label: "High Activity (50+ events)", 
+          count: transformedVenues.filter(v => v.totalEvents >= 50).length 
+        },
+        { 
+          value: "medium", 
+          label: "Medium Activity (20-49 events)", 
+          count: transformedVenues.filter(v => v.totalEvents >= 20 && v.totalEvents < 50).length 
+        },
+        { 
+          value: "low", 
+          label: "Low Activity (5-19 events)", 
+          count: transformedVenues.filter(v => v.totalEvents >= 5 && v.totalEvents < 20).length 
+        },
+        { 
+          value: "minimal", 
+          label: "Minimal Activity (1-4 events)", 
+          count: transformedVenues.filter(v => v.totalEvents >= 1 && v.totalEvents < 5).length 
+        },
+        { 
+          value: "none", 
+          label: "No Events", 
+          count: transformedVenues.filter(v => v.totalEvents === 0).length 
+        },
+      ],
       collapsible: true,
       defaultOpen: false,
     },
@@ -376,21 +429,39 @@ const VenueCard = ({ venue }: { venue: any }) => {
             </div>
           )}
 
-          {/* Utilization Bar */}
-          {venue.totalEvents > 0 && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-xs text-muted-foreground">Activity</span>
-                <span className="text-xs font-medium">{venue.utilization.toFixed(0)}%</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2">
-                <div 
-                  className="bg-primary rounded-full h-2 transition-all"
-                  style={{ width: `${Math.min(venue.utilization, 100)}%` }}
-                />
+          {/* Activity Bar with Level Badge */}
+          <div className="mt-4">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-xs text-muted-foreground">Activity</span>
+              <div className="flex items-center gap-2">
+                <Badge 
+                  variant={
+                    venue.totalEvents >= 50 ? "default" : 
+                    venue.totalEvents >= 20 ? "secondary" : 
+                    venue.totalEvents >= 5 ? "outline" : "secondary"
+                  }
+                  className="text-xs"
+                >
+                  {venue.totalEvents >= 50 ? "High" : 
+                   venue.totalEvents >= 20 ? "Medium" : 
+                   venue.totalEvents >= 5 ? "Low" : 
+                   venue.totalEvents > 0 ? "Minimal" : "None"}
+                </Badge>
+                <span className="text-xs font-medium">{venue.totalEvents} events</span>
               </div>
             </div>
-          )}
+            <div className="w-full bg-secondary rounded-full h-2">
+              <div 
+                className={`rounded-full h-2 transition-all ${
+                  venue.totalEvents >= 50 ? "bg-green-500" :
+                  venue.totalEvents >= 20 ? "bg-yellow-500" :
+                  venue.totalEvents >= 5 ? "bg-orange-500" :
+                  venue.totalEvents > 0 ? "bg-red-500" : "bg-gray-300"
+                }`}
+                style={{ width: `${Math.min(venue.utilization, 100)}%` }}
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
     </Link>
