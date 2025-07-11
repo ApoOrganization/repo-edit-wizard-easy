@@ -18,7 +18,7 @@ export const usePromoterCampaigns = (promoterId: string | undefined) => {
 
       try {
         const { data, error } = await supabase.rpc('get_promoter_campaigns', {
-          promoter_uuid: promoterId
+          _promoter_id: promoterId
         });
 
         if (error) {
