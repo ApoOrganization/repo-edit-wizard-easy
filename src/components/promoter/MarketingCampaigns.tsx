@@ -72,12 +72,6 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
     });
   };
 
-  const formatPageNames = (pageNames: string[]) => {
-    if (!pageNames || pageNames.length === 0) return 'Unknown Page';
-    if (pageNames.length === 1) return pageNames[0];
-    return `${pageNames[0]} +${pageNames.length - 1} more`;
-  };
-
   const truncateCaption = (caption: string | null, maxLength: number = 100) => {
     if (!caption) return 'No caption available';
     if (caption.length <= maxLength) return caption;
@@ -237,10 +231,12 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-sm font-semibold">
-                      {formatPageNames(campaign.page_name)}
-                    </CardTitle>
+                  <div className="flex flex-wrap gap-1">
+                    {campaign.page_name.map((page, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {page}
+                      </Badge>
+                    ))}
                     <Badge variant={getStatusBadgeVariant(campaign.ad_status)}>
                       {campaign.ad_status || 'Unknown'}
                     </Badge>
@@ -255,7 +251,14 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
                     {campaign.ad_archive_id && (
                       <div className="flex items-center gap-1">
                         <ExternalLink className="h-3 w-3" />
-                        <span>Archive ID: {campaign.ad_archive_id}</span>
+                        <a 
+                          href={`https://www.facebook.com/ads/library/?id=${campaign.ad_archive_id}`}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 hover:underline text-xs"
+                        >
+                          View Ad (ID: {campaign.ad_archive_id})
+                        </a>
                       </div>
                     )}
                   </div>
@@ -289,19 +292,6 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
                   )}
                 </div>
 
-                {/* Page Names (if multiple) */}
-                {campaign.page_name && campaign.page_name.length > 1 && (
-                  <div>
-                    <h4 className="text-xs font-medium text-muted-foreground mb-2">All Pages</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {campaign.page_name.map((page, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {page}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
