@@ -343,13 +343,19 @@ const Artists = () => {
                   <Card key={artist.id} className="media-card group hover:shadow-lg transition-all duration-200">
                     <CardHeader>
                       <div className="flex items-start justify-between">
-                        <div>
+                        <div className="flex-1">
                           <CardTitle className="text-lg group-hover:text-primary transition-colors">
                             <Link to={`/artists/${artist.id}`} className="hover:underline">
                               {artist.name}
                             </Link>
                           </CardTitle>
-                          <p className="text-sm text-muted-foreground">{artist.agency}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {artist.agency && (
+                              <Badge variant="outline" className="text-xs">
+                                {artist.agency}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                         <Badge variant="secondary" className="text-xs">
                           Artist
@@ -360,12 +366,17 @@ const Artists = () => {
                       <div className="grid grid-cols-1 gap-4 text-sm">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>{artist.eventCount} event{artist.eventCount !== 1 ? 's' : ''}</span>
+                          <span>
+                            {artist.eventCount !== null && artist.eventCount > 0 
+                              ? `${artist.eventCount} event${artist.eventCount !== 1 ? 's' : ''}`
+                              : 'No events'
+                            }
+                          </span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Star className="h-4 w-4 text-muted-foreground" />
                           <span className="truncate">
-                            {artist.favouritePromoter || 'No favourite promoter'}
+                            {artist.favouritePromoter || 'No promoter history'}
                           </span>
                         </div>
                       </div>

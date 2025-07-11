@@ -73,13 +73,13 @@ export const transformArtistFromDB = (dbArtist: ArtistListItem): TransformedArti
     // Use id from Edge Function response
     id: dbArtist.id || 'unknown',
     name: dbArtist.name || 'Unknown Artist',
-    agency: 'Unknown Agency', // Not available in simple list
-    agent: 'Unknown Agent', // Not available in simple list
+    agency: dbArtist.agency || 'Independent', // Use real agency data or show as Independent
+    agent: extractAgentName(null, dbArtist.agency), // Generate agent from agency
     territory: 'Unknown Territory', // Not available in simple list
     monthlyListeners: 0, // Not available in simple list
     followers: 0, // Not available in simple list
     topCities: ['Unknown'], // Not available in simple list
-    email: 'unknown@example.com', // Not available in simple list
+    email: generateEmail(dbArtist.agency), // Generate email from agency
     profileUrl: generateProfileUrl(dbArtist.name || 'unknown'),
     spotifyUrl: `https://spotify.com/artist/${dbArtist.name?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}`,
     eventCount: dbArtist.eventCount || 0, // Real event count from edge function

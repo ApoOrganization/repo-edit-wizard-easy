@@ -1,8 +1,9 @@
 export interface ArtistListItem {
   id: string;  // UUID from Edge Function
   name: string;
-  eventCount: number;  // Number of events for this artist
+  eventCount: number | null;  // Number of events for this artist (can be null)
   favouritePromoter: string | null;  // Most worked with promoter
+  agency: string | null;  // Agency name (can be null)
   total_count?: number;  // For pagination from Edge Function
 }
 

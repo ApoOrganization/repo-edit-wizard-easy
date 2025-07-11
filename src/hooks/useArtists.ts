@@ -36,8 +36,9 @@ export const useArtistsList = (params: { searchQuery?: string; page?: number; pa
       const artists = data.artists.map((item: any) => ({
         id: item.id,
         name: item.name,
-        eventCount: item.eventCount || 0,
-        favouritePromoter: item.favouritePromoter || null
+        eventCount: item.eventCount || null,
+        favouritePromoter: item.favouritePromoter || null,
+        agency: item.agency || null
       }));
 
       console.log('Artists list results:', { 
