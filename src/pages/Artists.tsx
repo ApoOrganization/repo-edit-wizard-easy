@@ -17,20 +17,20 @@ const Artists = () => {
     searchQuery: '',
     page: 1,
     pageSize: 20,
-    sortBy: 'name',
-    sortOrder: 'asc' as 'asc' | 'desc'
+    agencyFilter: '',
+    minEvents: null as number | null,
+    promoterFilter: ''
   });
   
   const [filters, setFilters] = useState<UniversalFilterState>({
     search: '',
-    sortBy: 'name',
     agencies: [],
     territories: [],
     activityLevels: [],
     hasPromoter: []
   });
 
-  // Fetch data from backend
+  // Fetch data from backend with filters
   const { data: searchResults, isLoading, error } = useArtistsList(searchParams);
   const { data: filterOptions, isLoading: filterOptionsLoading } = useArtistFilterOptions();
   
@@ -44,60 +44,14 @@ const Artists = () => {
   };
 
   // Transform raw artists to match component expectations
-  const transformedArtists = rawArtists.map(transformArtistFromDB);
+  const artists = rawArtists.map(transformArtistFromDB);
   
   // Debug logging
-  console.log('🎭 Raw artists sample:', rawArtists.slice(0, 3));
-  console.log('🎨 Transformed artists sample:', transformedArtists.slice(0, 3));
-  console.log('🔧 Current filters:', filters);
-  
-  // Apply client-side filters
-  const artists = transformedArtists.filter(artist => {
-    // Activity level filter
-    const activityLevels = filters.activityLevels as string[];
-    if (activityLevels.length > 0) {
-      const eventCount = typeof artist.eventCount === 'string' ? parseInt(artist.eventCount) : artist.eventCount;
-      console.log('🔍 Filtering artist:', { 
-        name: artist.name, 
-        eventCount, 
-        eventCountType: typeof artist.eventCount,
-        filters: activityLevels 
-      });
-      const matchesActivity = activityLevels.some(level => {
-        switch(level) {
-          case 'very_active': return eventCount >= 50;
-          case 'active': return eventCount >= 20 && eventCount < 50;
-          case 'moderate': return eventCount >= 5 && eventCount < 20;
-          case 'emerging': return eventCount >= 1 && eventCount < 5;
-          case 'no_events': return eventCount === 0;
-          default: return true;
-        }
-      });
-      if (!matchesActivity) return false;
-    }
-    
-    // Promoter status filter
-    const hasPromoterFilter = filters.hasPromoter as string[];
-    if (hasPromoterFilter.length > 0) {
-      const hasPromoter = !!artist.favouritePromoter;
-      const matchesPromoter = hasPromoterFilter.some(status => {
-        if (status === 'has_promoter') return hasPromoter;
-        if (status === 'no_promoter') return !hasPromoter;
-        return true;
-      });
-      if (!matchesPromoter) return false;
-    }
-    
-    return true;
-  });
-  
-  console.log('📊 Filtering results:', {
-    totalBefore: transformedArtists.length,
-    totalAfter: artists.length,
-    activeFilters: {
-      activityLevels: filters.activityLevels,
-      hasPromoter: filters.hasPromoter
-    }
+  console.log('🎭 Artists from backend:', { 
+    count: artists.length, 
+    total: totalCount,
+    searchParams,
+    filters 
   });
 
   // Debounced search to avoid excessive API calls
@@ -105,24 +59,62 @@ const Artists = () => {
     setSearchParams(prev => ({ ...prev, searchQuery: search, page: 1 }));
   }, 300);
 
+  // Convert filter state to API parameters
+  const convertFiltersToParams = (currentFilters: UniversalFilterState) => {
+    // Agency filter - join selected agencies with OR logic
+    const agencyFilter = (currentFilters.agencies as string[])?.length > 0 
+      ? (currentFilters.agencies as string[]).join('|') 
+      : '';
+    
+    // Activity level filter - convert to minEvents
+    const activityLevels = currentFilters.activityLevels as string[];
+    let minEvents: number | null = null;
+    if (activityLevels.length > 0) {
+      // Use the lowest threshold from selected activity levels
+      const thresholds = activityLevels.map(level => {
+        switch(level) {
+          case 'very_active': return 50;
+          case 'active': return 20;
+          case 'moderate': return 5;
+          case 'emerging': return 1;
+          case 'no_events': return 0;
+          default: return null;
+        }
+      }).filter(t => t !== null);
+      minEvents = thresholds.length > 0 ? Math.min(...thresholds) : null;
+    }
+    
+    // Promoter filter - convert has/no promoter to search logic
+    const hasPromoterFilter = currentFilters.hasPromoter as string[];
+    let promoterFilter = '';
+    if (hasPromoterFilter.includes('has_promoter') && !hasPromoterFilter.includes('no_promoter')) {
+      promoterFilter = '%'; // Search for any non-null promoter
+    } else if (hasPromoterFilter.includes('no_promoter') && !hasPromoterFilter.includes('has_promoter')) {
+      promoterFilter = 'NULL'; // Special case for null promoters
+    }
+    
+    return {
+      searchQuery: currentFilters.search as string || '',
+      agencyFilter,
+      minEvents,
+      promoterFilter
+    };
+  };
+
+  // Debounced filter updates
+  const debouncedUpdateFilters = useDebouncedCallback((newFilters: UniversalFilterState) => {
+    const apiParams = convertFiltersToParams(newFilters);
+    setSearchParams(prev => ({ 
+      ...prev, 
+      ...apiParams,
+      page: 1 // Reset to first page when filters change
+    }));
+  }, 300);
+
   // Update search params when filters change
   useEffect(() => {
-    const sortBy = filters.sortBy as string || 'name';
-    let sortOrder: 'asc' | 'desc' = 'asc';
-    
-    // Determine sort order based on sortBy value
-    if (sortBy === 'eventCount_desc') {
-      setSearchParams(prev => ({ ...prev, sortBy: 'eventCount', sortOrder: 'desc', page: 1 }));
-    } else if (sortBy === 'eventCount_asc') {
-      setSearchParams(prev => ({ ...prev, sortBy: 'eventCount', sortOrder: 'asc', page: 1 }));
-    } else {
-      setSearchParams(prev => ({ ...prev, sortBy: 'name', sortOrder: 'asc', page: 1 }));
-    }
-  }, [filters.sortBy]);
-
-  useEffect(() => {
-    debouncedUpdateSearch(filters.search as string);
-  }, [filters.search]);
+    debouncedUpdateFilters(filters);
+  }, [filters, debouncedUpdateFilters]);
 
   // Format numbers helper
   const formatNumber = (num: number | null) => {
@@ -143,28 +135,16 @@ const Artists = () => {
       collapsible: false,
     },
     {
-      key: "sortBy",
-      title: "Sort By",
-      type: "radio",
-      icon: "music",
-      options: [
-        { value: "name", label: "Alphabetical (A-Z)" },
-        { value: "eventCount_desc", label: "Most Active" },
-        { value: "eventCount_asc", label: "Least Active" },
-      ],
-      collapsible: false,
-    },
-    {
       key: "activityLevels",
       title: "Activity Level",
       type: "checkbox",
       icon: "users",
       options: [
-        { value: "very_active", label: "Very Active (50+ events)", count: transformedArtists.filter(a => a.eventCount >= 50).length },
-        { value: "active", label: "Active (20-49 events)", count: transformedArtists.filter(a => a.eventCount >= 20 && a.eventCount < 50).length },
-        { value: "moderate", label: "Moderate (5-19 events)", count: transformedArtists.filter(a => a.eventCount >= 5 && a.eventCount < 20).length },
-        { value: "emerging", label: "Emerging (1-4 events)", count: transformedArtists.filter(a => a.eventCount >= 1 && a.eventCount < 5).length },
-        { value: "no_events", label: "No Events", count: transformedArtists.filter(a => a.eventCount === 0).length },
+        { value: "very_active", label: "Very Active (50+ events)" },
+        { value: "active", label: "Active (20-49 events)" },
+        { value: "moderate", label: "Moderate (5-19 events)" },
+        { value: "emerging", label: "Emerging (1-4 events)" },
+        { value: "no_events", label: "No Events" },
       ],
       collapsible: true,
       defaultOpen: false,
@@ -175,8 +155,8 @@ const Artists = () => {
       type: "checkbox",
       icon: "users",
       options: [
-        { value: "has_promoter", label: "Has Favourite Promoter", count: transformedArtists.filter(a => a.favouritePromoter).length },
-        { value: "no_promoter", label: "No Favourite Promoter", count: transformedArtists.filter(a => !a.favouritePromoter).length },
+        { value: "has_promoter", label: "Has Favourite Promoter" },
+        { value: "no_promoter", label: "No Favourite Promoter" },
       ],
       collapsible: true,
       defaultOpen: false,
@@ -188,8 +168,7 @@ const Artists = () => {
       icon: "building",
       options: (filterOptions?.agencies || []).map(agency => ({
         value: agency,
-        label: agency,
-        count: 0, // Count will be handled by backend
+        label: agency
       })),
       collapsible: true,
       defaultOpen: false,
@@ -201,8 +180,7 @@ const Artists = () => {
       icon: "globe",
       options: (filterOptions?.territories || []).map(territory => ({
         value: territory,
-        label: territory,
-        count: 0, // Count will be handled by backend
+        label: territory
       })),
       collapsible: true,
       defaultOpen: false,

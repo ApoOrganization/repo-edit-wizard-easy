@@ -2,20 +2,28 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ArtistSearchParams, ArtistFilterOptions, ArtistListItem, SearchArtistsResponse } from '@/types/artist.types';
 
-// Simple artists list using Edge Function
-export const useArtistsList = (params: { searchQuery?: string; page?: number; pageSize?: number; sortBy?: string; sortOrder?: 'asc' | 'desc' }) => {
-  return useQuery<{ artists: ArtistListItem[]; totalCount: number }>({
+// Artists list using new Edge Function with backend filtering
+export const useArtistsList = (params: { 
+  searchQuery?: string; 
+  page?: number; 
+  pageSize?: number; 
+  agencyFilter?: string;
+  minEvents?: number;
+  promoterFilter?: string;
+}) => {
+  return useQuery<{ artists: ArtistListItem[]; totalCount: number; pagination: any }>({
     queryKey: ['artists-list', params],
     queryFn: async () => {
       console.log('Fetching artists list with params:', params);
 
-      const { data, error } = await supabase.functions.invoke('get-artist-list-new', {
+      const { data, error } = await supabase.functions.invoke('get-artists-list', {
         body: {
-          searchQuery: params.searchQuery || '',
+          searchQuery: params.searchQuery || null,
           page: params.page || 1,
           pageSize: params.pageSize || 50,
-          sortBy: params.sortBy || 'name',
-          sortOrder: params.sortOrder || 'asc'
+          agencyFilter: params.agencyFilter || null,
+          minEvents: params.minEvents || null,
+          promoterFilter: params.promoterFilter || null
         }
       });
 
@@ -25,31 +33,37 @@ export const useArtistsList = (params: { searchQuery?: string; page?: number; pa
       }
 
       if (!data || !data.success) {
-        throw new Error('Invalid response format from artists list API');
+        throw new Error(data.error || 'Invalid response format from artists list API');
       }
 
       if (!data.artists || !Array.isArray(data.artists)) {
         throw new Error('Artists array not found in response');
       }
 
-      const totalCount = data.pagination?.totalCount || 0;
       const artists = data.artists.map((item: any) => ({
         id: item.id,
         name: item.name,
-        eventCount: item.eventCount || null,
+        eventCount: item.eventCount || 0,
         favouritePromoter: item.favouritePromoter || null,
         agency: item.agency || null
       }));
 
       console.log('Artists list results:', { 
         count: artists.length, 
-        total: totalCount,
-        first_artist: artists[0]?.name 
+        total: data.pagination?.totalCount || 0,
+        first_artist: artists[0]?.name,
+        filters_applied: {
+          searchQuery: params.searchQuery,
+          agencyFilter: params.agencyFilter,
+          minEvents: params.minEvents,
+          promoterFilter: params.promoterFilter
+        }
       });
 
       return {
         artists,
-        totalCount
+        totalCount: data.pagination?.totalCount || 0,
+        pagination: data.pagination
       };
     },
     enabled: true,
