@@ -11,7 +11,7 @@ export interface LogoProps {
   /**
    * Size of the logo
    */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   
   /**
    * Custom width (overrides size)
@@ -43,7 +43,8 @@ const sizeMap = {
   sm: { width: 24, height: 24 },
   md: { width: 32, height: 32 },
   lg: { width: 48, height: 48 },
-  xl: { width: 64, height: 64 }
+  xl: { width: 64, height: 64 },
+  xxl: { width: 96, height: 96 }
 };
 
 export const Logo: React.FC<LogoProps> = ({

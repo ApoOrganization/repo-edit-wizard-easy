@@ -41,17 +41,17 @@ export function AppSidebar() {
     <Sidebar className="border-r border-sidebar-border bg-sidebar-background">
       <SidebarContent className="p-0">
         {/* Brand Header */}
-        <div className="flex items-center px-6 py-4">
+        <div className="flex items-center px-6 py-6">
           {!collapsed ? (
             <Logo 
               variant="brandName" 
-              size="lg"
+              size="xl"
               className="text-sidebar-foreground"
             />
           ) : (
             <Logo 
               variant="brandName" 
-              size="md"
+              size="lg"
               className="text-sidebar-foreground"
             />
           )}
