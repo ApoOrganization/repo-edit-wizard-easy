@@ -55,8 +55,9 @@ const PromoterDetail = () => {
   const shouldShowTicketTab = hasTicketSalesData || ticketLoading;
   
   // Check campaigns data status
-  const { hasCampaigns, isLoading: campaignsLoading } = useHasPromoterCampaigns(id);
-  const shouldShowCampaignsTab = hasCampaigns || campaignsLoading;
+  const { hasCampaigns, isLoading: campaignsLoading, error: campaignsError } = useHasPromoterCampaigns(id);
+  // Show campaigns tab if: loading, has data, or in development (for debugging)
+  const shouldShowCampaignsTab = campaignsLoading || hasCampaigns || process.env.NODE_ENV === 'development';
   
   console.log('🎭 Promoter Detail Status:', {
     promoterId: id,
@@ -81,7 +82,8 @@ const PromoterDetail = () => {
       shouldShowTicketTab,
       shouldShowCampaignsTab,
       hasCampaigns,
-      campaignsLoading
+      campaignsLoading,
+      campaignsError: campaignsError?.message
     }
   });
 

@@ -96,7 +96,8 @@ export const usePromoterCampaigns = (
       console.log('📱 [PROMOTER CAMPAIGNS] Fetching campaigns:', {
         promoterId,
         params,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        tableTargeted: 'promoters_total_campaigns_by_page'
       });
 
       try {
@@ -135,7 +136,9 @@ export const usePromoterCampaigns = (
 
         console.log('📥 [PROMOTER CAMPAIGNS] Raw data received:', {
           campaignsCount: data?.length || 0,
-          hasData: !!data
+          hasData: !!data,
+          sampleData: data?.slice(0, 2), // Show first 2 records for debugging
+          queryExecuted: `SELECT * FROM promoters_total_campaigns_by_page WHERE promoter_id = '${promoterId}' ORDER BY ad_start_date DESC`
         });
 
         return transformCampaignsResponse(data || []);
@@ -180,8 +183,15 @@ export const useHasPromoterCampaigns = (promoterId: string | undefined) => {
     promoterId,
     isLoading,
     hasError: !!error,
+    errorMessage: error?.message,
     campaignsCount: data?.campaigns?.length || 0,
-    hasCampaigns
+    hasCampaigns,
+    dataStructure: {
+      hasData: !!data,
+      hasCampaigns: !!data?.campaigns,
+      hasSummary: !!data?.summary,
+      summaryStats: data?.summary
+    }
   });
   
   return {

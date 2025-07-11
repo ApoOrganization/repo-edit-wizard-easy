@@ -30,6 +30,16 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
     statusFilter !== 'all' ? { status: statusFilter } : undefined
   );
 
+  console.log('🎯 [MARKETING CAMPAIGNS COMPONENT] Render state:', {
+    promoterId,
+    isLoading,
+    hasError: !!error,
+    errorMessage: error?.message,
+    hasData: !!campaignsData,
+    campaignsCount: campaignsData?.campaigns?.length || 0,
+    externalLoading
+  });
+
   const getStatusBadgeVariant = (status: string | null) => {
     if (!status) return 'secondary';
     switch (status.toLowerCase()) {
@@ -114,6 +124,14 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
             <p className="text-sm text-red-700 mb-4">
               {error instanceof Error ? error.message : 'Failed to fetch marketing campaigns'}
             </p>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-red-600 mt-2 p-2 bg-red-100 rounded">
+                <strong>Debug Info:</strong><br/>
+                Promoter ID: {promoterId}<br/>
+                Table: promoters_total_campaigns_by_page<br/>
+                Query: SELECT * WHERE promoter_id = '{promoterId}'
+              </div>
+            )}
             <Button 
               variant="outline" 
               size="sm" 
@@ -137,6 +155,15 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
             <p className="text-sm text-muted-foreground">
               This promoter doesn't have any Meta Ads campaigns on record.
             </p>
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-muted-foreground mt-4 p-2 bg-muted/30 rounded">
+                <strong>Debug Info:</strong><br/>
+                Promoter ID: {promoterId}<br/>
+                Has campaignsData: {!!campaignsData ? 'Yes' : 'No'}<br/>
+                Campaigns length: {campaignsData?.campaigns?.length || 0}<br/>
+                Summary: {JSON.stringify(campaignsData?.summary, null, 2)}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
