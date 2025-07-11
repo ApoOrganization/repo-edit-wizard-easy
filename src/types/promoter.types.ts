@@ -376,3 +376,38 @@ export interface MockPromoter {
   revenue: number;
   rating: number;
 }
+
+// Marketing Campaigns (Meta Ads) Interfaces
+export interface PromoterMetaCampaign {
+  id: number;
+  page_name: string[] | null;
+  ad_status: string | null;
+  ad_start_date: string | null;
+  ad_end_date: string | null;
+  ad_caption: string | null;
+  ad_archive_id: string | null;
+  promoter_id: string | null;
+  promoter_name: string | null;
+}
+
+export interface PromoterCampaignsResponse {
+  campaigns: PromoterMetaCampaign[];
+  summary: {
+    total_campaigns: number;
+    active_campaigns: number;
+    unique_pages: number;
+    date_range: {
+      earliest_start: string | null;
+      latest_end: string | null;
+    };
+  };
+}
+
+export interface PromoterCampaignsParams {
+  promoterId: string;
+  status?: string;
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
+}

@@ -15,6 +15,8 @@ import { usePromoterTickets, hasPromoterTicketData, isPromoterTicketError } from
 import { RevenueOverview, SalesTimeSeriesChart } from "@/components/shared";
 import { EventPortfolioAnalytics } from "@/components/promoter/EventPortfolioAnalytics";
 import { PromoterInsights } from "@/components/promoter/PromoterInsights";
+import { useHasPromoterCampaigns } from "@/hooks/usePromoterCampaigns";
+import MarketingCampaigns from "@/components/promoter/MarketingCampaigns";
 
 const PromoterDetail = () => {
   const { id } = useParams();
@@ -52,6 +54,10 @@ const PromoterDetail = () => {
   const isTicketError = isPromoterTicketError(ticketData);
   const shouldShowTicketTab = hasTicketSalesData || ticketLoading;
   
+  // Check campaigns data status
+  const { hasCampaigns, isLoading: campaignsLoading } = useHasPromoterCampaigns(id);
+  const shouldShowCampaignsTab = hasCampaigns || campaignsLoading;
+  
   console.log('🎭 Promoter Detail Status:', {
     promoterId: id,
     promoterName: promoter?.name,
@@ -70,7 +76,13 @@ const PromoterDetail = () => {
       genreAnalyticsCount: genreAnalytics.length,
       venueAnalyticsCount: venueAnalytics.length,
       timeSeriesLength: timeSeries.length
-    } : null
+    } : null,
+    tabsStatus: {
+      shouldShowTicketTab,
+      shouldShowCampaignsTab,
+      hasCampaigns,
+      campaignsLoading
+    }
   });
 
   if (isLoading) {
@@ -252,7 +264,11 @@ const PromoterDetail = () => {
 
         {/* Tabbed Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={`grid w-full ${shouldShowTicketTab ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className={`grid w-full ${
+            shouldShowTicketTab && shouldShowCampaignsTab ? 'grid-cols-6' : 
+            shouldShowTicketTab || shouldShowCampaignsTab ? 'grid-cols-5' : 
+            'grid-cols-4'
+          }`}>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="venues">Venues</TabsTrigger>
             <TabsTrigger value="analytics" disabled={!hasFullAnalytics}>
@@ -262,6 +278,11 @@ const PromoterDetail = () => {
             {shouldShowTicketTab && (
               <TabsTrigger value="tickets">
                 Ticket Sales
+              </TabsTrigger>
+            )}
+            {shouldShowCampaignsTab && (
+              <TabsTrigger value="campaigns">
+                Marketing Campaigns
               </TabsTrigger>
             )}
           </TabsList>
@@ -741,6 +762,13 @@ const PromoterDetail = () => {
                 </Card>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="campaigns" className="space-y-6">
+            <MarketingCampaigns 
+              promoterId={id || ''} 
+              isLoading={campaignsLoading}
+            />
           </TabsContent>
         </Tabs>
 
