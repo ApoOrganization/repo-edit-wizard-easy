@@ -7,7 +7,7 @@ export const useArtistsList = (params: {
   searchQuery?: string; 
   page?: number; 
   pageSize?: number; 
-  agencyFilter?: string | null;
+  agencyFilter?: string;
   minEvents?: number | null;
   promoterFilter?: string;
 }) => {
@@ -130,7 +130,6 @@ export const useArtistFilterOptions = () => {
         'Cobra Agency',
         'Wasserman',
         'WME',
-        'No Agency / Local Artists', // Special case for null agencies
         'High Road Touring',
         'United Talent Agency',
         'Onefiinix'

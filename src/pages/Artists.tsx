@@ -17,7 +17,7 @@ const Artists = () => {
     searchQuery: '',
     page: 1,
     pageSize: 20,
-    agencyFilter: null as string | null,
+    agencyFilter: '',
     minEvents: null as number | null,
     promoterFilter: ''
   });
@@ -61,25 +61,11 @@ const Artists = () => {
 
   // Convert filter state to API parameters
   const convertFiltersToParams = (currentFilters: UniversalFilterState) => {
-    // Agency filter - handle special "No Agency / Local Artists" case
+    // Agency filter - simple pipe-separated list
     const selectedAgencies = currentFilters.agencies as string[];
-    let agencyFilter: string | null = null;
-    
-    if (selectedAgencies?.length > 0) {
-      const hasNoAgency = selectedAgencies.includes('No Agency / Local Artists');
-      const regularAgencies = selectedAgencies.filter(agency => agency !== 'No Agency / Local Artists');
-      
-      if (hasNoAgency && regularAgencies.length > 0) {
-        // Both null agencies and regular agencies selected - use special format
-        agencyFilter = `${regularAgencies.join('|')}|NULL`;
-      } else if (hasNoAgency) {
-        // Only null agencies selected - send actual null
-        agencyFilter = null;
-      } else {
-        // Only regular agencies selected
-        agencyFilter = regularAgencies.join('|');
-      }
-    }
+    const agencyFilter = selectedAgencies?.length > 0 
+      ? selectedAgencies.join('|') 
+      : '';
     
     // Activity level filter - convert to minEvents
     const activityLevels = currentFilters.activityLevels as string[];
