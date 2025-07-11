@@ -1,6 +1,7 @@
 
-import { Calendar, BarChart3, Users, MapPin, Building2, Grid } from "lucide-react";
+import { Calendar, BarChart3, Users, MapPin, Building2, Grid, LogOut } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 import {
   Sidebar,
@@ -27,6 +28,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+  const { signOut, user } = useAuth();
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -83,6 +85,33 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* User info and logout */}
+        <div className="mt-auto px-3 py-2 border-t border-sidebar-border">
+          {!collapsed && (
+            <div className="mb-2 px-4 py-2">
+              <p className="text-xs text-muted-foreground">Signed in as</p>
+              <p className="text-sm font-medium text-sidebar-foreground truncate">
+                {user?.email}
+              </p>
+            </div>
+          )}
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                onClick={signOut}
+                className="h-auto p-0 w-full"
+              >
+                <div className="flex items-center px-4 py-3 rounded-md transition-colors text-sm font-medium text-sidebar-foreground hover:bg-accent/10 hover:text-accent-foreground w-full">
+                  <LogOut className={`${collapsed ? 'mx-auto' : 'mr-3'} h-5 w-5 flex-shrink-0`} />
+                  {!collapsed && (
+                    <span>Sign Out</span>
+                  )}
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </div>
       </SidebarContent>
     </Sidebar>
   );
