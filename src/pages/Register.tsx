@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Music, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Logo } from '@/components/brand';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -99,11 +100,11 @@ const Register = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Music className="h-12 w-12 text-primary" />
+            <Logo variant="brandName" size="xl" />
           </div>
           <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <CardDescription>
-            Register to access the event analytics dashboard
+          <CardDescription className="text-primary font-medium">
+            Venture forth as an Eventturer!
           </CardDescription>
         </CardHeader>
         <CardContent>
