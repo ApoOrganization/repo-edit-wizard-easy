@@ -61,11 +61,9 @@ const Artists = () => {
 
   // Convert filter state to API parameters
   const convertFiltersToParams = (currentFilters: UniversalFilterState) => {
-    // Agency filter - simple pipe-separated list
-    const selectedAgencies = currentFilters.agencies as string[];
-    const agencyFilter = selectedAgencies?.length > 0 
-      ? selectedAgencies.join('|') 
-      : '';
+    // Agency filter - single selection (radio button)
+    const selectedAgency = currentFilters.agencies as string;
+    const agencyFilter = selectedAgency || '';
     
     // Activity level filter - convert to minEvents
     const activityLevels = currentFilters.activityLevels as string[];
@@ -165,7 +163,7 @@ const Artists = () => {
     {
       key: "agencies",
       title: "Agencies",
-      type: "checkbox",
+      type: "radio",
       icon: "building",
       options: (filterOptions?.agencies || []).map(agency => ({
         value: agency,

@@ -126,7 +126,7 @@ export const useArtistFilterOptions = () => {
         'ITB',
         '13 Artists', 
         'Red Light Management',
-        'Primary Talent',
+        'Primariy Talent',
         'Cobra Agency',
         'Wasserman',
         'WME',
