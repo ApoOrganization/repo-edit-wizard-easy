@@ -13,6 +13,7 @@ export interface BrandConfig {
     icon: string;
     dark?: string;
     light?: string;
+    brandName?: string;
     favicon: string;
   };
   colors: {
@@ -45,6 +46,7 @@ export const brandConfig: BrandConfig = {
     icon: "/branding/logos/logo.svg",
     dark: "/branding/logos/logo-dark.svg",
     light: "/branding/logos/logo.svg",
+    brandName: "/branding/logos/logo-brand-name.svg",
     favicon: "/branding/logos/logo.svg"
   },
   colors: {

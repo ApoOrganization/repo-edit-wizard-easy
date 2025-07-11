@@ -185,7 +185,7 @@ export const useArtistAnalytics = (artistId: string | undefined) => {
         const { data, error } = await supabase.functions.invoke('artist-analytics', {
           body: {
             artistId,
-            includeComparisons: true,
+            includeComparisons: false,
             timeRange: 'year'
           }
         });

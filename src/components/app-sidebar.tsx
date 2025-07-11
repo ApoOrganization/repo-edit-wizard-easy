@@ -42,15 +42,14 @@ export function AppSidebar() {
         <div className="flex items-center px-6 py-4">
           {!collapsed ? (
             <Logo 
-              variant="main" 
-              size="md" 
-              showName={true}
+              variant="brandName" 
+              size="lg"
               className="text-sidebar-foreground"
             />
           ) : (
             <Logo 
-              variant="icon" 
-              size="sm"
+              variant="brandName" 
+              size="md"
               className="text-sidebar-foreground"
             />
           )}

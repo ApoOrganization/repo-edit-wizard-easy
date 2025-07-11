@@ -6,7 +6,7 @@ export interface LogoProps {
   /**
    * Logo variant to display
    */
-  variant?: 'main' | 'icon' | 'dark' | 'light';
+  variant?: 'main' | 'icon' | 'dark' | 'light' | 'brandName';
   
   /**
    * Size of the logo
@@ -70,7 +70,7 @@ export const Logo: React.FC<LogoProps> = ({
         height={logoHeight}
         className="object-contain"
       />
-      {(showName || variant === 'icon') && (
+      {(showName || variant === 'icon') && variant !== 'brandName' && (
         <span className="font-semibold text-current">
           {brandConfig.name}
         </span>
