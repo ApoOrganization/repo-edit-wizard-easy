@@ -28,7 +28,6 @@ const ArtistDetail = () => {
   const artist = analyticsData?.artist;
   const analytics = analyticsData?.analytics;
   const insights = analyticsData?.insights || [];
-  const comparisons = analyticsData?.comparisons || [];
   const upcomingEvents = upcomingEventsData?.events || [];
   const pastEvents = pastEventsData?.events || [];
   const allEvents = [...upcomingEvents, ...pastEvents];
@@ -55,7 +54,6 @@ const ArtistDetail = () => {
     isErrorState,
     hasFullAnalytics,
     hasMeaningfulAnalytics,
-    hasComparisons: comparisons.length > 0
   });
 
   // Helper functions
@@ -361,14 +359,11 @@ const ArtistDetail = () => {
 
         {/* Tabbed Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="events">Events</TabsTrigger>
             <TabsTrigger value="analytics" disabled={!hasMeaningfulAnalytics}>
               Analytics {!hasMeaningfulAnalytics && '(Unavailable)'}
-            </TabsTrigger>
-            <TabsTrigger value="similar" disabled={comparisons.length === 0}>
-              Similar Artists {comparisons.length === 0 && '(Unavailable)'}
             </TabsTrigger>
           </TabsList>
           
@@ -657,61 +652,6 @@ const ArtistDetail = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="similar" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-semibold">Similar Artists</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {comparisons.length > 0 ? (
-                    comparisons.map((comparison) => (
-                      <div key={comparison.artist_id} className="p-4 border border-border rounded-md hover:bg-muted/50 transition-colors">
-                        <Link 
-                          to={`/artists/${comparison.artist_id}`} 
-                          className="block"
-                          onClick={() => {
-                            console.log('🔗 Navigating to similar artist:', {
-                              from: id,
-                              to: comparison.artist_id,
-                              artistName: comparison.artist_name
-                            });
-                          }}
-                        >
-                          <div className="font-medium text-sm mb-1">{comparison.artist_name}</div>
-                          <div className="text-xs text-muted-foreground mb-2">
-                            {formatSimilarityScore(comparison.similarity_score)} similarity
-                          </div>
-                          <div className="space-y-1">
-                            <div className="text-xs">{formatNumber(comparison.monthly_listeners)} listeners</div>
-                            <div className="text-xs">{comparison.total_events} events</div>
-                          </div>
-                        </Link>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-8">
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {isFallbackData 
-                          ? '🔗 Similar artists feature requires full analytics data.' 
-                          : 'No similar artists found for this artist.'
-                        }
-                      </p>
-                      {isFallbackData && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => window.location.reload()}
-                        >
-                          Try Again
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
 
         {/* Event Calendar Section */}
