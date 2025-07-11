@@ -25,20 +25,29 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [expandedCaption, setExpandedCaption] = useState<number | null>(null);
 
-  const { data: campaignsData, isLoading, error } = usePromoterCampaigns(
-    promoterId,
-    statusFilter !== 'all' ? { status: statusFilter } : undefined
-  );
+  const { data: campaigns, isLoading, error } = usePromoterCampaigns(promoterId);
 
-  console.log('🎯 [MARKETING CAMPAIGNS COMPONENT] Render state:', {
-    promoterId,
-    isLoading,
-    hasError: !!error,
-    errorMessage: error?.message,
-    hasData: !!campaignsData,
-    campaignsCount: campaignsData?.campaigns?.length || 0,
-    externalLoading
-  });
+  // Filter campaigns by status if needed
+  const filteredCampaigns = statusFilter === 'all' 
+    ? campaigns || []
+    : (campaigns || []).filter(campaign => campaign.ad_status === statusFilter);
+
+  // Calculate summary statistics
+  const summary = {
+    total_campaigns: campaigns?.length || 0,
+    active_campaigns: (campaigns || []).filter(c => c.ad_status?.toLowerCase() === 'active').length,
+    unique_pages: new Set((campaigns || []).flatMap(c => c.page_name || [])).size,
+    date_range: {
+      earliest_start: campaigns?.length ? 
+        campaigns.reduce((earliest, c) => 
+          !earliest || (c.ad_start_date && c.ad_start_date < earliest) ? c.ad_start_date : earliest
+        , campaigns[0].ad_start_date) : null,
+      latest_end: campaigns?.length ?
+        campaigns.reduce((latest, c) => 
+          !latest || (c.ad_end_date && c.ad_end_date > latest) ? c.ad_end_date : latest
+        , campaigns[0].ad_end_date) : null
+    }
+  };
 
   const getStatusBadgeVariant = (status: string | null) => {
     if (!status) return 'secondary';
@@ -63,7 +72,7 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
     });
   };
 
-  const formatPageNames = (pageNames: string[] | null) => {
+  const formatPageNames = (pageNames: string[]) => {
     if (!pageNames || pageNames.length === 0) return 'Unknown Page';
     if (pageNames.length === 1) return pageNames[0];
     return `${pageNames[0]} +${pageNames.length - 1} more`;
@@ -75,8 +84,8 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
     return caption.substring(0, maxLength) + '...';
   };
 
-  const uniqueStatuses = campaignsData?.campaigns
-    ? Array.from(new Set(campaignsData.campaigns.map(c => c.ad_status).filter(Boolean)))
+  const uniqueStatuses = campaigns
+    ? Array.from(new Set(campaigns.map(c => c.ad_status).filter(Boolean)))
     : [];
 
   if (isLoading || externalLoading) {
@@ -124,14 +133,6 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
             <p className="text-sm text-red-700 mb-4">
               {error instanceof Error ? error.message : 'Failed to fetch marketing campaigns'}
             </p>
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-red-600 mt-2 p-2 bg-red-100 rounded">
-                <strong>Debug Info:</strong><br/>
-                Promoter ID: {promoterId}<br/>
-                Table: promoters_total_campaigns_by_page<br/>
-                Query: SELECT * WHERE promoter_id = '{promoterId}'
-              </div>
-            )}
             <Button 
               variant="outline" 
               size="sm" 
@@ -145,7 +146,7 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
     );
   }
 
-  if (!campaignsData || campaignsData.campaigns.length === 0) {
+  if (!campaigns || campaigns.length === 0) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -155,15 +156,6 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
             <p className="text-sm text-muted-foreground">
               This promoter doesn't have any Meta Ads campaigns on record.
             </p>
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-muted-foreground mt-4 p-2 bg-muted/30 rounded">
-                <strong>Debug Info:</strong><br/>
-                Promoter ID: {promoterId}<br/>
-                Has campaignsData: {!!campaignsData ? 'Yes' : 'No'}<br/>
-                Campaigns length: {campaignsData?.campaigns?.length || 0}<br/>
-                Summary: {JSON.stringify(campaignsData?.summary, null, 2)}
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -177,7 +169,7 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold">{campaignsData.summary.total_campaigns}</div>
+              <div className="text-2xl font-bold">{summary.total_campaigns}</div>
               <p className="text-xs text-muted-foreground">Total Campaigns</p>
             </div>
           </CardContent>
@@ -186,7 +178,7 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold">{campaignsData.summary.active_campaigns}</div>
+              <div className="text-2xl font-bold">{summary.active_campaigns}</div>
               <p className="text-xs text-muted-foreground">Active Campaigns</p>
             </div>
           </CardContent>
@@ -195,7 +187,7 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
-              <div className="text-2xl font-bold">{campaignsData.summary.unique_pages}</div>
+              <div className="text-2xl font-bold">{summary.unique_pages}</div>
               <p className="text-xs text-muted-foreground">Unique Pages</p>
             </div>
           </CardContent>
@@ -205,9 +197,9 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="text-2xl font-bold">
-                {campaignsData.summary.date_range.earliest_start && campaignsData.summary.date_range.latest_end
-                  ? Math.ceil((new Date(campaignsData.summary.date_range.latest_end).getTime() - 
-                              new Date(campaignsData.summary.date_range.earliest_start).getTime()) / 
+                {summary.date_range.earliest_start && summary.date_range.latest_end
+                  ? Math.ceil((new Date(summary.date_range.latest_end).getTime() - 
+                              new Date(summary.date_range.earliest_start).getTime()) / 
                               (1000 * 60 * 60 * 24))
                   : 0}
               </div>
@@ -240,7 +232,7 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
 
       {/* Campaigns List */}
       <div className="space-y-4">
-        {campaignsData.campaigns.map((campaign) => (
+        {filteredCampaigns.map((campaign) => (
           <Card key={campaign.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
@@ -317,14 +309,14 @@ const MarketingCampaigns: React.FC<MarketingCampaignsProps> = ({
       </div>
 
       {/* Date Range Summary */}
-      {campaignsData.summary.date_range.earliest_start && campaignsData.summary.date_range.latest_end && (
+      {summary.date_range.earliest_start && summary.date_range.latest_end && (
         <Card>
           <CardContent className="pt-6">
             <div className="text-center">
               <h3 className="font-medium text-foreground mb-2">Campaign Timeline</h3>
               <p className="text-sm text-muted-foreground">
-                From {formatDate(campaignsData.summary.date_range.earliest_start)} to{' '}
-                {formatDate(campaignsData.summary.date_range.latest_end)}
+                From {formatDate(summary.date_range.earliest_start)} to{' '}
+                {formatDate(summary.date_range.latest_end)}
               </p>
             </div>
           </CardContent>

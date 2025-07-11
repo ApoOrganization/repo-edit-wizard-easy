@@ -55,9 +55,8 @@ const PromoterDetail = () => {
   const shouldShowTicketTab = hasTicketSalesData || ticketLoading;
   
   // Check campaigns data status
-  const { hasCampaigns, isLoading: campaignsLoading, error: campaignsError } = useHasPromoterCampaigns(id);
-  // Show campaigns tab if: loading, has data, or in development (for debugging)
-  const shouldShowCampaignsTab = campaignsLoading || hasCampaigns || import.meta.env.DEV || true; // Temporarily force true
+  const { hasCampaigns, isLoading: campaignsLoading } = useHasPromoterCampaigns(id);
+  const shouldShowCampaignsTab = campaignsLoading || hasCampaigns;
   
   console.log('🎭 Promoter Detail Status:', {
     promoterId: id,
@@ -82,8 +81,7 @@ const PromoterDetail = () => {
       shouldShowTicketTab,
       shouldShowCampaignsTab,
       hasCampaigns,
-      campaignsLoading,
-      campaignsError: campaignsError?.message
+      campaignsLoading
     }
   });
 
@@ -282,16 +280,7 @@ const PromoterDetail = () => {
                 Ticket Sales
               </TabsTrigger>
             )}
-            {(() => {
-              console.log('🚨 [CAMPAIGNS TAB] Rendering decision:', {
-                shouldShowCampaignsTab,
-                campaignsLoading,
-                hasCampaigns,
-                devMode: import.meta.env.DEV,
-                calculation: `${campaignsLoading} || ${hasCampaigns} || ${import.meta.env.DEV} || true = ${shouldShowCampaignsTab}`
-              });
-              return shouldShowCampaignsTab;
-            })() && (
+            {shouldShowCampaignsTab && (
               <TabsTrigger value="campaigns">
                 Marketing Campaigns
               </TabsTrigger>

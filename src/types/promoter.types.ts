@@ -377,37 +377,15 @@ export interface MockPromoter {
   rating: number;
 }
 
-// Marketing Campaigns (Meta Ads) Interfaces
+// Marketing Campaigns (Meta Ads) Interfaces - RPC Response
 export interface PromoterMetaCampaign {
   id: number;
-  page_name: string[] | null;
-  ad_status: string | null;
-  ad_start_date: string | null;
-  ad_end_date: string | null;
-  ad_caption: string | null;
-  ad_archive_id: string | null;
-  promoter_id: string | null;
-  promoter_name: string | null;
-}
-
-export interface PromoterCampaignsResponse {
-  campaigns: PromoterMetaCampaign[];
-  summary: {
-    total_campaigns: number;
-    active_campaigns: number;
-    unique_pages: number;
-    date_range: {
-      earliest_start: string | null;
-      latest_end: string | null;
-    };
-  };
-}
-
-export interface PromoterCampaignsParams {
-  promoterId: string;
-  status?: string;
-  dateRange?: {
-    start?: string;
-    end?: string;
-  };
+  ad_status: string;
+  page_name: string[];
+  ad_caption: string;
+  ad_end_date: string;
+  promoter_id: string;
+  ad_archive_id: string;
+  ad_start_date: string;
+  promoter_name: string;
 }
