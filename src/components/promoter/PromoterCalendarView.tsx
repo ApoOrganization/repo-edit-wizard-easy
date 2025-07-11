@@ -42,18 +42,9 @@ export const PromoterCalendarView: React.FC<PromoterCalendarViewProps> = ({
       } : null
     });
 
-    return events.filter(event => event.status !== 'cancelled').map(event => {
-      // Map status from database to valid Event status values
-      
+    return events.map(event => {
+      // Default all events to 'On Sale' - database status is not reliable
       let eventStatus: 'On Sale' | 'Sold Out' | 'Postponed' = 'On Sale';
-      
-      if (event.status === 'sold_out') {
-        eventStatus = 'Sold Out';
-      } else if (event.status === 'postponed') {
-        eventStatus = 'Postponed';
-      } else {
-        eventStatus = 'On Sale';
-      }
 
       const transformedEvent = {
         id: String(event.id), // Ensure ID is string
