@@ -17,14 +17,14 @@ const Artists = () => {
     searchQuery: '',
     page: 1,
     pageSize: 20,
-    agencyFilter: '',
+    agencyFilter: null as string | null,
     minEvents: null as number | null,
     promoterFilter: ''
   });
   
   const [filters, setFilters] = useState<UniversalFilterState>({
     search: '',
-    agencies: [],
+    agencies: '', // String for radio button selection
     territories: [],
     activityLevels: [],
     hasPromoter: []
@@ -63,7 +63,7 @@ const Artists = () => {
   const convertFiltersToParams = (currentFilters: UniversalFilterState) => {
     // Agency filter - single selection (radio button)
     const selectedAgency = currentFilters.agencies as string;
-    const agencyFilter = selectedAgency || '';
+    const agencyFilter = selectedAgency || null;
     
     // Activity level filter - convert to minEvents
     const activityLevels = currentFilters.activityLevels as string[];

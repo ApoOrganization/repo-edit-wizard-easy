@@ -7,7 +7,7 @@ export const useArtistsList = (params: {
   searchQuery?: string; 
   page?: number; 
   pageSize?: number; 
-  agencyFilter?: string;
+  agencyFilter?: string | null;
   minEvents?: number | null;
   promoterFilter?: string;
 }) => {
