@@ -96,18 +96,20 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Logo variant="brandName" size="xl" />
+    <div className="min-h-screen flex items-center justify-center bg-[#F5F5F5] px-4">
+      <Card className="w-full max-w-2xl bg-[#EDF252] border-none shadow-xl">
+        <CardHeader className="text-center p-8">
+          <div className="flex justify-center mb-6">
+            <Logo variant="icon" width={150} height={150} />
           </div>
-          <CardTitle className="text-2xl font-bold">Create Account</CardTitle>
-          <CardDescription className="text-primary font-medium">
+          <CardTitle className="text-3xl font-bold text-[#0D0D0D] mb-4" style={{ fontFamily: 'Satoshi, sans-serif' }}>
+            Create Account
+          </CardTitle>
+          <CardDescription className="text-[#0D0D0D] text-4xl font-black mb-6" style={{ fontFamily: 'Satoshi, sans-serif' }}>
             Venture forth as an Eventturer!
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
@@ -186,11 +188,11 @@ const Register = () => {
           </form>
           
           <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-[#737373]" style={{ fontFamily: 'Satoshi, sans-serif' }}>
               Already have an account?{' '}
               <Link 
                 to="/login" 
-                className="text-primary hover:underline font-medium"
+                className="text-[#020126] hover:underline font-medium"
               >
                 Sign in
               </Link>
